@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "myOrders": "My Orders",
+    "contact": "Contact",
+    "login": "Login",
+    "logout": "Logout",
+    "cart": "Cart",
+    "profile": "Profile",
+    "profileSettings": "Profile Settings"
+  },
+  "banner": {
+    "freeDelivery": "Free delivery on orders over ₹1000",
+    "heading1": "Fast, Fresh",
+    "heading2": "Products",
+    "heading3": "Delivered next",
+    "heading4": "to your Door !!",
+    "subheading": "Why wait? Get your weekly groceries delivered in under 30 minutes",
+    "searchPlaceholder": "Search for fresh products...",
+    "aiRecipeButton": "AI Recipe Assistant",
+    "newBadge": "New!!",
+    "lightningDelivery": "Lightning Delivery",
+    "pocketFriendly": "Pocket-Friendly",
+    "returnEase": "ReturnEase",
+    "dealRush": "Deal Rush"
+  },
+  "login": {
+    "welcomeBack": "Welcome Back",
+    "email": "Email Address",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot Password?",
+    "signIn": "Sign In",
+    "orContinueWith": "Or continue with",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign Up",
+    "backToHome": "Back to Home",
+    "loginSuccess": "Login successful!",
+    "loginError": "Login error",
+    "googleLoginFailed": "Google login failed. Please try again."
+  },
+  "signup": {
+    "createAccount": "Create Account",
+    "name": "Full Name",
+    "email": "Email Address",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "signUp": "Sign Up",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign In"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "emptyCart": "Your cart is empty",
+    "addToCart": "Add to Cart",
+    "removeFromCart": "Remove from Cart",
+    "checkout": "Checkout",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "delivery": "Delivery",
+    "orderSummary": "Order Summary"
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "editProfile": "Edit Profile",
+    "changePassword": "Change Password",
+    "myAddresses": "My Addresses",
+    "settings": "Settings"
+  },
+  "orders": {
+    "myOrders": "My Orders",
+    "orderHistory": "Order History",
+    "orderDetails": "Order Details",
+    "trackOrder": "Track Order",
+    "status": "Status",
+    "date": "Date",
+    "amount": "Amount"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "language": "Language"
+  },
+  "footer": {
+    "brandDescription": "Bringing you the freshest organic produce since 2025. Our mission is to deliver farm-fresh goodness straight to your doorstep.",
+    "quickLinks": "Quick Links",
+    "contactUs": "Contact Us",
+    "newsletter": "Newsletter",
+    "newsletterText": "Subscribe to our newsletter for fresh updates, exclusive offers, and seasonal recipes!",
+    "emailPlaceholder": "Your email address",
+    "subscribe": "Subscribe",
+    "privacyText": "We respect your privacy. Unsubscribe at any time.",
+    "paymentMethods": "We Accept All Major Payment Methods"
+  }
+}

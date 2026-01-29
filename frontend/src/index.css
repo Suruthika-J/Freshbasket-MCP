@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+::-webkit-scrollbar{
+    display: none;
+}
+
+/* Theme Variables */
+:root {
+  /* Dark Theme (Default) */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --accent-primary: #10b981;
+  --accent-secondary: #059669;
+  --accent-hover: #047857;
+  --card-bg: rgba(30, 41, 59, 0.8);
+  --dropdown-bg: rgba(15, 23, 42, 0.95);
+  --input-bg: #1e293b;
+  --button-primary: #10b981;
+  --button-primary-hover: #059669;
+  --navbar-bg: rgba(15, 23, 42, 0.95);
+  --navbar-blur: rgba(15, 23, 42, 0.8);
+  --text-maroon: #ffffff;
+  --banner-bg: #334155;
+  --feature-text: #ffffff;
+}
+
+[data-theme="light"] {
+  /* Light Theme */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --accent-primary: #10b981;
+  --accent-secondary: #059669;
+  --accent-hover: #047857;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --dropdown-bg: rgba(255, 255, 255, 0.95);
+  --input-bg: #ffffff;
+  --button-primary: #10b981;
+  --button-primary-hover: #059669;
+  --navbar-bg: rgba(255, 255, 255, 0.95);
+  --navbar-blur: rgba(255, 255, 255, 0.8);
+  --text-maroon: #475569;
+  --banner-bg: #ffffff;
+  --feature-text: #0f172a;
+}
+
+/* Theme-aware utility classes */
+.theme-bg-primary { background-color: var(--bg-primary); }
+.theme-bg-secondary { background-color: var(--bg-secondary); }
+.theme-bg-tertiary { background-color: var(--bg-tertiary); }
+.theme-text-primary { color: var(--text-primary); }
+.theme-text-secondary { color: var(--text-secondary); }
+.theme-text-muted { color: var(--text-muted); }
+.theme-border-primary { border-color: var(--border-primary); }
+.theme-border-secondary { border-color: var(--border-secondary); }
+.theme-accent-primary { color: var(--accent-primary); }
+.theme-accent-secondary { background-color: var(--accent-secondary); }
+.theme-accent-hover:hover { background-color: var(--accent-hover); }
+.theme-card-bg { background-color: var(--card-bg); }
+.theme-dropdown-bg { background-color: var(--dropdown-bg); }
+.theme-input-bg { background-color: var(--input-bg); }
+.theme-button-primary { background-color: var(--button-primary); }
+.theme-button-primary-hover:hover { background-color: var(--button-primary-hover); }
+.theme-navbar-bg { background-color: var(--navbar-bg); }
+.theme-navbar-blur { background-color: var(--navbar-blur); }
+.theme-text-maroon { color: var(--text-maroon); }
+.theme-banner-bg { background-color: var(--banner-bg); }
+.theme-feature-text { color: var(--feature-text); }

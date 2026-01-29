@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "home": "होम",
+    "shop": "दुकान",
+    "myOrders": "मेरे ऑर्डर",
+    "contact": "संपर्क",
+    "login": "लॉगिन",
+    "logout": "लॉगआउट",
+    "cart": "कार्ट",
+    "profile": "प्रोफ़ाइल",
+    "profileSettings": "प्रोफ़ाइल सेटिंग्स"
+  },
+  "banner": {
+    "freeDelivery": "₹1000 से अधिक के ऑर्डर पर मुफ्त डिलीवरी",
+    "heading1": "तेज़, ताज़ा",
+    "heading2": "उत्पाद",
+    "heading3": "आपके दरवाज़े",
+    "heading4": "पर डिलीवर !!",
+    "subheading": "क्यों इंतज़ार करें? 30 मिनट से कम समय में अपनी साप्ताहिक किराने का सामान प्राप्त करें",
+    "searchPlaceholder": "ताज़ा उत्पादों की खोज करें...",
+    "aiRecipeButton": "AI रेसिपी सहायक",
+    "newBadge": "नया!!",
+    "lightningDelivery": "बिजली तेज़ डिलीवरी",
+    "pocketFriendly": "जेब-फ्रेंडली",
+    "returnEase": "रिटर्नईज़",
+    "dealRush": "डील रश"
+  },
+  "login": {
+    "welcomeBack": "वापस स्वागत है",
+    "email": "ईमेल पता",
+    "password": "पासवर्ड",
+    "rememberMe": "मुझे याद रखें",
+    "forgotPassword": "पासवर्ड भूल गए?",
+    "signIn": "साइन इन करें",
+    "orContinueWith": "या जारी रखें",
+    "noAccount": "खाता नहीं है?",
+    "signUp": "साइन अप करें",
+    "backToHome": "होम पर वापस जाएं",
+    "loginSuccess": "लॉगिन सफल!",
+    "loginError": "लॉगिन त्रुटि",
+    "googleLoginFailed": "Google लॉगिन विफल रहा। कृपया पुनः प्रयास करें।"
+  },
+  "signup": {
+    "createAccount": "खाता बनाएं",
+    "name": "पूरा नाम",
+    "email": "ईमेल पता",
+    "password": "पासवर्ड",
+    "confirmPassword": "पासवर्ड की पुष्टि करें",
+    "signUp": "साइन अप करें",
+    "alreadyHaveAccount": "पहले से खाता है?",
+    "signIn": "साइन इन करें"
+  },
+  "cart": {
+    "title": "शॉपिंग कार्ट",
+    "emptyCart": "आपकी कार्ट खाली है",
+    "addToCart": "कार्ट में जोड़ें",
+    "removeFromCart": "कार्ट से हटाएं",
+    "checkout": "चेकआउट",
+    "total": "कुल",
+    "subtotal": "उप-योग",
+    "delivery": "डिलीवरी",
+    "orderSummary": "ऑर्डर सारांश"
+  },
+  "profile": {
+    "myProfile": "मेरी प्रोफ़ाइल",
+    "editProfile": "प्रोफ़ाइल संपादित करें",
+    "changePassword": "पासवर्ड बदलें",
+    "myAddresses": "मेरे पते",
+    "settings": "सेटिंग्स"
+  },
+  "orders": {
+    "myOrders": "मेरे ऑर्डर",
+    "orderHistory": "ऑर्डर इतिहास",
+    "orderDetails": "ऑर्डर विवरण",
+    "trackOrder": "ऑर्डर ट्रैक करें",
+    "status": "स्थिति",
+    "date": "तारीख",
+    "amount": "राशि"
+  },
+  "common": {
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं",
+    "edit": "संपादित करें",
+    "submit": "जमा करें",
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफलता",
+    "confirm": "पुष्टि करें",
+    "search": "खोजें",
+    "filter": "फ़िल्टर",
+    "sort": "क्रमबद्ध करें",
+    "language": "भाषा"
+  },
+  "footer": {
+    "brandDescription": "2025 से आपको सबसे ताज़ा जैविक उत्पाद लाते हुए। हमारा मिशन आपके दरवाज़े पर ताज़ा खेत का अच्छा सामान पहुंचाना है।",
+    "quickLinks": "त्वरित लिंक",
+    "contactUs": "संपर्क करें",
+    "newsletter": "न्यूज़लेटर",
+    "newsletterText": "ताज़ा अपडेट, विशेष ऑफ़र और मौसमी व्यंजनों के लिए हमारे न्यूज़लेटर की सदस्यता लें!",
+    "emailPlaceholder": "आपका ईमेल पता",
+    "subscribe": "सदस्यता लें",
+    "privacyText": "हम आपकी गोपनीयता का सम्मान करते हैं। कभी भी सदस्यता समाप्त करें।",
+    "paymentMethods": "हम सभी प्रमुख भुगतान विधियों को स्वीकार करते हैं"
+  }
+}
