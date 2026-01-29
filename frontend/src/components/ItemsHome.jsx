@@ -38,6 +38,107 @@ const StockBadge = ({ stock }) => {
   }
 };
 
+// Uploader Badge Component
+const UploaderBadge = ({ uploaderRole, uploaderName }) => {
+  if (uploaderRole === 'admin') {
+    return (
+      <div className="mb-2">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+          <span className="mr-1">👤</span> Uploaded by Admin
+        </span>
+      </div>
+    );
+  } else if (uploaderRole === 'farmer') {
+    return (
+      <div className="mb-2">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+          <span className="mr-1">🌾</span> Farmer: {uploaderName || 'Local Farmer'}
+        </span>
+      </div>
+    );
+  }
+  return null;
+};
+
+// ============================================
+// NEW: FARMER ADDRESS COMPONENT
+// ============================================
+const FarmerAddressCard = ({ farmer }) => {
+  if (!farmer) return null;
+
+  const formatAddress = () => {
+    const parts = [];
+    
+    if (farmer.location?.city && farmer.location.city !== '-') {
+      parts.push(farmer.location.city);
+    }
+    
+    if (farmer.district) {
+      parts.push(farmer.district);
+    }
+    
+    if (farmer.location?.state && farmer.location.state !== 'Tamil Nadu') {
+      parts.push(farmer.location.state);
+    } else if (!farmer.location?.state) {
+      parts.push('Tamil Nadu');
+    }
+    
+    if (farmer.pincode) {
+      parts.push(farmer.pincode);
+    }
+    
+    return parts.join(', ') || 'Address not available';
+  };
+
+  return (
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+          <span className="text-white text-lg">🌾</span>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-bold text-green-900 mb-2">
+            Farmer Information
+          </h3>
+          
+          <div className="space-y-2 text-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-green-700 font-semibold min-w-[70px]">Name:</span>
+              <span className="text-green-900">{farmer.name}</span>
+            </div>
+
+            <div className="flex items-start gap-2">
+              <span className="text-green-700 font-semibold min-w-[70px]">📍 Address:</span>
+              <span className="text-green-900 font-medium">{formatAddress()}</span>
+            </div>
+
+            {farmer.certification && farmer.certification !== 'None' && (
+              <div className="flex items-start gap-2">
+                <span className="text-green-700 font-semibold min-w-[70px]">✓ Certified:</span>
+                <span className="text-green-900">{farmer.certification}</span>
+              </div>
+            )}
+
+            {farmer.experience && (
+              <div className="flex items-start gap-2">
+                <span className="text-green-700 font-semibold min-w-[70px]">📅 Experience:</span>
+                <span className="text-green-900">{farmer.experience} years</span>
+              </div>
+            )}
+
+            {farmer.phone && (
+              <div className="flex items-start gap-2">
+                <span className="text-green-700 font-semibold min-w-[70px]">📞 Phone:</span>
+                <span className="text-green-900">{farmer.phone}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ItemsHome = () => {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -55,7 +156,6 @@ const ItemsHome = () => {
   
   const isAuthenticated = Boolean(localStorage.getItem('authToken'));
   
-  // Get user's district from localStorage
   const userDistrict = (() => {
     try {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -83,7 +183,6 @@ const ItemsHome = () => {
     try {
       let url = `${API_BASE_URL}/api/items`;
       
-      // Add district filter if selected
       if (selectedDistrict) {
         url += `?district=${encodeURIComponent(selectedDistrict)}`;
       }
@@ -207,7 +306,6 @@ const ItemsHome = () => {
     ...categories
   ];
 
-  // Tamil Nadu Districts
   const tamilNaduDistricts = [
     "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore",
     "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram",
@@ -221,7 +319,6 @@ const ItemsHome = () => {
 
   return (
     <div className={itemsHomeStyles.page}>
-      {/* District Filter */}
       <div className="bg-white border-b shadow-sm py-3">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
@@ -356,7 +453,6 @@ const ItemsHome = () => {
                 const qty = getQuantity(product._id);
                 const stock = product.stock || 0;
                 
-                // Determine if product is from farmer or admin
                 const isFarmerProduct = product.farmerId && !product.adminUploaded;
                 const farmer = isFarmerProduct ? product.farmerId : null;
 
@@ -385,27 +481,10 @@ const ItemsHome = () => {
                         {product.name}
                       </h3>
                       
-                      {/* Farmer Info or Admin Label */}
-                      {isFarmerProduct && farmer ? (
-                        <div className="mb-2 text-xs space-y-1 bg-green-50 p-2 rounded border border-green-200">
-                          <p className="font-semibold text-green-800">🌾 From: {farmer.name}</p>
-                          {farmer.certification && farmer.certification !== 'None' && (
-                            <p className="text-green-700">✓ {farmer.certification} Certified</p>
-                          )}
-                          {farmer.experience && (
-                            <p className="text-green-700">📅 {farmer.experience} years experience</p>
-                          )}
-                          {farmer.district && (
-                            <p className="text-green-700">📍 {farmer.district}</p>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mb-2">
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
-                            ✨ Freshly updated item from the farm
-                          </span>
-                        </div>
-                      )}
+                      <UploaderBadge 
+                        uploaderRole={product.uploaderRole} 
+                        uploaderName={product.uploaderName} 
+                      />
 
                       <div className="mb-2">
                         <StockBadge stock={stock} />
@@ -496,19 +575,22 @@ const ItemsHome = () => {
         </main>
       </div>
 
-      {/* Product Detail Modal - Same as before */}
+      {/* ============================================ */}
+      {/* UPDATED: Product Detail Modal with Farmer Address */}
+      {/* ============================================ */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-semibold text-gray-800">Product Details</h2>
               <button
                 onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 p-2"
+                className="text-gray-500 hover:text-gray-700 p-2 transition-colors"
               >
                 <span className="text-2xl">&times;</span>
               </button>
             </div>
+            
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -527,6 +609,7 @@ const ItemsHome = () => {
                     />
                   </div>
                 </div>
+
                 <div className="space-y-4">
                   <div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -537,36 +620,27 @@ const ItemsHome = () => {
                     </p>
                   </div>
                   
-                  {/* Show farmer info or admin label in modal */}
-                  {selectedProduct.farmerId && !selectedProduct.adminUploaded ? (
-                    <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-                      <p className="text-sm font-semibold text-green-800 mb-2">🌾 Farmer Information</p>
-                      <div className="space-y-1 text-sm text-green-700">
-                        <p><span className="font-medium">Name:</span> {selectedProduct.farmerId.name}</p>
-                        {selectedProduct.farmerId.certification && selectedProduct.farmerId.certification !== 'None' && (
-                          <p><span className="font-medium">Certification:</span> {selectedProduct.farmerId.certification}</p>
-                        )}
-                        {selectedProduct.farmerId.experience && (
-                          <p><span className="font-medium">Experience:</span> {selectedProduct.farmerId.experience} years</p>
-                        )}
-                        {selectedProduct.farmerId.district && (
-                          <p><span className="font-medium">District:</span> {selectedProduct.farmerId.district}</p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                      <p className="text-sm text-blue-800 font-medium">✨ Freshly updated item from the farm</p>
-                    </div>
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-gray-200">
+                    <UploaderBadge 
+                      uploaderRole={selectedProduct.uploaderRole} 
+                      uploaderName={selectedProduct.uploaderName} 
+                    />
+                  </div>
+                  
+                  {/* ============================================ */}
+                  {/* NEW: FARMER ADDRESS CARD */}
+                  {/* ============================================ */}
+                  {selectedProduct.farmerId && !selectedProduct.adminUploaded && (
+                    <FarmerAddressCard farmer={selectedProduct.farmerId} />
                   )}
                   
                   <div className="p-3 rounded-lg bg-gray-50 border">
                     <StockBadge stock={selectedProduct.stock || 0} />
                   </div>
                   
-                  <div className="p-4 bg-emerald-50 rounded-lg">
+                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-600">Selling Price</span>
+                      <span className="text-sm text-gray-700 font-medium">Selling Price</span>
                       <span className="text-2xl font-bold text-emerald-600">
                         ₹{selectedProduct.price.toFixed(2)}
                       </span>
@@ -586,6 +660,16 @@ const ItemsHome = () => {
                         </div>
                       </>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-gray-800">Description</h3>
+                    <p className="text-gray-600 leading-relaxed text-sm">
+                      {selectedProduct.description || 
+                       `Fresh and organic ${selectedProduct.name.toLowerCase()} sourced directly from local farms. 
+                        Premium quality guaranteed with natural taste and maximum nutritional value. 
+                        Perfect for healthy cooking and daily consumption.`}
+                    </p>
                   </div>
                   
                   <div className="border-t pt-4">
@@ -612,25 +696,27 @@ const ItemsHome = () => {
                               closeModal();
                             }
                           }}
-                          className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center"
+                          className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center shadow-md"
                         >
                           <FaShoppingCart className="mr-2" />
                           Add to Cart
                         </button>
                       ) : (
                         <div className="space-y-3">
-                          <div className="flex items-center justify-center space-x-4 bg-emerald-50 rounded-lg p-3">
+                          <div className="flex items-center justify-center space-x-4 bg-emerald-50 rounded-lg p-3 border border-emerald-200">
                             <button
                               onClick={() => handleDecrease(selectedProduct)}
-                              className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
+                              className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-sm"
                             >
                               <FaMinus />
                             </button>
-                            <span className="text-xl font-bold text-emerald-700">{qty}</span>
+                            <span className="text-xl font-bold text-emerald-700 min-w-[40px] text-center">
+                              {qty}
+                            </span>
                             <button
                               onClick={() => handleIncrease(selectedProduct)}
                               disabled={qty >= stock}
-                              className={`w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors ${
+                              className={`w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-sm ${
                                 qty >= stock ? 'opacity-50 cursor-not-allowed' : ''
                               }`}
                             >
@@ -638,11 +724,11 @@ const ItemsHome = () => {
                             </button>
                           </div>
                           <p className="text-center text-sm text-gray-600">
-                            Total: ₹{(selectedProduct.price * qty).toFixed(2)}
+                            Total: <span className="font-bold text-emerald-600">₹{(selectedProduct.price * qty).toFixed(2)}</span>
                           </p>
                           {qty >= stock && (
-                            <p className="text-center text-xs text-orange-600 font-medium">
-                              Maximum quantity reached
+                            <p className="text-center text-xs text-orange-600 font-medium bg-orange-50 py-2 rounded">
+                              ⚠️ Maximum quantity reached
                             </p>
                           )}
                         </div>

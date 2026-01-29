@@ -38,6 +38,10 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: 0
     },
+    unit: {
+      type: String,
+      default: 'kg'
+    },
     // ============================================
     // FARMER/ADMIN UPLOAD DIFFERENTIATION
     // ============================================
@@ -49,6 +53,25 @@ const productSchema = new mongoose.Schema(
     adminUploaded: {
       type: Boolean,
       default: false
+    },
+    // ============================================
+    // NEW: UPLOADER TRACKING FIELDS
+    // ============================================
+    uploaderRole: {
+      type: String,
+      enum: ['admin', 'farmer'],
+      required: true,
+      default: 'admin'
+    },
+    uploaderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      default: null
+    },
+    uploaderName: {
+      type: String,
+      default: 'Admin',
+      trim: true
     },
     // ============================================
     // DISTRICT-BASED VISIBILITY FOR ADMIN UPLOADS

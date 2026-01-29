@@ -34,6 +34,30 @@ const StockBadge = ({ stock }) => {
   }
 };
 
+// ============================================
+// NEW: UPLOADER BADGE COMPONENT
+// ============================================
+const UploaderBadge = ({ uploaderRole, uploaderName }) => {
+  if (uploaderRole === 'admin') {
+    return (
+      <div className="mb-2">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+          <span className="mr-1">👤</span> Uploaded by Admin
+        </span>
+      </div>
+    );
+  } else if (uploaderRole === 'farmer') {
+    return (
+      <div className="mb-2">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+          <span className="mr-1">🌾</span> Farmer: {uploaderName || 'Local Farmer'}
+        </span>
+      </div>
+    );
+  }
+  return null;
+};
+
 const ProductCard = ({ item, onCardClick }) => {
   const { addToCart, removeFromCart, updateQuantity, cart } = useCart();
   const navigate = useNavigate();
@@ -135,6 +159,14 @@ const ProductCard = ({ item, onCardClick }) => {
           <h3 className={itemsPageStyles.productTitle}>{item.name}</h3>
         </div>
 
+        {/* ============================================ */}
+        {/* NEW: UPLOADER BADGE */}
+        {/* ============================================ */}
+        <UploaderBadge 
+          uploaderRole={item.uploaderRole} 
+          uploaderName={item.uploaderName} 
+        />
+
         <div className="mb-2">
           <StockBadge stock={stock} />
         </div>
@@ -144,9 +176,11 @@ const ProductCard = ({ item, onCardClick }) => {
             <span className={itemsPageStyles.currentPrice}>
               ₹{item.price.toFixed(2)}
             </span>
-            <span className={itemsPageStyles.oldPrice}>
-              ₹{(item.price * 1.2).toFixed(2)}
-            </span>
+            {item.oldPrice && (
+              <span className={itemsPageStyles.oldPrice}>
+                ₹{item.oldPrice.toFixed(2)}
+              </span>
+            )}
           </div>
           
           <div 
@@ -195,10 +229,10 @@ const Items = () => {
   const [expandedCategories, setExpandedCategories] = useState({});
   const [allExpanded, setAllExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState(''); // NEW: State for sorting
+  const [sortOrder, setSortOrder] = useState('');
   const [data, setData] = useState(groceryData);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [loading, setLoading] = useState(false); // NEW: Loading state
+  const [loading, setLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
@@ -211,15 +245,13 @@ const Items = () => {
     if (search) setSearchTerm(search);
   }, [location]);
 
-  // NEW: Fetch products with sorting
   useEffect(() => {
     fetchProducts();
-  }, [sortOrder]); // Re-fetch when sort order changes
+  }, [sortOrder]);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Build API URL with sort parameter
       let apiUrl = `${BACKEND_URL}/api/items`;
       if (sortOrder) {
         apiUrl += `?sort=${sortOrder}`;
@@ -369,7 +401,6 @@ const Items = () => {
     }
   };
 
-  // NEW: Handle sort change
   const handleSortChange = (e) => {
     const value = e.target.value;
     setSortOrder(value);
@@ -424,7 +455,7 @@ const Items = () => {
             </form>
           </div>
 
-          {/* NEW: Sort Dropdown */}
+          {/* Sort Dropdown */}
           <div className="flex justify-center">
             <div className="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-lg shadow-md border border-gray-200">
               <label htmlFor="sort-select" className="text-sm font-medium text-gray-700">
@@ -586,6 +617,16 @@ const Items = () => {
                     </p>
                   </div>
 
+                  {/* ============================================ */}
+                  {/* NEW: UPLOADER INFO IN MODAL */}
+                  {/* ============================================ */}
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-gray-200">
+                    <UploaderBadge 
+                      uploaderRole={selectedProduct.uploaderRole} 
+                      uploaderName={selectedProduct.uploaderName} 
+                    />
+                  </div>
+
                   <div className="p-3 rounded-lg bg-green-50 border border-green-200">
                     <StockBadge stock={selectedProduct.stock || 0} />
                   </div>
@@ -597,17 +638,21 @@ const Items = () => {
                         ₹{selectedProduct.price.toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Original Price</span>
-                      <span className="text-gray-500 line-through">
-                        ₹{(selectedProduct.price * 1.2).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="mt-2 text-right">
-                      <span className="text-green-600 text-sm font-medium">
-                        Save ₹{(selectedProduct.price * 0.2).toFixed(2)} (17% off)
-                      </span>
-                    </div>
+                    {selectedProduct.oldPrice && (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-500">Original Price</span>
+                          <span className="text-gray-500 line-through">
+                            ₹{selectedProduct.oldPrice.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-right">
+                          <span className="text-green-600 text-sm font-medium">
+                            Save ₹{(selectedProduct.oldPrice - selectedProduct.price).toFixed(2)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -629,7 +674,7 @@ const Items = () => {
                         return (
                           <button
                             disabled
-                            className="w-full bg-gray-400 text-green py-3 px-4 rounded-lg font-medium cursor-not-allowed"
+                            className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg font-medium cursor-not-allowed"
                           >
                             Out of Stock
                           </button>
@@ -644,7 +689,7 @@ const Items = () => {
                               closeModal();
                             }
                           }}
-                          className="w-full bg-emerald-600 text-green py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center"
+                          className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center"
                         >
                           <FaShoppingCart className="mr-2" />
                           Add to Cart
@@ -654,7 +699,7 @@ const Items = () => {
                           <div className="flex items-center justify-center space-x-4 bg-emerald-50 rounded-lg p-3">
                             <button
                               onClick={() => handleDecrease(selectedProduct)}
-                              className="w-10 h-10 bg-emerald-600 text-green rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
+                              className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
                             >
                               <FiMinus />
                             </button>
@@ -662,7 +707,7 @@ const Items = () => {
                             <button
                               onClick={() => handleIncrease(selectedProduct)}
                               disabled={qty >= stock}
-                              className={`w-10 h-10 bg-emerald-600 text-green rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors ${
+                              className={`w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors ${
                                 qty >= stock ? 'opacity-50 cursor-not-allowed' : ''
                               }`}
                             >
@@ -690,5 +735,89 @@ const Items = () => {
     </div>
   );
 };
+
+const FarmerAddressCard = ({ farmer }) => {
+  if (!farmer) return null;
+
+  const formatAddress = () => {
+    const parts = [];
+    
+    if (farmer.location?.city && farmer.location.city !== '-') {
+      parts.push(farmer.location.city);
+    }
+    
+    if (farmer.district) {
+      parts.push(farmer.district);
+    }
+    
+    if (farmer.location?.state && farmer.location.state !== 'Tamil Nadu') {
+      parts.push(farmer.location.state);
+    } else if (!farmer.location?.state) {
+      parts.push('Tamil Nadu');
+    }
+    
+    if (farmer.pincode) {
+      parts.push(farmer.pincode);
+    }
+    
+    return parts.join(', ') || 'Address not available';
+  };
+
+  return (
+    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+          <span className="text-white text-lg">🌾</span>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-bold text-green-900 mb-2">
+            Farmer Information
+          </h3>
+          
+          <div className="space-y-2 text-sm">
+            {/* Farmer Name */}
+            <div className="flex items-start gap-2">
+              <span className="text-green-700 font-semibold min-w-[70px]">Name:</span>
+              <span className="text-green-900">{farmer.name}</span>
+            </div>
+
+            {/* Farmer Address */}
+            <div className="flex items-start gap-2">
+              <span className="text-green-700 font-semibold min-w-[70px]">📍 Address:</span>
+              <span className="text-green-900 font-medium">{formatAddress()}</span>
+            </div>
+
+            {/* Certification */}
+            {farmer.certification && farmer.certification !== 'None' && (
+              <div className="flex items-start gap-2">
+                <span className="text-green-700 font-semibold min-w-[70px]">✓ Certified:</span>
+                <span className="text-green-900">{farmer.certification}</span>
+              </div>
+            )}
+
+            {/* Experience */}
+            {farmer.experience && (
+              <div className="flex items-start gap-2">
+                <span className="text-green-700 font-semibold min-w-[70px]">📅 Experience:</span>
+                <span className="text-green-900">{farmer.experience} years</span>
+              </div>
+            )}
+
+            {/* Contact */}
+            {farmer.phone && (
+              <div className="flex items-start gap-2">
+                <span className="text-green-700 font-semibold min-w-[70px]">📞 Phone:</span>
+                <span className="text-green-900">{farmer.phone}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Then update the Product Detail Modal section in the Items component
+// (Use the exact same modal code as shown above for ItemsHome.jsx)
 
 export default Items;

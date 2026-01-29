@@ -18,9 +18,8 @@ import productRouter from './routes/productRoute.js';
 import userRouter from './routes/userRoute.js';
 import reviewRouter from './routes/reviewRoute.js';
 
-// ============================================
 // INITIAL ENVIRONMENT CHECK
-// ============================================
+
 console.log('🔍 Environment Check:');
 console.log('  - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? '✅ Found' : '❌ Missing');
 console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? '✅ Found' : '❌ Missing');

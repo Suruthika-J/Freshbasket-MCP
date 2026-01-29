@@ -3,7 +3,7 @@
 
 import { Product } from '../models/productModel.js';
 import { checkAndNotifyStockLevel } from '../services/twilioService.js';
-
+import User from '../models/userModel.js';
 // ============================================
 // GET PRODUCTS WITH DISTRICT FILTERING
 // ============================================
@@ -35,10 +35,15 @@ export const getProducts = async (req, res, next) => {
     }
     
     // Build the query with population
-    let dbQuery = Product.find(query).populate({
-      path: 'farmerId',
-      select: 'name certification experience district'
-    });
+    let dbQuery = Product.find(query)
+      .populate({
+        path: 'farmerId',
+        select: 'name certification experience district'
+      })
+      .populate({
+        path: 'uploaderId',
+        select: 'name role'
+      });
     
     // Apply sorting
     if (sort === 'asc') {
@@ -81,7 +86,7 @@ export const getProducts = async (req, res, next) => {
 export const getProductsForDownload = async (req, res, next) => {
   try {
     const products = await Product.find()
-      .select('name category description oldPrice price stock')
+      .select('name category description oldPrice price stock uploaderRole uploaderName')
       .sort({ category: 1, name: 1 });
     
     res.json(products);
@@ -102,6 +107,7 @@ export const createProduct = async (req, res, next) => {
     console.log('📦 Creating product:', {
       name,
       userRole: req.user.role,
+      userId: req.user._id,
       visibleDistricts
     });
     
@@ -119,10 +125,15 @@ export const createProduct = async (req, res, next) => {
       unit: unit || 'kg',
     };
     
-    // Set farmerId or adminUploaded flag
+    // ============================================
+    // NEW: SET UPLOADER INFORMATION
+    // ============================================
     if (isAdminUpload) {
       productData.adminUploaded = true;
       productData.farmerId = null;
+      productData.uploaderRole = 'admin';
+      productData.uploaderId = req.user._id;
+      productData.uploaderName = 'Admin';
       
       // Parse and set visible districts for admin uploads
       if (visibleDistricts) {
@@ -131,9 +142,18 @@ export const createProduct = async (req, res, next) => {
           : JSON.parse(visibleDistricts);
       }
     } else {
+      // Farmer upload
       productData.farmerId = req.user._id;
       productData.adminUploaded = false;
       productData.visibleDistricts = [];
+      productData.uploaderRole = 'farmer';
+      productData.uploaderId = req.user._id;
+      productData.uploaderName = req.user.name;
+      
+      console.log('🌾 Farmer product - storing uploader info:', {
+        uploaderRole: 'farmer',
+        uploaderName: req.user.name
+      });
     }
     
     const product = await Product.create(productData);
@@ -142,6 +162,8 @@ export const createProduct = async (req, res, next) => {
       id: product._id,
       adminUploaded: product.adminUploaded,
       farmerId: product.farmerId,
+      uploaderRole: product.uploaderRole,
+      uploaderName: product.uploaderName,
       visibleDistricts: product.visibleDistricts
     });
     
@@ -239,7 +261,7 @@ export const getLowStockProducts = async (req, res, next) => {
     const threshold = Number(process.env.LOW_STOCK_THRESHOLD) || 10;
     const products = await Product.find({
       stock: { $gt: 0, $lt: threshold }
-    }).select('name stock category').sort({ stock: 1 });
+    }).select('name stock category uploaderRole uploaderName').sort({ stock: 1 });
     
     res.json(products);
   } catch (err) {
@@ -252,7 +274,7 @@ export const getOutOfStockProducts = async (req, res, next) => {
   try {
     const products = await Product.find({
       stock: 0
-    }).select('name stock category').sort({ name: 1 });
+    }).select('name stock category uploaderRole uploaderName').sort({ name: 1 });
     res.json(products);
   } catch (err) {
     next(err);
