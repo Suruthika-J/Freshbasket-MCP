@@ -1,187 +1,129 @@
 // frontend/src/page/FarmerPendingApproval.jsx
-// DEBUG VERSION - Replace with this to test navigation
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FiClock, FiHome, FiCheckCircle } from 'react-icons/fi';
+import { FiClock, FiHome } from 'react-icons/fi';
 import { GiFarmer } from 'react-icons/gi';
 
 const FarmerPendingApproval = () => {
   const navigate = useNavigate();
 
   const handleGoHome = () => {
-    console.log('🏠 Go Home button clicked!');
-    console.log('Current auth state:', {
-      token: localStorage.getItem('authToken'),
-      role: localStorage.getItem('userRole'),
-      userData: localStorage.getItem('userData')
-    });
-    
-    // Show toast notification
     toast.info('Redirecting to home page...', {
-      position: "top-center",
-      autoClose: 1500,
+      position: 'top-center',
+      autoClose: 1200,
     });
-    
-    // Clear farmer session data since they're not approved yet
+
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     localStorage.removeItem('userRole');
-    
-    // Dispatch auth change event
+
     window.dispatchEvent(new Event('authStateChanged'));
-    
-    console.log('Auth data cleared, navigating to home...');
-    
-    // Navigate to home page with slight delay
+
     setTimeout(() => {
       navigate('/', { replace: true });
-      console.log('Navigation executed');
-    }, 500);
+    }, 400);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
-      {/* Decorative circles */}
-      <div className="absolute top-10 left-10 w-32 h-32 bg-amber-200 rounded-full opacity-20 animate-pulse"></div>
-      <div className="absolute bottom-10 right-10 w-40 h-40 bg-orange-200 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '700ms' }}></div>
-      <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-yellow-200 rounded-full opacity-20 animate-pulse" style={{ animationDelay: '1000ms' }}></div>
+    <div className="min-h-screen bg-green-50 flex items-center justify-center px-4">
+      <div className="bg-white max-w-xl w-full rounded-xl shadow-md border border-green-200">
 
-      {/* Main Card */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all duration-500 hover:scale-105">
-        {/* Header Section with Gradient */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-8 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
+        {/* Header */}
+        <div className="flex flex-col items-center text-center p-8 border-b border-green-200">
           
-          <div className="relative z-10 flex flex-col items-center">
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg animate-bounce">
-              <GiFarmer className="w-14 h-14 text-amber-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-center mb-2">
-              Welcome to FreshBasket!
-            </h1>
-            <p className="text-amber-100 text-center text-lg">
-              Farmer Registration Received
-            </p>
+          {/* Jumping Farmer */}
+          <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <GiFarmer className="text-green-700 w-10 h-10 animate-bounce" />
           </div>
+
+          <h1 className="text-2xl font-semibold text-green-800">
+            Farmer Registration Submitted
+          </h1>
+          <p className="text-green-600 mt-2">
+            Your account is under review
+          </p>
         </div>
 
-        {/* Content Section */}
+        {/* Content */}
         <div className="p-8 space-y-6">
-          {/* Status Badge */}
+
+          {/* Rotating Clock Status */}
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-amber-100 border-2 border-amber-300 rounded-full">
-              <FiClock className="w-5 h-5 text-amber-600 animate-spin" style={{ animationDuration: '3s' }} />
-              <span className="font-semibold text-amber-800">Pending Admin Approval</span>
+            <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-green-100 border border-green-300">
+              <FiClock className="text-green-700 animate-spin-slow" />
+              <span className="text-sm font-medium text-green-800">
+                Pending Admin Approval
+              </span>
             </div>
           </div>
 
-          {/* Message Box */}
-          <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-lg">
-            <h3 className="font-bold text-gray-800 text-lg mb-3 flex items-center gap-2">
-              <FiCheckCircle className="text-amber-600" />
-              What's Next?
-            </h3>
-            <p className="text-gray-700 leading-relaxed mb-4">
-              Thank you for registering as a farmer on FreshBasket! Your account has been successfully created and is currently under review by our admin team.
+          {/* Message */}
+          <div className="text-green-800 text-sm leading-relaxed">
+            <p className="mb-3">
+              Thank you for registering as a farmer on{' '}
+              <span className="font-medium">FreshBasket</span>.
+              Your details have been successfully submitted.
             </p>
-            <p className="text-gray-700 leading-relaxed">
-              You will receive an email notification once your account is approved. After approval, you'll be able to:
-            </p>
-          </div>
-
-          {/* Features List */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">1</span>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">List Your Products</p>
-                <p className="text-sm text-gray-600">Add and manage your farm produce</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">2</span>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Manage Orders</p>
-                <p className="text-sm text-gray-600">Track and fulfill customer orders</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">3</span>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Set Your Prices</p>
-                <p className="text-sm text-gray-600">Control pricing and inventory</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
-              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold">4</span>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-800">Direct Sales</p>
-                <p className="text-sm text-gray-600">Sell directly to customers</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Estimated Time */}
-          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600 text-center">
-              ⏱️ <span className="font-semibold">Estimated approval time:</span> 24-48 hours
+            <p>
+              Our admin team is currently reviewing your application. You will
+              receive an email once your account is approved.
             </p>
           </div>
 
-          {/* Debug Info (Remove in production) */}
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <p className="text-xs text-blue-800 font-mono">
-              DEBUG: Click button to test navigation
-            </p>
+          {/* Features */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            {[
+              'List your farm products',
+              'Manage customer orders',
+              'Control pricing & stock',
+              'Sell directly to customers',
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-800"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+
+          {/* Time Info */}
+          <div className="text-center text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg py-3">
+            ⏱️ Estimated approval time:{' '}
+            <span className="font-medium">24 – 48 hours</span>
           </div>
 
           {/* Action Button */}
-          <div className="pt-4">
-            <button
-              onClick={handleGoHome}
-              className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-emerald-500/50 transform hover:scale-105 transition-all duration-300"
-            >
-              <FiHome className="w-6 h-6 group-hover:scale-110 transition-transform" />
-              <span>Go to Home Page</span>
-            </button>
-          </div>
+          <button
+            onClick={handleGoHome}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-green-700 text-white font-medium hover:bg-green-800 transition"
+          >
+            <FiHome />
+            Go to Home Page
+          </button>
 
-          {/* Alternative Navigation (for testing) */}
-          <div className="pt-2">
+          {/* Support */}
+          <p className="text-center text-xs text-green-600">
+            Need help? Contact us at{' '}
             <a
-              href="/"
-              className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-gray-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-gray-500/50 transform hover:scale-105 transition-all duration-300"
+              href="mailto:quickcommerceapp@gmail.com"
+              className="text-green-800 font-medium hover:underline"
             >
-              <FiHome className="w-6 h-6 group-hover:scale-110 transition-transform" />
-              <span>Alternative: Go Home (href)</span>
+              quickcommerceapp@gmail.com
             </a>
-          </div>
-
-          {/* Contact Support */}
-          <div className="text-center pt-4">
-            <p className="text-sm text-gray-500">
-              Questions? Contact us at{' '}
-              <a href="mailto:support@freshbasket.com" className="text-amber-600 hover:text-amber-700 font-semibold">
-                support@freshbasket.com
-              </a>
-            </p>
-          </div>
+          </p>
         </div>
       </div>
+
+      {/* Custom slow spin animation */}
+      <style>
+        {`
+          .animate-spin-slow {
+            animation: spin 3s linear infinite;
+          }
+        `}
+      </style>
     </div>
   );
 };
