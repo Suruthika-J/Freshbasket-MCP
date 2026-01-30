@@ -1,4 +1,4 @@
-// frontend/src/components/BannerHome.jsx
+// frontend/src/components/BannerHome_WavyStyle.jsx
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiSearch, FiTruck, FiUsers } from 'react-icons/fi';
@@ -25,18 +25,14 @@ const BannerHome = ({ onSearch }) => {
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const navigate = useNavigate();
 
-  // Check authentication status
   const isAuthenticated = Boolean(localStorage.getItem('authToken'));
   const userRole = localStorage.getItem('userRole');
 
-  // Auto-rotate carousel every 3 seconds (pauses on hover)
   useEffect(() => {
     if (!isAutoPlay) return;
-    
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % carouselImages.length);
     }, 3000);
-
     return () => clearInterval(interval);
   }, [isAutoPlay]);
 
@@ -45,7 +41,6 @@ const BannerHome = ({ onSearch }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmedTerm = searchTerm.trim();
-
     if (trimmedTerm) {
       if (onSearch) {
         const searchWords = trimmedTerm.toLowerCase().split(/\s+/);
@@ -67,10 +62,8 @@ const BannerHome = ({ onSearch }) => {
 
   return (
     <div className="relative overflow-hidden pt-16">
-      {/* Background gradient */}
       <div className={bannerStyles.backgroundGradient}></div>
 
-      {/* Decorative circles */}
       <div className="hidden sm:block absolute top-6 left-6 w-20 h-20 rounded-full bg-teal-100 opacity-30"></div>
       <div className="hidden md:block absolute bottom-12 right-28 w-32 h-32 rounded-full bg-seafoam-200 opacity-30"></div>
       <div className="hidden lg:block absolute top-1/3 right-1/4 w-16 h-16 rounded-full bg-mint-200 opacity-30"></div>
@@ -78,18 +71,18 @@ const BannerHome = ({ onSearch }) => {
       <div className="relative z-10 mt-8 sm:mt-10 lg:mt-12 mx-auto px-4 sm:px-6 md:px-8 lg:px-16 py-8 sm:py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
 
-          {/* Image Carousel with Abnormal Organic Shape */}
+          {/* WAVY LIQUID SHAPE CAROUSEL */}
           <div className="relative flex justify-center">
             <div 
               className="relative w-full max-w-md group cursor-pointer"
               onMouseEnter={() => setIsAutoPlay(false)}
               onMouseLeave={() => setIsAutoPlay(true)}
             >
-              {/* Organic Blob Shape Container */}
-              <div className="relative aspect-square overflow-hidden shadow-2xl" 
+              {/* Liquid/Wavy Shape Container */}
+              <div className="relative aspect-square overflow-hidden shadow-2xl transition-all duration-700 group-hover:shadow-emerald-500/50" 
                    style={{
-                     clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                     borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
+                     borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+                     animation: 'morphShape 8s ease-in-out infinite'
                    }}>
                 {carouselImages.map((imageSrc, index) => (
                   <img
@@ -98,75 +91,50 @@ const BannerHome = ({ onSearch }) => {
                     alt={`Fresh produce ${index + 1}`}
                     className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ease-in-out ${
                       index === currentIndex 
-                        ? 'opacity-100 scale-100 group-hover:scale-110 group-hover:rotate-2' 
-                        : 'opacity-0 scale-95'
+                        ? 'opacity-100 scale-100 group-hover:scale-110' 
+                        : 'opacity-0 scale-90'
                     }`}
                   />
                 ))}
                 
-                {/* Overlay gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/30 via-transparent to-teal-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
 
-              {/* Morphing border effect */}
-              <div 
-                className="absolute inset-0 border-4 border-emerald-400/50 group-hover:border-emerald-500 transition-all duration-700 group-hover:scale-105"
-                style={{
-                  clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
-                }}
-              ></div>
-
-              {/* Discount Badge with organic shape */}
-              <div className="absolute bottom-8 left-8 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                <div className="relative bg-gradient-to-br from-yellow-400 to-orange-400 text-gray-900 font-bold px-6 py-3 shadow-lg"
-                     style={{
-                       clipPath: 'polygon(10% 0%, 90% 0%, 100% 20%, 100% 80%, 90% 100%, 10% 100%, 0% 80%, 0% 20%)',
-                       borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%'
-                     }}>
-                  <span className="text-sm font-extrabold">Fresh Daily!</span>
+              {/* Floating Badge */}
+              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-300">
+                <div className="relative bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white font-bold px-8 py-3 shadow-xl"
+                     style={{ borderRadius: '50% 20% / 10% 40%' }}>
+                  <span className="text-sm font-extrabold">🌿 FARM FRESH</span>
                 </div>
               </div>
 
-              {/* Carousel Indicators with custom shape */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+              {/* Wavy Indicators */}
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-3">
                 {carouselImages.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}
                     className={`transition-all duration-300 ${
                       index === currentIndex 
-                        ? 'bg-white w-8 h-3' 
-                        : 'bg-white/50 hover:bg-white/75 w-3 h-3'
+                        ? 'bg-white w-10 h-4' 
+                        : 'bg-white/50 hover:bg-white/75 w-4 h-4'
                     }`}
                     style={{
-                      clipPath: index === currentIndex 
-                        ? 'polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%)'
-                        : 'circle(50%)'
+                      borderRadius: index === currentIndex ? '50% / 100%' : '50%'
                     }}
-                    aria-label={`Go to slide ${index + 1}`}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Decorative organic shapes */}
-            <div className="hidden sm:block absolute -top-6 -right-6 w-24 h-24 bg-mint-200 opacity-30"
-                 style={{
-                   clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
-                   borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%'
-                 }}></div>
-            <div className="hidden md:block absolute -bottom-6 -left-6 w-32 h-32 bg-teal-100 opacity-30"
-                 style={{
-                   borderRadius: '63% 37% 54% 46% / 55% 48% 52% 45%'
-                 }}></div>
-            <div className="hidden lg:block absolute top-1/4 -left-8 w-20 h-20 bg-seafoam-100 opacity-30"
-                 style={{
-                   clipPath: 'polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%)',
-                 }}></div>
+            {/* Wavy decorative elements */}
+            <div className="hidden sm:block absolute -top-8 -right-8 w-28 h-28 bg-gradient-to-br from-mint-200 to-teal-200 opacity-40"
+                 style={{ borderRadius: '70% 30% 30% 70% / 60% 40% 60% 40%' }}></div>
+            <div className="hidden md:block absolute -bottom-8 -left-8 w-36 h-36 bg-gradient-to-tr from-seafoam-200 to-emerald-200 opacity-40"
+                 style={{ borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%' }}></div>
           </div>
 
-          {/* Content on the Right */}
+          {/* Content Section */}
           <div className="text-center md:text-left">
             <div className={bannerStyles.tag}>
               <span className="flex items-center text-sm sm:text-base">
@@ -190,9 +158,7 @@ const BannerHome = ({ onSearch }) => {
               {t('banner.subheading') || 'No Middleman – Direct from Farmers to You'}
             </p>
 
-            {/* ========== CONDITIONAL CONTENT BASED ON AUTH STATUS ========== */}
             {isAuthenticated && userRole === 'user' ? (
-              // ========== SEARCH BAR FOR LOGGED-IN CUSTOMERS ==========
               <>
                 <form onSubmit={handleSubmit} className={bannerStyles.form}>
                   <input
@@ -202,15 +168,11 @@ const BannerHome = ({ onSearch }) => {
                     placeholder={t('banner.searchPlaceholder') || 'Search for fresh produce...'}
                     className={bannerStyles.input}
                   />
-                  <button
-                    type="submit"
-                    className={bannerStyles.searchButton}
-                  >
+                  <button type="submit" className={bannerStyles.searchButton}>
                     <FiSearch className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </form>
 
-                {/* AI Recipe Assistant Button */}
                 <div className="mt-6 flex justify-center md:justify-start">
                   <button
                     onClick={() => navigate('/recipe-chatbot')}
@@ -224,26 +186,18 @@ const BannerHome = ({ onSearch }) => {
                   </button>
                 </div>
 
-                {/* Features Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-8">
                   {getFeatures(t).map((f, i) => (
-                    <div
-                      key={i}
-                      className={bannerStyles.featureItem}
-                    >
+                    <div key={i} className={bannerStyles.featureItem}>
                       <div className="text-teal-600 mb-1">{f.icon}</div>
-                      <span className={bannerStyles.featureText}>
-                        {f.text}
-                      </span>
+                      <span className={bannerStyles.featureText}>{f.text}</span>
                     </div>
                   ))}
                 </div>
               </>
             ) : (
-              // ========== LOGIN BUTTONS FOR NON-AUTHENTICATED ==========
               <>
                 <div className="mt-8 space-y-4">
-                  {/* Customer Login Button */}
                   <button
                     onClick={handleCustomerLogin}
                     className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-emerald-500/50 transform hover:scale-105 transition-all duration-300"
@@ -252,7 +206,6 @@ const BannerHome = ({ onSearch }) => {
                     <span>Login as Customer</span>
                   </button>
 
-                  {/* Farmer Login Button */}
                   <button
                     onClick={handleFarmerLogin}
                     className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-amber-500/50 transform hover:scale-105 transition-all duration-300"
@@ -262,7 +215,6 @@ const BannerHome = ({ onSearch }) => {
                   </button>
                 </div>
 
-                {/* Info Text */}
                 <div className="mt-6 text-center md:text-left">
                   <p className="text-sm text-gray-600">
                     🌾 <strong>Farmers:</strong> Sell your produce directly to customers
@@ -277,6 +229,24 @@ const BannerHome = ({ onSearch }) => {
 
         </div>
       </div>
+
+      {/* CSS Animation for morphing shape */}
+      <style jsx>{`
+        @keyframes morphShape {
+          0%, 100% {
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+          }
+          25% {
+            border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+          }
+          50% {
+            border-radius: 50% 60% 30% 70% / 60% 40% 60% 40%;
+          }
+          75% {
+            border-radius: 60% 40% 60% 40% / 70% 30% 40% 60%;
+          }
+        }
+      `}</style>
     </div>
   );
 };
