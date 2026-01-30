@@ -10,8 +10,9 @@ import {
     getLowStockProducts,
     getOutOfStockProducts,
     getFarmerProducts,
+    getProductsByFarmerId, // NEW IMPORT
 } from '../controllers/productController.js';
-import auth from '../middleware/auth.js';
+import auth, { requireAdmin } from '../middleware/auth.js';
 
 // Import Twilio service for test endpoints
 import { sendSMS, sendOutOfStockAlert, sendLowStockAlert } from '../services/twilioService.js';
@@ -50,6 +51,10 @@ itemrouter.delete('/:id', deleteProduct);
 
 // GET /api/product/farmer-products - Get products for logged-in farmer
 itemrouter.get('/farmer-products', auth, getFarmerProducts);
+
+// ====== NEW ADMIN-ONLY ROUTE ======
+// GET /api/items/admin/farmer/:farmerId/products - Get all products by a specific farmer (Admin only)
+itemrouter.get('/admin/farmer/:farmerId/products', auth, requireAdmin, getProductsByFarmerId);
 
 // ====== TEST ROUTES (Remove in Production) ======
 

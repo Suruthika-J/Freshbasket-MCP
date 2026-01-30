@@ -4,6 +4,7 @@
 import { Product } from '../models/productModel.js';
 import { checkAndNotifyStockLevel } from '../services/twilioService.js';
 import User from '../models/userModel.js';
+
 // ============================================
 // GET PRODUCTS WITH DISTRICT FILTERING
 // ============================================
@@ -297,6 +298,60 @@ export const getFarmerProducts = async (req, res, next) => {
     });
   } catch (err) {
     console.error('❌ Error fetching farmer products:', err);
+    next(err);
+  }
+};
+
+// ============================================
+// NEW: ADMIN-ONLY - GET PRODUCTS BY FARMER ID
+// ============================================
+export const getProductsByFarmerId = async (req, res, next) => {
+  try {
+    const { farmerId } = req.params;
+    
+    console.log('👨‍🌾 Admin fetching products for farmer:', farmerId);
+    
+    // Verify the farmer exists
+    const farmer = await User.findById(farmerId);
+    if (!farmer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Farmer not found'
+      });
+    }
+    
+    if (farmer.role !== 'farmer') {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not a farmer'
+      });
+    }
+    
+    // Fetch all products uploaded by this farmer
+    const products = await Product.find({ 
+      farmerId: farmerId,
+      uploaderRole: 'farmer'
+    })
+    .sort({ createdAt: -1 })
+    .select('name category description price oldPrice stock imageUrl unit createdAt updatedAt');
+    
+    console.log(`📦 Retrieved ${products.length} products for farmer ${farmer.name}`);
+    
+    res.json({
+      success: true,
+      farmer: {
+        id: farmer._id,
+        name: farmer.name,
+        email: farmer.email,
+        district: farmer.district,
+        certification: farmer.certification,
+        experience: farmer.experience
+      },
+      products,
+      count: products.length
+    });
+  } catch (err) {
+    console.error('❌ Error fetching products by farmer ID:', err);
     next(err);
   }
 };
