@@ -1,20 +1,29 @@
-// frontend/src/CartContext.jsx
+// File: CartContext.jsx
+// Path: frontend/src/CartContext.jsx
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const CartContext = createContext();
 
 const API_BASE_URL = 'http://localhost:4000/api';
 
+// ============================================
+// FIXED: Better Auth Token Retrieval
+// ============================================
 const getAuthHeader = () => {
   const token = localStorage.getItem('authToken') || 
                 localStorage.getItem('token') || 
                 sessionStorage.getItem('token');
   
   if (!token) {
-    console.log('No auth token found');
+    console.log('⚠️ No auth token found in storage');
     return {};
   }
+  
+  console.log('✅ Auth token found, attaching to request');
   
   return { 
     headers: { 
@@ -22,6 +31,34 @@ const getAuthHeader = () => {
       'Content-Type': 'application/json'
     } 
   };
+};
+
+// ============================================
+// HANDLE TOKEN EXPIRATION - AUTO LOGOUT
+// ============================================
+const handleTokenExpiration = () => {
+  console.log('🔒 Token expired - clearing session');
+  
+  // Clear all auth data
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('token');
+  localStorage.removeItem('userData');
+  localStorage.removeItem('userRole');
+  sessionStorage.clear();
+  
+  // Dispatch auth state change
+  window.dispatchEvent(new Event('authStateChanged'));
+  
+  // Show notification
+  toast.error('Session expired. Please log in again.', {
+    position: 'top-center',
+    autoClose: 3000,
+  });
+  
+  // Redirect to login after a short delay
+  setTimeout(() => {
+    window.location.href = '/login';
+  }, 1000);
 };
 
 const normalizeItems = (rawItems = []) => {
@@ -60,11 +97,13 @@ export const CartProvider = ({ children }) => {
     const token = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
     
+    console.log('🔐 CartContext init - Token:', !!token, 'Role:', userRole);
+    
     // Only fetch cart for regular users
     if (token && userRole !== 'agent') {
       fetchCart();
     } else {
-      console.log('User not authenticated or is delivery agent, skipping cart fetch');
+      console.log('⏭️ Skipping cart fetch - not authenticated or is delivery agent');
       setLoading(false);
     }
 
@@ -72,6 +111,8 @@ export const CartProvider = ({ children }) => {
     const handleAuthChange = () => {
       const newToken = localStorage.getItem('authToken');
       const newRole = localStorage.getItem('userRole');
+      
+      console.log('🔄 Auth state changed - Token:', !!newToken, 'Role:', newRole);
       
       if (newToken && newRole !== 'agent') {
         fetchCart();
@@ -90,7 +131,7 @@ export const CartProvider = ({ children }) => {
     
     // Don't fetch if no auth or user is delivery agent
     if (!authHeader.headers || userRole === 'agent') {
-      console.log('Skipping cart fetch - no auth token or user is agent');
+      console.log('⏭️ Skipping cart fetch - no auth token or user is agent');
       setCart([]);
       setLoading(false);
       return;
@@ -99,6 +140,8 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     try {
       setError(null);
+      
+      console.log('📡 Fetching cart from:', `${API_BASE_URL}/cart`);
       
       const { data } = await axios.get(
         `${API_BASE_URL}/cart`,
@@ -114,13 +157,26 @@ export const CartProvider = ({ children }) => {
                        data.cart?.items || [];
       
       setCart(normalizeItems(rawItems));
-      console.log('Cart fetched successfully:', rawItems.length, 'items');
+      console.log('✅ Cart fetched successfully:', rawItems.length, 'items');
       
     } catch (err) {
-      console.error('Error fetching cart:', err.message);
+      console.error('❌ Error fetching cart:', err.message);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
       
+      // ============================================
+      // CRITICAL FIX: Handle Token Expiration
+      // ============================================
       if (err.response?.status === 401) {
-        console.log('Auth token invalid or expired');
+        const errorMsg = err.response?.data?.message || '';
+        
+        if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+          console.log('🔒 Token expired or invalid - logging out');
+          handleTokenExpiration();
+          return; // Stop execution
+        }
+        
+        console.log('🔒 Auth token invalid');
         setCart([]);
         setError('Please log in to view your cart');
       } else if (err.response) {
@@ -142,12 +198,14 @@ export const CartProvider = ({ children }) => {
     const userRole = localStorage.getItem('userRole');
     
     if (!authHeader.headers || userRole === 'agent') {
-      console.log('Cannot refresh cart - no auth token or user is agent');
+      console.log('⏭️ Cannot refresh cart - no auth token or user is agent');
       return;
     }
 
     try {
       setError(null);
+      
+      console.log('🔄 Refreshing cart...');
       
       const { data } = await axios.get(
         `${API_BASE_URL}/cart`,
@@ -163,12 +221,18 @@ export const CartProvider = ({ children }) => {
                        data.cart?.items || [];
       
       setCart(normalizeItems(rawItems));
-      console.log('Cart refreshed');
+      console.log('✅ Cart refreshed:', rawItems.length, 'items');
       
     } catch (err) {
-      console.error('Error refreshing cart:', err.message);
+      console.error('❌ Error refreshing cart:', err.message);
       
+      // Handle token expiration on refresh
       if (err.response?.status === 401) {
+        const errorMsg = err.response?.data?.message || '';
+        if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+          handleTokenExpiration();
+          return;
+        }
         setCart([]);
         setError('Please log in to view your cart');
       } else if (err.response) {
@@ -198,6 +262,8 @@ export const CartProvider = ({ children }) => {
     try {
       setError(null);
       
+      console.log('➕ Adding to cart:', { productId, quantity });
+      
       await axios.post(
         `${API_BASE_URL}/cart`,
         { productId, quantity },
@@ -209,12 +275,17 @@ export const CartProvider = ({ children }) => {
       );
       
       await refreshCart();
-      console.log('Item added to cart');
+      console.log('✅ Item added to cart');
       
     } catch (err) {
-      console.error('Error adding to cart:', err.message);
+      console.error('❌ Error adding to cart:', err.message);
       
       if (err.response?.status === 401) {
+        const errorMsg = err.response?.data?.message || '';
+        if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+          handleTokenExpiration();
+          return;
+        }
         setError('Please log in to add items');
       } else if (err.response) {
         setError(`Add failed: ${err.response.data?.message || err.response.status}`);
@@ -244,6 +315,8 @@ export const CartProvider = ({ children }) => {
     try {
       setError(null);
       
+      console.log('🔄 Updating quantity:', { lineId, quantity });
+      
       await axios.put(
         `${API_BASE_URL}/cart/${lineId}`,
         { quantity },
@@ -255,12 +328,17 @@ export const CartProvider = ({ children }) => {
       );
       
       await refreshCart();
-      console.log('Quantity updated');
+      console.log('✅ Quantity updated');
       
     } catch (err) {
-      console.error('Error updating quantity:', err.message);
+      console.error('❌ Error updating quantity:', err.message);
       
       if (err.response?.status === 401) {
+        const errorMsg = err.response?.data?.message || '';
+        if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+          handleTokenExpiration();
+          return;
+        }
         setError('Please log in');
       } else if (err.response) {
         setError(`Update failed: ${err.response.data?.message || err.response.status}`);
@@ -290,6 +368,8 @@ export const CartProvider = ({ children }) => {
     try {
       setError(null);
       
+      console.log('🗑️ Removing from cart:', lineId);
+      
       await axios.delete(
         `${API_BASE_URL}/cart/${lineId}`,
         {
@@ -300,12 +380,17 @@ export const CartProvider = ({ children }) => {
       );
       
       await refreshCart();
-      console.log('Item removed from cart');
+      console.log('✅ Item removed from cart');
       
     } catch (err) {
-      console.error('Error removing from cart:', err.message);
+      console.error('❌ Error removing from cart:', err.message);
       
       if (err.response?.status === 401) {
+        const errorMsg = err.response?.data?.message || '';
+        if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+          handleTokenExpiration();
+          return;
+        }
         setError('Please log in');
       } else if (err.response) {
         setError(`Remove failed: ${err.response.data?.message || err.response.status}`);
@@ -335,6 +420,8 @@ export const CartProvider = ({ children }) => {
     try {
       setError(null);
       
+      console.log('🧹 Clearing cart...');
+      
       await axios.post(
         `${API_BASE_URL}/cart/clear`,
         {},
@@ -346,12 +433,17 @@ export const CartProvider = ({ children }) => {
       );
       
       setCart([]);
-      console.log('Cart cleared');
+      console.log('✅ Cart cleared');
       
     } catch (err) {
-      console.error('Error clearing cart:', err.message);
+      console.error('❌ Error clearing cart:', err.message);
       
       if (err.response?.status === 401) {
+        const errorMsg = err.response?.data?.message || '';
+        if (errorMsg.includes('expired') || errorMsg.includes('invalid')) {
+          handleTokenExpiration();
+          return;
+        }
         setError('Please log in');
       } else if (err.response) {
         setError(`Clear failed: ${err.response.data?.message || err.response.status}`);

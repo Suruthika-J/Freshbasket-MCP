@@ -1,3 +1,5 @@
+//frontend/src/admin/assets/dummyData.jsx
+// Dummy data for initial orders in the admin dashboard
 const initialOrders = [
   {
     id: 'ORD-1001',

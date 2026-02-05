@@ -1,4 +1,4 @@
-// src/assets/dummyStyles.js
+// frontend/src/assets/dummyStyles.js
 export const adminNavbarStyles = {
   nav: "bg-emerald-800 text-white shadow-lg",
   container: "max-w-6xl mx-auto px-4",

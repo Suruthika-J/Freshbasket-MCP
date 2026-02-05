@@ -6,7 +6,7 @@ import { checkAndNotifyStockLevel } from '../services/twilioService.js';
 import User from '../models/userModel.js';
 
 // ============================================
-// GET PRODUCTS WITH DISTRICT FILTERING
+// GET PRODUCTS WITH DISTRICT FILTERING (FIXED)
 // ============================================
 export const getProducts = async (req, res, next) => {
   try {
@@ -18,13 +18,23 @@ export const getProducts = async (req, res, next) => {
     let query = {};
     
     // ============================================
-    // DISTRICT-BASED FILTERING LOGIC
+    // FIXED: DISTRICT-BASED FILTERING LOGIC
     // ============================================
     if (district) {
+      // Find all farmer IDs in this district first
+      const farmersInDistrict = await User.find({
+        role: 'farmer',
+        district: district
+      }).select('_id');
+      
+      const farmerIds = farmersInDistrict.map(f => f._id);
+      
+      console.log(`🌾 Found ${farmerIds.length} farmers in ${district}`);
+      
       query.$or = [
         // Farmer products matching district
         { 
-          farmerId: { $ne: null },
+          farmerId: { $in: farmerIds },
           adminUploaded: false
         },
         // Admin products with matching district in visibleDistricts
@@ -39,7 +49,7 @@ export const getProducts = async (req, res, next) => {
     let dbQuery = Product.find(query)
       .populate({
         path: 'farmerId',
-        select: 'name certification experience district'
+        select: 'name certification experience district location phone'
       })
       .populate({
         path: 'uploaderId',
@@ -60,25 +70,11 @@ export const getProducts = async (req, res, next) => {
     
     const products = await dbQuery;
     
-    // Additional filtering based on district for farmer products
-    const filteredProducts = district 
-      ? products.filter(product => {
-          // Admin products already filtered by MongoDB query
-          if (product.adminUploaded) return true;
-          
-          // Farmer products - check farmer's district
-          if (product.farmerId && product.farmerId.district === district) {
-            return true;
-          }
-          
-          return false;
-        })
-      : products;
-    
-    console.log(`📦 Retrieved ${filteredProducts.length} products`);
-    res.json(filteredProducts);
+    console.log(`📦 Retrieved ${products.length} products`);
+    res.json(products);
   } catch (err) {
     console.error('❌ Error fetching products:', err);
+    console.error('Error stack:', err.stack);
     next(err);
   }
 };
@@ -92,6 +88,7 @@ export const getProductsForDownload = async (req, res, next) => {
     
     res.json(products);
   } catch (err) {
+    console.error('❌ Error in getProductsForDownload:', err);
     next(err);
   }
 };
@@ -126,9 +123,6 @@ export const createProduct = async (req, res, next) => {
       unit: unit || 'kg',
     };
     
-    // ============================================
-    // NEW: SET UPLOADER INFORMATION
-    // ============================================
     if (isAdminUpload) {
       productData.adminUploaded = true;
       productData.farmerId = null;
@@ -235,6 +229,7 @@ export const updateProduct = async (req, res, next) => {
     
     res.json(updatedProduct);
   } catch (err) {
+    console.error('❌ Error in updateProduct:', err);
     next(err);
   }
 };
@@ -252,6 +247,7 @@ export const deleteProduct = async (req, res, next) => {
       message: 'Product removed successfully'
     });
   } catch (err) {
+    console.error('❌ Error in deleteProduct:', err);
     next(err);
   }
 };
@@ -266,6 +262,7 @@ export const getLowStockProducts = async (req, res, next) => {
     
     res.json(products);
   } catch (err) {
+    console.error('❌ Error in getLowStockProducts:', err);
     next(err);
   }
 };
@@ -278,6 +275,7 @@ export const getOutOfStockProducts = async (req, res, next) => {
     }).select('name stock category uploaderRole uploaderName').sort({ name: 1 });
     res.json(products);
   } catch (err) {
+    console.error('❌ Error in getOutOfStockProducts:', err);
     next(err);
   }
 };
@@ -302,9 +300,7 @@ export const getFarmerProducts = async (req, res, next) => {
   }
 };
 
-// ============================================
-// NEW: ADMIN-ONLY - GET PRODUCTS BY FARMER ID
-// ============================================
+// ADMIN-ONLY - GET PRODUCTS BY FARMER ID
 export const getProductsByFarmerId = async (req, res, next) => {
   try {
     const { farmerId } = req.params;

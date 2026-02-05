@@ -60,9 +60,7 @@ const UploaderBadge = ({ uploaderRole, uploaderName }) => {
   return null;
 };
 
-// ============================================
-// NEW: FARMER ADDRESS COMPONENT
-// ============================================
+// Farmer Address Component
 const FarmerAddressCard = ({ farmer }) => {
   if (!farmer) return null;
 
@@ -187,14 +185,18 @@ const ItemsHome = () => {
         url += `?district=${encodeURIComponent(selectedDistrict)}`;
       }
       
+      console.log('📡 Fetching products from:', url);
+      
       const res = await axios.get(url);
       const normalized = res.data.map(p => ({
         ...p,
         id: p._id,
       }));
       setProducts(normalized);
+      console.log('✅ Products loaded:', normalized.length);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      console.error('❌ Error fetching products:', err);
+      console.error('Error response:', err.response?.data);
       toast.error('Failed to load products');
     }
   };
@@ -291,10 +293,14 @@ const ItemsHome = () => {
 
   const handleCardClick = (product) => {
     setSelectedProduct(product);
+    // Disable body scroll when modal opens
+    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedProduct(null);
+    // Re-enable body scroll when modal closes
+    document.body.style.overflow = 'unset';
   };
 
   const sidebarCategories = [
@@ -576,16 +582,27 @@ const ItemsHome = () => {
       </div>
 
       {/* ============================================ */}
-      {/* UPDATED: Product Detail Modal with Farmer Address */}
+      {/* UPDATED: Product Detail Modal with BLURRED Background */}
       {/* ============================================ */}
       {selectedProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={closeModal}
+          style={{
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
               <h2 className="text-xl font-semibold text-gray-800">Product Details</h2>
               <button
                 onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 p-2 transition-colors"
+                className="text-gray-500 hover:text-gray-700 p-2 transition-colors rounded-full hover:bg-gray-100"
               >
                 <span className="text-2xl">&times;</span>
               </button>
@@ -627,9 +644,6 @@ const ItemsHome = () => {
                     />
                   </div>
                   
-                  {/* ============================================ */}
-                  {/* NEW: FARMER ADDRESS CARD */}
-                  {/* ============================================ */}
                   {selectedProduct.farmerId && !selectedProduct.adminUploaded && (
                     <FarmerAddressCard farmer={selectedProduct.farmerId} />
                   )}
