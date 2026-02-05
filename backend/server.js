@@ -1,4 +1,4 @@
-// backend/server.js - UPDATED with specific middleware order
+// backend/server.js - COMPLETE UPDATED VERSION
 import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import returnRouter from './routes/returnRoute.js';
+
 // Middleware
 import authMiddleware from './middleware/auth.js';
 
@@ -18,14 +19,16 @@ import productRouter from './routes/productRoute.js';
 import userRouter from './routes/userRoute.js';
 import reviewRouter from './routes/reviewRoute.js';
 
+// ============================================
 // INITIAL ENVIRONMENT CHECK
-
-console.log('🔍 Environment Check:');
+// ============================================
+console.log('\n🔍 Environment Check:');
 console.log('  - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? '✅ Found' : '❌ Missing');
 console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? '✅ Found' : '❌ Missing');
-console.log('  - PORT:', process.env.PORT);
-console.log('  - NODE_ENV:', process.env.NODE_ENV);
-
+console.log('  - MONGODB_URI:', process.env.MONGODB_URI ? '✅ Found' : '❌ Missing');
+console.log('  - PORT:', process.env.PORT || 4000);
+console.log('  - NODE_ENV:', process.env.NODE_ENV || 'development');
+console.log('');
 
 // ============================================
 // APP & SERVER CONFIGURATION
@@ -35,7 +38,6 @@ const port = process.env.PORT || 4000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 
 // ============================================
 // CORE MIDDLEWARE (Order is important)
@@ -70,7 +72,6 @@ app.use(
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'token', 'X-Requested-With', 'Accept', 'Origin'],
         optionsSuccessStatus: 204,
-        // Add Cross-Origin-Opener-Policy header to prevent blocking postMessage
         exposedHeaders: ['Cross-Origin-Opener-Policy']
     })
 );
@@ -86,8 +87,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 3. Global Loggers (BEFORE routes are mounted)
-
-// General Request Logging (for development)
 if (process.env.NODE_ENV !== 'production') {
     app.use((req, res, next) => {
         console.log(`📨 ${req.method} ${req.path}`);
@@ -98,7 +97,7 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-// NEW: Global logger specifically for order routes
+// Global logger specifically for order routes
 app.use((req, res, next) => {
     if (req.url.includes('/orders')) {
         console.log(`🌐 ${req.method} ${req.url}`);
@@ -106,18 +105,16 @@ app.use((req, res, next) => {
     next();
 });
 
-
 // ============================================
-// DATABASE CONNECTION
+// DATABASE CONNECTION (CRITICAL - BEFORE ROUTES)
 // ============================================
+console.log('🔄 Connecting to MongoDB...');
 connectDB();
-
 
 // ============================================
 // STATIC FILE SERVING
 // ============================================
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 // ============================================
 // API ROUTES (Order matters for overlapping paths)
@@ -131,7 +128,7 @@ app.use('/api/items', productRouter);
 app.use('/api/products', productRouter);
 
 // Order routes
-app.use('/api/orders', orderRouter); // ← Correctly placed
+app.use('/api/orders', orderRouter);
 
 // Chatbot routes
 app.use('/api/chatbot', chatbotRouter);
@@ -139,8 +136,11 @@ app.use('/api/chatbot', chatbotRouter);
 // Review routes
 app.use('/api/reviews', reviewRouter);
 
+// Return routes
+app.use('/api/returns', returnRouter);
+
 // Delivery Agent routes
-app.use('/api', deliveryAgentRouter); // ← Correctly placed after more specific routes
+app.use('/api', deliveryAgentRouter);
 
 // Protected cart routes (require auth)
 app.use('/api/cart', authMiddleware, cartRouter);
@@ -159,16 +159,24 @@ app.get('/', (req, res) => {
             cart: '/api/cart',
             agents: '/api/agents',
             reviews: '/api/reviews',
-            chatbot: '/api/chatbot'
+            chatbot: '/api/chatbot',
+            returns: '/api/returns'
         }
     });
 });
 
-// Return routes (moved before 404 handler)
-app.use('/api/returns', returnRouter);
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Server is healthy',
+        timestamp: new Date().toISOString()
+    });
+});
 
 // 404 Handler (runs if no other route matches)
 app.use((req, res) => {
+    console.log('❌ 404 Not Found:', req.method, req.path);
     res.status(404).json({
         success: false,
         message: `Route ${req.method} ${req.path} not found`
@@ -179,21 +187,28 @@ app.use((req, res) => {
 // GLOBAL ERROR HANDLER
 // ============================================
 app.use((err, req, res, next) => {
-    console.error('❌ Global Error Handler:', err);
+    console.error('❌ Global Error Handler:', err.message);
+    console.error('Stack:', err.stack);
+    
     res.status(err.status || 500).json({
         success: false,
         message: err.message || 'An internal server error occurred',
         error: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
+
 // ============================================
 // START SERVER
 // ============================================
 app.listen(port, () => {
-    console.log(`\n✅ Server Started on http://localhost:${port}`);
+    console.log('\n🚀 ========================================');
+    console.log(`✅ Server running on http://localhost:${port}`);
     console.log(`📍 API Base: http://localhost:${port}/api`);
-    console.log(`📦 Products API: http://localhost:${port}/api/items`);
-    console.log(`🚚 Delivery Agents API: http://localhost:${port}/api/agents`);
+    console.log(`📦 Products: http://localhost:${port}/api/items`);
+    console.log(`🛒 Cart: http://localhost:${port}/api/cart`);
+    console.log(`📋 Orders: http://localhost:${port}/api/orders`);
+    console.log(`🚚 Agents: http://localhost:${port}/api/agents`);
+    console.log('========================================\n');
 });
 
 export default app;

@@ -137,6 +137,135 @@ const FarmerAddressCard = ({ farmer }) => {
   );
 };
 
+// ============================================
+// NEW: QUANTITY INPUT COMPONENT WITH REAL-TIME VALIDATION
+// ============================================
+const QuantityInput = ({ product, onAdd, selectedDistrict }) => {
+  const [inputValue, setInputValue] = useState('');
+  const [availabilityStatus, setAvailabilityStatus] = useState(null);
+  const [isChecking, setIsChecking] = useState(false);
+
+  const unit = product.unit || 'kg';
+  const stock = product.stock || 0;
+
+  useEffect(() => {
+    // Reset when product changes
+    setInputValue('');
+    setAvailabilityStatus(null);
+  }, [product._id]);
+
+  const checkAvailability = async (value) => {
+    const numValue = parseFloat(value);
+    
+    if (!value || numValue <= 0 || isNaN(numValue)) {
+      setAvailabilityStatus(null);
+      return;
+    }
+
+    setIsChecking(true);
+
+    // Simulate real-time check
+    setTimeout(() => {
+      if (numValue > stock) {
+        setAvailabilityStatus({
+          available: false,
+          message: `Only ${stock}${unit} available from this seller`,
+          suggestion: selectedDistrict 
+            ? `Try checking other sellers in ${selectedDistrict}` 
+            : 'Try checking sellers in other districts'
+        });
+      } else {
+        setAvailabilityStatus({
+          available: true,
+          message: `✓ ${numValue}${unit} available`
+        });
+      }
+      setIsChecking(false);
+    }, 300);
+  };
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    
+    // Allow only numbers and decimal point
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setInputValue(value);
+      checkAvailability(value);
+    }
+  };
+
+  const handleAddToCart = () => {
+    const numValue = parseFloat(inputValue);
+    
+    if (!numValue || numValue <= 0) {
+      toast.warning('Please enter a valid quantity', {
+        position: 'top-center',
+        autoClose: 2000,
+      });
+      return;
+    }
+
+    if (numValue > stock) {
+      toast.error(`Only ${stock}${unit} available!`, {
+        position: 'top-center',
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    onAdd(numValue);
+    setInputValue('');
+    setAvailabilityStatus(null);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder={`Enter ${unit}`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+            {unit}
+          </span>
+        </div>
+        
+        <button
+          onClick={handleAddToCart}
+          disabled={!inputValue || !availabilityStatus?.available}
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+            !inputValue || !availabilityStatus?.available
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : 'bg-emerald-600 text-white hover:bg-emerald-700'
+          }`}
+        >
+          Add
+        </button>
+      </div>
+
+      {/* Availability Status Message */}
+      {isChecking && (
+        <div className="text-xs text-gray-500 animate-pulse">
+          Checking availability...
+        </div>
+      )}
+
+      {!isChecking && availabilityStatus && (
+        <div className={`text-xs ${availabilityStatus.available ? 'text-green-600' : 'text-orange-600'}`}>
+          <div className="font-medium">{availabilityStatus.message}</div>
+          {availabilityStatus.suggestion && (
+            <div className="text-gray-600 mt-1">{availabilityStatus.suggestion}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ItemsHome = () => {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -146,7 +275,6 @@ const ItemsHome = () => {
   const [selectedDistrict, setSelectedDistrict] = useState(() =>
     localStorage.getItem("selectedDistrict") || ""
   );
-  const [showDistrictFilter, setShowDistrictFilter] = useState(false);
   
   const navigate = useNavigate();
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
@@ -197,7 +325,7 @@ const ItemsHome = () => {
     } catch (err) {
       console.error('❌ Error fetching products:', err);
       console.error('Error response:', err.response?.data);
-      toast.error('Failed to load products');
+      toast.error('Failed to load products. Please refresh the page.');
     }
   };
 
@@ -224,6 +352,27 @@ const ItemsHome = () => {
   const getLineItemId = (productId) => {
     const item = cart.find((ci) => ci.productId === productId);
     return item ? item.id : null;
+  };
+
+  const handleAddWithQuantity = async (product, quantity) => {
+    if (!isAuthenticated) {
+      toast.warning('⚠️ Please login first to add items to your cart.', {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    try {
+      await addToCart(product._id, quantity);
+      toast.success(`✅ Added ${quantity}${product.unit || 'kg'} to cart!`, {
+        position: "bottom-right",
+        autoClose: 1500,
+      });
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      toast.error('Failed to add to cart. Please try again.');
+    }
   };
 
   const handleIncrease = (product) => {
@@ -293,13 +442,11 @@ const ItemsHome = () => {
 
   const handleCardClick = (product) => {
     setSelectedProduct(product);
-    // Disable body scroll when modal opens
     document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedProduct(null);
-    // Re-enable body scroll when modal closes
     document.body.style.overflow = 'unset';
   };
 
@@ -459,9 +606,6 @@ const ItemsHome = () => {
                 const qty = getQuantity(product._id);
                 const stock = product.stock || 0;
                 
-                const isFarmerProduct = product.farmerId && !product.adminUploaded;
-                const farmer = isFarmerProduct ? product.farmerId : null;
-
                 return (
                   <div
                     key={product._id}
@@ -499,7 +643,7 @@ const ItemsHome = () => {
                       <div className={itemsHomeStyles.priceContainer}>
                         <div>
                           <p className={itemsHomeStyles.currentPrice}>
-                            ₹{product.price.toFixed(2)}
+                            ₹{product.price.toFixed(2)}/{product.unit || 'kg'}
                           </p>
                           {product.oldPrice && (
                             <span className={itemsHomeStyles.oldPrice}>
@@ -507,43 +651,6 @@ const ItemsHome = () => {
                             </span>
                           )}
                         </div>
-                        {qty === 0 ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleIncrease(product);
-                            }}
-                            disabled={stock === 0}
-                            className={`${itemsHomeStyles.addButton} ${
-                              stock === 0 ? 'opacity-50 cursor-not-allowed bg-gray-400' : ''
-                            }`}
-                          >
-                            <FaShoppingCart className="mr-2" />
-                            {stock === 0 ? 'Out' : 'Add'}
-                          </button>
-                        ) : (
-                          <div
-                            className={itemsHomeStyles.quantityControls}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              onClick={() => handleDecrease(product)}
-                              className={itemsHomeStyles.quantityButton}
-                            >
-                              <FaMinus />
-                            </button>
-                            <span className="font-bold">{qty}</span>
-                            <button
-                              onClick={() => handleIncrease(product)}
-                              disabled={qty >= stock}
-                              className={`${itemsHomeStyles.quantityButton} ${
-                                qty >= stock ? 'opacity-50 cursor-not-allowed' : ''
-                              }`}
-                            >
-                              <FaPlus />
-                            </button>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -582,7 +689,7 @@ const ItemsHome = () => {
       </div>
 
       {/* ============================================ */}
-      {/* UPDATED: Product Detail Modal with BLURRED Background */}
+      {/* UPDATED: Product Detail Modal with Quantity Input */}
       {/* ============================================ */}
       {selectedProduct && (
         <div 
@@ -654,7 +761,7 @@ const ItemsHome = () => {
                   
                   <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-700 font-medium">Selling Price</span>
+                      <span className="text-sm text-gray-700 font-medium">Price per {selectedProduct.unit || 'kg'}</span>
                       <span className="text-2xl font-bold text-emerald-600">
                         ₹{selectedProduct.price.toFixed(2)}
                       </span>
@@ -687,67 +794,27 @@ const ItemsHome = () => {
                   </div>
                   
                   <div className="border-t pt-4">
-                    {(() => {
-                      const qty = getQuantity(selectedProduct._id);
-                      const stock = selectedProduct.stock || 0;
-                      
-                      if (stock === 0) {
-                        return (
-                          <button
-                            disabled
-                            className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg font-medium cursor-not-allowed"
-                          >
-                            Out of Stock
-                          </button>
-                        );
-                      }
-                      
-                      return qty === 0 ? (
-                        <button
-                          onClick={() => {
-                            handleIncrease(selectedProduct);
-                            if (isAuthenticated && stock > 0) {
+                    {selectedProduct.stock === 0 ? (
+                      <button
+                        disabled
+                        className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg font-medium cursor-not-allowed"
+                      >
+                        Out of Stock
+                      </button>
+                    ) : (
+                      <div className="space-y-3">
+                        <QuantityInput
+                          product={selectedProduct}
+                          onAdd={(quantity) => {
+                            handleAddWithQuantity(selectedProduct, quantity);
+                            if (isAuthenticated) {
                               closeModal();
                             }
                           }}
-                          className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center shadow-md"
-                        >
-                          <FaShoppingCart className="mr-2" />
-                          Add to Cart
-                        </button>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-center space-x-4 bg-emerald-50 rounded-lg p-3 border border-emerald-200">
-                            <button
-                              onClick={() => handleDecrease(selectedProduct)}
-                              className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-sm"
-                            >
-                              <FaMinus />
-                            </button>
-                            <span className="text-xl font-bold text-emerald-700 min-w-[40px] text-center">
-                              {qty}
-                            </span>
-                            <button
-                              onClick={() => handleIncrease(selectedProduct)}
-                              disabled={qty >= stock}
-                              className={`w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-sm ${
-                                qty >= stock ? 'opacity-50 cursor-not-allowed' : ''
-                              }`}
-                            >
-                              <FaPlus />
-                            </button>
-                          </div>
-                          <p className="text-center text-sm text-gray-600">
-                            Total: <span className="font-bold text-emerald-600">₹{(selectedProduct.price * qty).toFixed(2)}</span>
-                          </p>
-                          {qty >= stock && (
-                            <p className="text-center text-xs text-orange-600 font-medium bg-orange-50 py-2 rounded">
-                              ⚠️ Maximum quantity reached
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })()}
+                          selectedDistrict={selectedDistrict}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -6,11 +6,13 @@ import createError from 'http-errors';
 // GET /api/cart
 export const getCart = async (req, res, next) => {
     try {
+        console.log('📦 Fetching cart for user:', req.user._id);
+        
         const items = await CartItem.find({ user: req.user._id })
             .populate({
                 path: 'product',
                 model: 'Product',
-                select: 'name price imageUrl description stock'
+                select: 'name price imageUrl description stock unit'
             })
             .lean();
         
@@ -27,7 +29,8 @@ export const getCart = async (req, res, next) => {
                 price: ci.product.price,
                 imageUrl: ci.product.imageUrl,
                 description: ci.product.description,
-                stock: ci.product.stock
+                stock: ci.product.stock,
+                unit: ci.product.unit || 'kg'
             },
             quantity: ci.quantity,
             price: ci.product.price,
@@ -35,7 +38,7 @@ export const getCart = async (req, res, next) => {
             imageUrl: ci.product.imageUrl
         }));
         
-        console.log('📦 Cart items sent:', formatted.length);
+        console.log('✅ Cart items sent:', formatted.length);
         res.json(formatted);
     } catch (err) {
         console.error('❌ Error in getCart:', err);
@@ -49,14 +52,24 @@ export const addToCart = async (req, res, next) => {
         const { productId, itemId, quantity = 1 } = req.body;
         const pid = productId || itemId;
         
+        console.log('➕ Adding to cart:', { productId: pid, quantity, userId: req.user._id });
+        
         // Enhanced validation with detailed messages
         if (!pid) {
             throw createError(400, 'Product identifier (productId or itemId) is required');
         }
         
-        if (typeof quantity !== 'number' || quantity < 1) {
+        // ============================================
+        // SUPPORT DECIMAL QUANTITIES (for kg/liters)
+        // ============================================
+        const numQuantity = parseFloat(quantity);
+        
+        if (isNaN(numQuantity) || numQuantity <= 0) {
             throw createError(400, 'Quantity must be a positive number');
         }
+        
+        // Round to 2 decimal places for precision
+        const roundedQuantity = Math.round(numQuantity * 100) / 100;
         
         // Verify product exists
         const product = await Product.findById(pid);
@@ -64,13 +77,8 @@ export const addToCart = async (req, res, next) => {
             throw createError(404, 'Product not found');
         }
         
-        /*
-        // STOCK CHECK DISABLED: This check for initial add is now commented out.
-        if (product.stock < quantity) {
-            throw createError(400, `Only ${product.stock} items available in stock`);
-        }
-        */
-
+        console.log('📦 Product found:', product.name, 'Stock:', product.stock, 'Unit:', product.unit);
+        
         // Check if item already exists in cart
         let cartItem = await CartItem.findOne({ 
             user: req.user._id, 
@@ -79,32 +87,26 @@ export const addToCart = async (req, res, next) => {
 
         if (cartItem) {
             // Update existing cart item
-            const newQuantity = cartItem.quantity + quantity;
+            const newQuantity = cartItem.quantity + roundedQuantity;
             
-            /*
-            // STOCK CHECK DISABLED: This check for updating quantity is now commented out.
-            if (newQuantity > product.stock) {
-                throw createError(400, `Cannot add more. Only ${product.stock} items available`);
-            }
-            */
+            // Round to 2 decimal places
+            const finalQuantity = Math.round(newQuantity * 100) / 100;
             
-            // Support for quantity decrease with auto-delete
-            const finalQuantity = Math.max(1, newQuantity);
-            
-            if (finalQuantity < 1 || (quantity < 0 && Math.abs(quantity) >= cartItem.quantity)) {
+            // Auto-delete if quantity becomes 0 or negative
+            if (finalQuantity <= 0) {
                 await cartItem.deleteOne();
-                console.log('✅ Cart item auto-removed (quantity < 1)');
+                console.log('✅ Cart item auto-removed (quantity <= 0)');
                 return res.status(200).json({ 
                     message: 'Item removed from cart', 
                     _id: cartItem._id.toString() 
                 });
             }
             
-            cartItem.quantity = finalQuantity;
+            cartItem.quantity = Math.max(0.01, finalQuantity); // Minimum 0.01
             await cartItem.save();
             await cartItem.populate('product');
             
-            console.log('✅ Cart item updated:', cartItem.product.name, '- Quantity:', finalQuantity);
+            console.log('✅ Cart item updated:', cartItem.product.name, '- Quantity:', cartItem.quantity);
             
             return res.status(200).json({
                 _id: cartItem._id.toString(),
@@ -122,12 +124,12 @@ export const addToCart = async (req, res, next) => {
         cartItem = await CartItem.create({
             user: req.user._id,
             product: pid,
-            quantity: Math.max(1, quantity)
+            quantity: Math.max(0.01, roundedQuantity) // Minimum 0.01
         });
         
         await cartItem.populate('product');
         
-        console.log('✅ New item added to cart:', cartItem.product.name, '- Quantity:', quantity);
+        console.log('✅ New item added to cart:', cartItem.product.name, '- Quantity:', cartItem.quantity);
         
         res.status(201).json({
             _id: cartItem._id.toString(),
@@ -150,10 +152,19 @@ export const updateCartItem = async (req, res, next) => {
     try {
         const { quantity } = req.body;
         
-        // Validate quantity
-        if (typeof quantity !== 'number' || quantity < 1) {
+        console.log('🔄 Updating cart item:', req.params.id, 'New quantity:', quantity);
+        
+        // ============================================
+        // SUPPORT DECIMAL QUANTITIES
+        // ============================================
+        const numQuantity = parseFloat(quantity);
+        
+        if (isNaN(numQuantity) || numQuantity <= 0) {
             throw createError(400, 'Quantity must be a positive number');
         }
+        
+        // Round to 2 decimal places
+        const roundedQuantity = Math.round(numQuantity * 100) / 100;
         
         const cartItem = await CartItem.findOne({ 
             _id: req.params.id, 
@@ -164,15 +175,8 @@ export const updateCartItem = async (req, res, next) => {
             throw createError(404, 'Cart item not found');
         }
         
-        /*
-        // STOCK CHECK DISABLED: This check for direct quantity update is now commented out.
-        if (quantity > cartItem.product.stock) {
-            throw createError(400, `Only ${cartItem.product.stock} items available in stock`);
-        }
-        */
-        
-        // Apply Math.max to ensure minimum quantity of 1
-        cartItem.quantity = Math.max(1, quantity);
+        // Apply minimum quantity of 0.01
+        cartItem.quantity = Math.max(0.01, roundedQuantity);
         await cartItem.save();
         
         console.log('✅ Cart item quantity updated:', cartItem.product.name, '- New quantity:', cartItem.quantity);
@@ -196,6 +200,8 @@ export const updateCartItem = async (req, res, next) => {
 // DELETE /api/cart/:id
 export const deleteCartItem = async (req, res, next) => {
     try {
+        console.log('🗑️ Deleting cart item:', req.params.id);
+        
         const cartItem = await CartItem.findOne({ 
             _id: req.params.id, 
             user: req.user._id 
@@ -222,6 +228,8 @@ export const deleteCartItem = async (req, res, next) => {
 // POST /api/cart/clear
 export const clearCart = async (req, res, next) => {
     try {
+        console.log('🧹 Clearing cart for user:', req.user._id);
+        
         const result = await CartItem.deleteMany({ user: req.user._id });
         
         console.log('✅ Cart cleared:', result.deletedCount, 'items removed');
