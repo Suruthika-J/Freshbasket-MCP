@@ -168,11 +168,15 @@ const App = () => {
   
   // Check if current route is farmer pending approval page
   const isFarmerPendingRoute = location.pathname === '/farmer-pending-approval';
-  
+
+  // Check if current route is farmer dashboard or related pages
+  const isFarmerRoute = location.pathname.startsWith('/farmer/') || location.pathname === '/farmer-dashboard';
+
   // Don't show navbar, chatbot for admin routes and order success page
-  const showNavbar = !isAdminRoute && 
+  const showNavbar = !isAdminRoute &&
                      !isOrderSuccessRoute &&
                      !isFarmerPendingRoute &&
+                     !isFarmerRoute &&
                      (userRole !== 'agent' || location.pathname !== '/delivery-dashboard');
   
   const showChatbotIcon = !isAdminRoute && 

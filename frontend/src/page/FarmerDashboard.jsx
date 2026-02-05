@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FiPackage, FiPlus, FiEdit, FiTrash2, FiEye, FiUser, FiSave } from 'react-icons/fi';
+import { FiPackage, FiPlus, FiEdit, FiTrash2, FiEye, FiUser, FiSave, FiLogOut } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -143,6 +143,23 @@ const FarmerDashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    toast.info('Logging out...', {
+      position: 'top-center',
+      autoClose: 1200,
+    });
+
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('userRole');
+
+    window.dispatchEvent(new Event('authStateChanged'));
+
+    setTimeout(() => {
+      navigate('/', { replace: true });
+    }, 400);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -180,6 +197,13 @@ const FarmerDashboard = () => {
               >
                 <FiPlus className="w-5 h-5" />
                 Add Product
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              >
+                <FiLogOut className="w-5 h-5" />
+                Logout
               </button>
             </div>
           </div>

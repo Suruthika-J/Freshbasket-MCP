@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet';
 import axios from 'axios';
 import { FiX, FiPackage, FiTruck, FiMapPin, FiRefreshCw } from 'react-icons/fi';
+import Modal from './Modal';
 import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet default icon issue

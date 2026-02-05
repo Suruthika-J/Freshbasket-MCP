@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet'
 import L from 'leaflet';
 import { FiPackage, FiTruck, FiCheckCircle, FiClock, FiMapPin, FiPhone, FiMail, FiLogOut, FiRefreshCw, FiNavigation } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
 import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet default icons
@@ -581,258 +582,247 @@ const DeliveryDashboard = () => {
             </div>
 
             {/* Order Details Modal with Map */}
-            {isModalOpen && selectedOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-                        {/* Modal Header */}
-                        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-                            <h2 className="text-xl font-semibold">
-                                Order Details: {selectedOrder.orderId}
-                            </h2>
-                            <button
-                                onClick={() => {
-                                    setIsModalOpen(false);
-                                    stopLocationSharing();
-                                    setSelectedOrder(null);
-                                }}
-                                className="text-white hover:text-gray-200 text-2xl"
-                            >
-                                ×
-                            </button>
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    stopLocationSharing();
+                    setSelectedOrder(null);
+                }}
+                title={`Order Details: ${selectedOrder?.orderId}`}
+                size="xl"
+            >
+                {selectedOrder && (
+                    <>
+                        {/* Location Sharing Controls */}
+                        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 mb-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    <FiNavigation className="text-green-600 text-2xl" />
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900">
+                                            Live Location Sharing
+                                        </h3>
+                                        <p className="text-sm text-gray-600">
+                                            {isSharing
+                                                ? `Sharing location for ${activeOrderId === selectedOrder?._id ? 'this order' : 'active order'} until manually stopped`
+                                                : 'Share your location to enable real-time tracking'
+                                            }
+                                        </p>
+                                        {isSharing && activeOrderId && (
+                                            <p className="text-xs text-green-600 font-medium mt-1">
+                                                🔄 Auto-sharing active - persists across page refreshes
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={isSharing ? stopLocationSharing : () => startLocationSharing(selectedOrder)}
+                                    disabled={false}
+                                    className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                                        isSharing
+                                            ? 'bg-red-600 hover:bg-red-700 text-white'
+                                            : 'bg-green-600 hover:bg-green-700 text-white'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                >
+                                    {isSharing ? (
+                                        <>
+                                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                            Stop Sharing
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FiNavigation />
+                                            Start Sharing
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            {locationError && (
+                                <p className="mt-2 text-sm text-red-600">{locationError}</p>
+                            )}
+                            {currentLocation && (
+                                <p className="mt-2 text-xs text-gray-500">
+                                    Current: {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
+                                    {currentLocation.accuracy && ` (±${Math.round(currentLocation.accuracy)}m)`}
+                                </p>
+                            )}
                         </div>
 
-                        {/* Modal Body */}
-                        <div className="p-6 space-y-6">
-                            {/* Location Sharing Controls */}
-                            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
-                                        <FiNavigation className="text-green-600 text-2xl" />
-                                        <div>
-                                            <h3 className="font-semibold text-gray-900">
-                                                Live Location Sharing
-                                            </h3>
-                                            <p className="text-sm text-gray-600">
-                                                {isSharing
-                                                    ? `Sharing location for ${activeOrderId === selectedOrder?._id ? 'this order' : 'active order'} until manually stopped`
-                                                    : 'Share your location to enable real-time tracking'
-                                                }
-                                            </p>
-                                            {isSharing && activeOrderId && (
-                                                <p className="text-xs text-green-600 font-medium mt-1">
-                                                    🔄 Auto-sharing active - persists across page refreshes
-                                                </p>
-                                            )}
+                        {/* Map */}
+                        <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
+                            <MapContainer
+                                center={getMapCenter()}
+                                zoom={13}
+                                style={{ height: '400px', width: '100%' }}
+                                scrollWheelZoom={true}
+                            >
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                />
+
+                                {/* Store Marker */}
+                                <Marker position={[9.1700, 77.8700]} icon={storeIcon}>
+                                    <Popup>
+                                        <div className="text-center">
+                                            <strong>Store Location</strong>
+                                            <p className="text-sm">Kovilpatti, Tamil Nadu</p>
                                         </div>
-                                    </div>
-                                    <button
-                                        onClick={isSharing ? stopLocationSharing : () => startLocationSharing(selectedOrder)}
-                                        disabled={false}
-                                        className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                                            isSharing
-                                                ? 'bg-red-600 hover:bg-red-700 text-white'
-                                                : 'bg-green-600 hover:bg-green-700 text-white'
-                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                    >
-                                        {isSharing ? (
-                                            <>
-                                                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                                                Stop Sharing
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FiNavigation />
-                                                Start Sharing
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                                {locationError && (
-                                    <p className="mt-2 text-sm text-red-600">{locationError}</p>
-                                )}
+                                    </Popup>
+                                </Marker>
+
+                                {/* Current Location Marker */}
                                 {currentLocation && (
-                                    <p className="mt-2 text-xs text-gray-500">
-                                        Current: {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
-                                        {currentLocation.accuracy && ` (±${Math.round(currentLocation.accuracy)}m)`}
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Map */}
-                            <div className="border border-gray-200 rounded-lg overflow-hidden">
-                                <MapContainer
-                                    center={getMapCenter()}
-                                    zoom={13}
-                                    style={{ height: '400px', width: '100%' }}
-                                    scrollWheelZoom={true}
-                                >
-                                    <TileLayer
-                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                    />
-
-                                    {/* Store Marker */}
-                                    <Marker position={[9.1700, 77.8700]} icon={storeIcon}>
+                                    <Marker
+                                        position={[currentLocation.latitude, currentLocation.longitude]}
+                                    >
                                         <Popup>
                                             <div className="text-center">
-                                                <strong>Store Location</strong>
-                                                <p className="text-sm">Kovilpatti, Tamil Nadu</p>
+                                                <strong>Your Current Location</strong>
+                                                <p className="text-xs text-gray-500">
+                                                    Live tracking enabled
+                                                </p>
                                             </div>
                                         </Popup>
                                     </Marker>
+                                )}
 
-                                    {/* Current Location Marker */}
-                                    {currentLocation && (
-                                        <Marker
-                                            position={[currentLocation.latitude, currentLocation.longitude]}
-                                        >
-                                            <Popup>
-                                                <div className="text-center">
-                                                    <strong>Your Current Location</strong>
-                                                    <p className="text-xs text-gray-500">
-                                                        Live tracking enabled
-                                                    </p>
-                                                </div>
-                                            </Popup>
-                                        </Marker>
-                                    )}
-
-                                    {/* Customer Marker */}
-                                    {selectedOrder.deliveryLocation && (
-                                        <Marker
-                                            position={[
-                                                selectedOrder.deliveryLocation.latitude,
-                                                selectedOrder.deliveryLocation.longitude
-                                            ]}
-                                            icon={customerIcon}
-                                        >
-                                            <Popup>
-                                                <div className="text-center">
-                                                    <strong>Delivery Address</strong>
-                                                    <p className="text-sm">{selectedOrder.customer?.name}</p>
-                                                </div>
-                                            </Popup>
-                                        </Marker>
-                                    )}
-
-                                    {/* Route Line */}
-                                    {getRouteLine().length > 1 && (
-                                        <Polyline
-                                            positions={getRouteLine()}
-                                            color="#3b82f6"
-                                            weight={4}
-                                            opacity={0.7}
-                                            dashArray="10, 10"
-                                        />
-                                    )}
-                                </MapContainer>
-                            </div>
-
-                            {/* Customer Information */}
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <h3 className="font-semibold text-lg mb-3 flex items-center">
-                                    <FiMapPin className="mr-2 text-blue-600" />
-                                    Customer Information
-                                </h3>
-                                <div className="space-y-2">
-                                    <p><strong>Name:</strong> {selectedOrder.customer?.name || 'N/A'}</p>
-                                    <p><strong>Phone:</strong> {selectedOrder.customer?.phone || 'N/A'}</p>
-                                    <p><strong>Email:</strong> {selectedOrder.customer?.email || 'N/A'}</p>
-                                    <p><strong>Address:</strong> {selectedOrder.customer?.address || 'N/A'}</p>
-                                </div>
-                            </div>
-
-                            {/* Order Items */}
-                            <div>
-                                <h3 className="font-semibold text-lg mb-3 flex items-center">
-                                    <FiPackage className="mr-2 text-blue-600" />
-                                    Order Items
-                                </h3>
-                                <div className="space-y-2">
-                                    {selectedOrder.items?.map((item, index) => (
-                                        <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                                            <div className="flex items-center space-x-3">
-                                                {item.imageUrl && (
-                                                    <img
-                                                        src={`http://localhost:4000${item.imageUrl}`}
-                                                        alt={item.name}
-                                                        className="w-12 h-12 object-cover rounded"
-                                                    />
-                                                )}
-                                                <div>
-                                                    <p className="font-medium">{item.name}</p>
-                                                    <p className="text-sm text-gray-600">
-                                                        ₹{item.price} × {item.quantity}
-                                                    </p>
-                                                </div>
+                                {/* Customer Marker */}
+                                {selectedOrder.deliveryLocation && (
+                                    <Marker
+                                        position={[
+                                            selectedOrder.deliveryLocation.latitude,
+                                            selectedOrder.deliveryLocation.longitude
+                                        ]}
+                                        icon={customerIcon}
+                                    >
+                                        <Popup>
+                                            <div className="text-center">
+                                                <strong>Delivery Address</strong>
+                                                <p className="text-sm">{selectedOrder.customer?.name}</p>
                                             </div>
-                                            <p className="font-semibold">
-                                                ₹{(item.price * item.quantity).toFixed(2)}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                                        </Popup>
+                                    </Marker>
+                                )}
 
-                            {/* Order Summary */}
-                            <div className="bg-blue-50 rounded-lg p-4">
-                                <h3 className="font-semibold text-lg mb-3">Order Summary</h3>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                        <span>Payment Method:</span>
-                                        <span className="font-medium">{selectedOrder.paymentMethod}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>Payment Status:</span>
-                                        <span className={`font-medium ${selectedOrder.paymentStatus === 'Paid' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {selectedOrder.paymentStatus}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between text-lg font-bold pt-2 border-t border-blue-200">
-                                        <span>Total Amount:</span>
-                                        <span className="text-blue-600">₹{selectedOrder.total?.toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Status Update Buttons */}
-                            {selectedOrder.status !== 'Delivered' && selectedOrder.status !== 'Cancelled' && (
-                                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                                    {selectedOrder.status === 'Pending' && (
-                                        <button
-                                            onClick={() => updateOrderStatus(selectedOrder._id, 'Processing')}
-                                            disabled={actionLoading}
-                                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                                        >
-                                            {actionLoading ? 'Updating...' : 'Mark as Processing'}
-                                        </button>
-                                    )}
-                                    {selectedOrder.status === 'Processing' && (
-                                        <button
-                                            onClick={() => updateOrderStatus(selectedOrder._id, 'Shipped')}
-                                            disabled={actionLoading}
-                                            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center"
-                                        >
-                                            <FiTruck className="mr-2" />
-                                            {actionLoading ? 'Updating...' : 'Mark as Shipped'}
-                                        </button>
-                                    )}
-                                    {selectedOrder.status === 'Shipped' && (
-                                        <button
-                                            onClick={() => updateOrderStatus(selectedOrder._id, 'Delivered')}
-                                            disabled={actionLoading}
-                                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center"
-                                        >
-                                            <FiCheckCircle className="mr-2" />
-                                            {actionLoading ? 'Updating...' : 'Mark as Delivered'}
-                                        </button>
-                                    )}
-                                </div>
-                            )}
+                                {/* Route Line */}
+                                {getRouteLine().length > 1 && (
+                                    <Polyline
+                                        positions={getRouteLine()}
+                                        color="#3b82f6"
+                                        weight={4}
+                                        opacity={0.7}
+                                        dashArray="10, 10"
+                                    />
+                                )}
+                            </MapContainer>
                         </div>
-                    </div>
-                </div>
-            )}
+
+                        {/* Customer Information */}
+                        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                            <h3 className="font-semibold text-lg mb-3 flex items-center">
+                                <FiMapPin className="mr-2 text-blue-600" />
+                                Customer Information
+                            </h3>
+                            <div className="space-y-2">
+                                <p><strong>Name:</strong> {selectedOrder.customer?.name || 'N/A'}</p>
+                                <p><strong>Phone:</strong> {selectedOrder.customer?.phone || 'N/A'}</p>
+                                <p><strong>Email:</strong> {selectedOrder.customer?.email || 'N/A'}</p>
+                                <p><strong>Address:</strong> {selectedOrder.customer?.address || 'N/A'}</p>
+                            </div>
+                        </div>
+
+                        {/* Order Items */}
+                        <div className="mb-6">
+                            <h3 className="font-semibold text-lg mb-3 flex items-center">
+                                <FiPackage className="mr-2 text-blue-600" />
+                                Order Items
+                            </h3>
+                            <div className="space-y-2">
+                                {selectedOrder.items?.map((item, index) => (
+                                    <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                        <div className="flex items-center space-x-3">
+                                            {item.imageUrl && (
+                                                <img
+                                                    src={`http://localhost:4000${item.imageUrl}`}
+                                                    alt={item.name}
+                                                    className="w-12 h-12 object-cover rounded"
+                                                />
+                                            )}
+                                            <div>
+                                                <p className="font-medium">{item.name}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    ₹{item.price} × {item.quantity}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p className="font-semibold">
+                                            ₹{(item.price * item.quantity).toFixed(2)}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Order Summary */}
+                        <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                            <h3 className="font-semibold text-lg mb-3">Order Summary</h3>
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span>Payment Method:</span>
+                                    <span className="font-medium">{selectedOrder.paymentMethod}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Payment Status:</span>
+                                    <span className={`font-medium ${selectedOrder.paymentStatus === 'Paid' ? 'text-green-600' : 'text-red-600'}`}>
+                                        {selectedOrder.paymentStatus}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between text-lg font-bold pt-2 border-t border-blue-200">
+                                    <span>Total Amount:</span>
+                                    <span className="text-blue-600">₹{selectedOrder.total?.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Status Update Buttons */}
+                        {selectedOrder.status !== 'Delivered' && selectedOrder.status !== 'Cancelled' && (
+                            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                                {selectedOrder.status === 'Pending' && (
+                                    <button
+                                        onClick={() => updateOrderStatus(selectedOrder._id, 'Processing')}
+                                        disabled={actionLoading}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                    >
+                                        {actionLoading ? 'Updating...' : 'Mark as Processing'}
+                                    </button>
+                                )}
+                                {selectedOrder.status === 'Processing' && (
+                                    <button
+                                        onClick={() => updateOrderStatus(selectedOrder._id, 'Shipped')}
+                                        disabled={actionLoading}
+                                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center"
+                                    >
+                                        <FiTruck className="mr-2" />
+                                        {actionLoading ? 'Updating...' : 'Mark as Shipped'}
+                                    </button>
+                                )}
+                                {selectedOrder.status === 'Shipped' && (
+                                    <button
+                                        onClick={() => updateOrderStatus(selectedOrder._id, 'Delivered')}
+                                        disabled={actionLoading}
+                                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center"
+                                    >
+                                        <FiCheckCircle className="mr-2" />
+                                        {actionLoading ? 'Updating...' : 'Mark as Delivered'}
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+            </Modal>
         </div>
     );
 };

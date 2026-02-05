@@ -10,6 +10,7 @@ import axios from 'axios';
 import RatingModal from './RatingModal';
 import UserOrderTracking from './UserOrderTracking'; // NEW IMPORT
 import ReturnModal from './ReturnModal'; // NEW IMPORT
+import Modal from './Modal';
 
 const UserOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -307,206 +308,196 @@ const UserOrdersPage = () => {
         </div>
       </div>
 
-      {/* Order Detail Modal - KEEP ALL EXISTING CODE */}
-      {isDetailModalOpen && selectedOrder && (
-        <div className={ordersPageStyles.modalOverlay}>
-          <div className={ordersPageStyles.modalContainer}>
-            <div className={ordersPageStyles.modalHeader}>
-              <div className="flex justify-between items-center">
-                <h2 className={ordersPageStyles.modalTitle}>
-                  Order Details: {selectedOrder._id}
-                </h2>
-                <button
-                  onClick={closeModal}
-                  className={ordersPageStyles.modalCloseButton}
-                >
-                  <FiX size={24} />
-                </button>
-              </div>
-              <p className="text-emerald-300 mt-1">
-                Ordered on {selectedOrder.date} 
-              </p>
+      {/* Order Detail Modal */}
+      <Modal
+        isOpen={isDetailModalOpen}
+        onClose={closeModal}
+        title={`Order Details: ${selectedOrder?.orderId}`}
+        size="xl"
+      >
+        {selectedOrder && (
+          <>
+            <div className="text-emerald-300 mb-6">
+              Ordered on {selectedOrder.date}
             </div>
 
-            <div className={ordersPageStyles.modalBody}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div>
-                  {/* Customer Info */}
-                  <div className={ordersPageStyles.modalSection}>
-                    <h3 className={ordersPageStyles.modalSectionTitle}>
-                      <FiUser className="mr-2 text-emerald-300" />
-                      My Information
-                    </h3>
-                    <div className={ordersPageStyles.modalCard}>
-                      <div className="mb-3">
-                        <div className="font-medium text-emerald-100">{selectedOrder.customer.name}</div>
-                        <div className="text-emerald-300 flex items-center mt-2">
-                          <FiMail className="mr-2 flex-shrink-0" />
-                          {selectedOrder.customer.email || 'No email provided'}
-                        </div>
-                        <div className="text-emerald-300 flex items-center mt-2">
-                          <FiPhone className="mr-2 flex-shrink-0" />
-                          {selectedOrder.customer.phone}
-                        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column */}
+              <div>
+                {/* Customer Info */}
+                <div className="mb-6">
+                  <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
+                    <FiUser className="mr-2 text-emerald-300" />
+                    My Information
+                  </h3>
+                  <div className="bg-emerald-800/50 rounded-xl p-4 border border-emerald-700/50">
+                    <div className="mb-3">
+                      <div className="font-medium text-emerald-100">{selectedOrder.customer.name}</div>
+                      <div className="text-emerald-300 flex items-center mt-2">
+                        <FiMail className="mr-2 flex-shrink-0" />
+                        {selectedOrder.customer.email || 'No email provided'}
                       </div>
-                      <div className="flex items-start mt-3">
-                        <FiMapPin className="text-emerald-400 mr-2 mt-1 flex-shrink-0" />
-                        <div className="text-emerald-300">{selectedOrder.customer.address}</div>
+                      <div className="text-emerald-300 flex items-center mt-2">
+                        <FiPhone className="mr-2 flex-shrink-0" />
+                        {selectedOrder.customer.phone}
                       </div>
+                    </div>
+                    <div className="flex items-start mt-3">
+                      <FiMapPin className="text-emerald-400 mr-2 mt-1 flex-shrink-0" />
+                      <div className="text-emerald-300">{selectedOrder.customer.address}</div>
                     </div>
                   </div>
-
-                  {selectedOrder.notes && (
-                    <div className={ordersPageStyles.modalSection}>
-                      <h3 className={ordersPageStyles.modalSectionTitle}>
-                        Delivery Notes
-                      </h3>
-                      <div className="bg-emerald-800/50 border-l-4 border-emerald-400 p-4 rounded-lg">
-                        <p className="text-emerald-200">{selectedOrder.notes}</p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {getReviewForOrder(selectedOrder._id) && (
-                    <div className={ordersPageStyles.modalSection}>
-                      <h3 className={ordersPageStyles.modalSectionTitle}>
-                        <FiStar className="mr-2 text-yellow-400" />
-                        Your Review
-                      </h3>
-                      <div className="bg-emerald-800/50 border border-emerald-600/50 p-4 rounded-lg">
-                        <div className="flex items-center gap-1 mb-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <FiStar
-                              key={star}
-                              className={`${
-                                star <= getReviewForOrder(selectedOrder._id).rating
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-500'
-                              }`}
-                              size={18}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-emerald-200">
-                          {getReviewForOrder(selectedOrder._id).comment}
-                        </p>
-                        <p className="text-emerald-400 text-xs mt-2">
-                          Reviewed on {new Date(getReviewForOrder(selectedOrder._id).createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Right Column */}
-                <div>
-                  <div className={ordersPageStyles.modalSection}>
-                    <h3 className={ordersPageStyles.modalSectionTitle}>
-                      <FiPackage className="mr-2 text-emerald-300" />
-                      Order Summary
+                {selectedOrder.notes && (
+                  <div className="mb-6">
+                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
+                      Delivery Notes
                     </h3>
-                    <div className="border border-emerald-700 rounded-xl overflow-hidden">
-                      {selectedOrder.items.map((item, index) => (
-                        <div
-                          key={item._id || index}
-                          className={`flex items-center p-4 bg-emerald-900/30 ${index !== selectedOrder.items.length - 1 ? 'border-b border-emerald-700' : ''}`}
-                        >
-                          {item.imageUrl ? (
-                            <img
-                              src={`http://localhost:4000${item.imageUrl}`}
-                              alt={item.name}
-                              className="w-16 h-16 object-cover rounded-lg mr-4"
-                            />
-                          ) : (
-                            <div className="bg-emerald-800 border-2 border-dashed border-emerald-700 rounded-xl w-16 h-16 mr-4 flex items-center justify-center">
-                              <FiPackage className="text-emerald-500" />
+                    <div className="bg-emerald-800/50 border-l-4 border-emerald-400 p-4 rounded-lg">
+                      <p className="text-emerald-200">{selectedOrder.notes}</p>
+                    </div>
+                  </div>
+                )}
+
+                {getReviewForOrder(selectedOrder._id) && (
+                  <div className="mb-6">
+                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
+                      <FiStar className="mr-2 text-yellow-400" />
+                      Your Review
+                    </h3>
+                    <div className="bg-emerald-800/50 border border-emerald-600/50 p-4 rounded-lg">
+                      <div className="flex items-center gap-1 mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <FiStar
+                            key={star}
+                            className={`${
+                              star <= getReviewForOrder(selectedOrder._id).rating
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-500'
+                            }`}
+                            size={18}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-emerald-200">
+                        {getReviewForOrder(selectedOrder._id).comment}
+                      </p>
+                      <p className="text-emerald-400 text-xs mt-2">
+                        Reviewed on {new Date(getReviewForOrder(selectedOrder._id).createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column */}
+              <div>
+                <div className="mb-6">
+                  <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
+                    <FiPackage className="mr-2 text-emerald-300" />
+                    Order Summary
+                  </h3>
+                  <div className="border border-emerald-700 rounded-xl overflow-hidden">
+                    {selectedOrder.items.map((item, index) => (
+                      <div
+                        key={item._id || index}
+                        className={`flex items-center p-4 bg-emerald-900/30 ${index !== selectedOrder.items.length - 1 ? 'border-b border-emerald-700' : ''}`}
+                      >
+                        {item.imageUrl ? (
+                          <img
+                            src={`http://localhost:4000${item.imageUrl}`}
+                            alt={item.name}
+                            className="w-16 h-16 object-cover rounded-lg mr-4"
+                          />
+                        ) : (
+                          <div className="bg-emerald-800 border-2 border-dashed border-emerald-700 rounded-xl w-16 h-16 mr-4 flex items-center justify-center">
+                            <FiPackage className="text-emerald-500" />
+                          </div>
+                        )}
+                        <div className="flex-grow">
+                          <div className="font-medium text-emerald-100">{item.name}</div>
+                          <div className="text-emerald-400">₹{item.price.toFixed(2)} × {item.quantity}</div>
+                          {item.stock !== undefined && (
+                            <div className="mt-1">
+                              {item.stock > 0 ? (
+                                <div className="flex items-center text-xs">
+                                  <span className={`${item.stock <= 5 ? 'text-amber-300' : 'text-green-400'}`}>
+                                    {item.stock <= 5 ? `Only ${item.stock} left in stock` : `${item.stock} in stock`}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-xs text-red-400">
+                                  <FiAlertTriangle className="mr-1" size={12} />
+                                  <span>Currently out of stock</span>
+                                </div>
+                              )}
                             </div>
                           )}
-                          <div className="flex-grow">
-                            <div className="font-medium text-emerald-100">{item.name}</div>
-                            <div className="text-emerald-400">₹{item.price.toFixed(2)} × {item.quantity}</div>
-                            {item.stock !== undefined && (
-                              <div className="mt-1">
-                                {item.stock > 0 ? (
-                                  <div className="flex items-center text-xs">
-                                    <span className={`${item.stock <= 5 ? 'text-amber-300' : 'text-green-400'}`}>
-                                      {item.stock <= 5 ? `Only ${item.stock} left in stock` : `${item.stock} in stock`}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center text-xs text-red-400">
-                                    <FiAlertTriangle className="mr-1" size={12} />
-                                    <span>Currently out of stock</span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          <div className="font-medium text-emerald-100">
-                            ₹{(item.price * item.quantity).toFixed(2)}
-                          </div>
                         </div>
-                      ))}
+                        <div className="font-medium text-emerald-100">
+                          ₹{(item.price * item.quantity).toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
 
-                      <div className="p-4 bg-emerald-800/50">
-                        <div className="flex justify-between py-2">
-                          <span className="text-emerald-300">Subtotal</span>
-                          <span className="font-medium text-emerald-100">₹{selectedOrder.total.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between py-2">
-                          <span className="text-emerald-300">Shipping</span>
-                          <span className="font-medium text-emerald-400">Free</span>
-                        </div>
-                        <div className="flex justify-between py-2">
-                          <span className="text-emerald-300">Tax</span>
-                          <span className="font-medium text-emerald-100">₹{(selectedOrder.total * 0.05).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between pt-4 mt-2 border-t border-emerald-700">
-                          <span className="text-lg font-bold text-emerald-100">Total</span>
-                          <span className="text-lg font-bold text-emerald-300">
-                            ₹{(selectedOrder.total * 1.05).toFixed(2)}
-                          </span>
-                        </div>
+                    <div className="p-4 bg-emerald-800/50">
+                      <div className="flex justify-between py-2">
+                        <span className="text-emerald-300">Subtotal</span>
+                        <span className="font-medium text-emerald-100">₹{selectedOrder.total.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between py-2">
+                        <span className="text-emerald-300">Shipping</span>
+                        <span className="font-medium text-emerald-400">Free</span>
+                      </div>
+                      <div className="flex justify-between py-2">
+                        <span className="text-emerald-300">Tax</span>
+                        <span className="font-medium text-emerald-100">₹{(selectedOrder.total * 0.05).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between pt-4 mt-2 border-t border-emerald-700">
+                        <span className="text-lg font-bold text-emerald-100">Total</span>
+                        <span className="text-lg font-bold text-emerald-300">
+                          ₹{(selectedOrder.total * 1.05).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
+                      <FiCreditCard className="mr-2 text-emerald-300" />
+                      Payment
+                    </h3>
+                    <div className="bg-emerald-800/50 rounded-xl p-4 border border-emerald-700/50">
+                      <div className="flex justify-between mb-3">
+                        <span className="text-emerald-300">Method:</span>
+                        <span className="font-medium text-emerald-100">{selectedOrder.paymentMethod}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-emerald-300">Status:</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-red-500/20 text-red-200'}`}>
+                          {selectedOrder.paymentStatus}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h3 className={ordersPageStyles.modalSectionTitle}>
-                        <FiCreditCard className="mr-2 text-emerald-300" />
-                        Payment
-                      </h3>
-                      <div className={ordersPageStyles.modalCard}>
-                        <div className="flex justify-between mb-3">
-                          <span className="text-emerald-300">Method:</span>
-                          <span className="font-medium text-emerald-100">{selectedOrder.paymentMethod}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-emerald-300">Status:</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-red-500/20 text-red-200'}`}>
-                            {selectedOrder.paymentStatus}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className={ordersPageStyles.modalSectionTitle}>
-                        <FiTruck className="mr-2 text-emerald-300" />
-                        Shipping
-                      </h3>
-                      <div className={ordersPageStyles.modalCard}>
-                        <div className="flex justify-between mb-3">
-                          <span className="text-emerald-300">Status:</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedOrder.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-200' :
-                            selectedOrder.status === 'Shipped' ? 'bg-blue-500/20 text-blue-200' :
-                            selectedOrder.status === 'Cancelled' ? 'bg-red-500/20 text-red-200' :
-                            'bg-amber-500/20 text-amber-200'}`}>
-                            {selectedOrder.status}
-                          </span>
-                        </div>
+                  <div>
+                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
+                      <FiTruck className="mr-2 text-emerald-300" />
+                      Shipping
+                    </h3>
+                    <div className="bg-emerald-800/50 rounded-xl p-4 border border-emerald-700/50">
+                      <div className="flex justify-between mb-3">
+                        <span className="text-emerald-300">Status:</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedOrder.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-200' :
+                          selectedOrder.status === 'Shipped' ? 'bg-blue-500/20 text-blue-200' :
+                          selectedOrder.status === 'Cancelled' ? 'bg-red-500/20 text-red-200' :
+                          'bg-amber-500/20 text-amber-200'}`}>
+                          {selectedOrder.status}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -514,45 +505,43 @@ const UserOrdersPage = () => {
               </div>
             </div>
 
-            <div className={ordersPageStyles.modalFooter}>
-              <div className="flex justify-end gap-3">
-                {/* NEW: Track Order button in modal footer */}
-                {canTrackOrder(selectedOrder) && (
-                  <button
-                    onClick={() => {
-                      closeModal();
-                      openTrackingModal(selectedOrder);
-                    }}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <FiTruck size={16} />
-                    Track Order
-                  </button>
-                )}
-                
-                {canReviewOrder(selectedOrder) && (
-                  <button
-                    onClick={() => {
-                      closeModal();
-                      openRatingModal(selectedOrder);
-                    }}
-                    className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <FiStar size={16} />
-                    Rate This Order
-                  </button>
-                )}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              {/* NEW: Track Order button in modal footer */}
+              {canTrackOrder(selectedOrder) && (
                 <button
-                  onClick={closeModal}
-                  className={ordersPageStyles.closeButton}
+                  onClick={() => {
+                    closeModal();
+                    openTrackingModal(selectedOrder);
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
                 >
-                  Close
+                  <FiTruck size={16} />
+                  Track Order
                 </button>
-              </div>
+              )}
+
+              {canReviewOrder(selectedOrder) && (
+                <button
+                  onClick={() => {
+                    closeModal();
+                    openRatingModal(selectedOrder);
+                  }}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                >
+                  <FiStar size={16} />
+                  Rate This Order
+                </button>
+              )}
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 bg-emerald-700/50 hover:bg-emerald-700 text-emerald-100 rounded-full transition"
+              >
+                Close
+              </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
       
       {/* Rating Modal */}
       <RatingModal

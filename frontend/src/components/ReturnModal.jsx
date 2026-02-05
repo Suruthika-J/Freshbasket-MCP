@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FiX, FiRotateCcw, FiAlertTriangle } from 'react-icons/fi';
+import Modal from './Modal';
 
 const ReturnModal = ({ isOpen, onClose, order, onReturnSubmitted }) => {
   const [reason, setReason] = useState('');

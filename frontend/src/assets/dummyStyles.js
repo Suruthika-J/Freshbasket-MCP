@@ -385,7 +385,7 @@ export const itemsPageStyles = {
     tableCell: "py-4 px-4 text-emerald-100",
     statusBadge: "px-3 py-1 rounded-full text-xs font-medium",
     actionButton: "text-sm bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-4 rounded-full transition-colors shadow-md shadow-emerald-950/50",
-    modalOverlay: "fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm",
+    modalOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 backdrop-blur-md bg-black/20",
     modalContainer: "bg-emerald-900/80 backdrop-blur-md rounded-2xl shadow-2xl shadow-emerald-950 w-full max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-emerald-700",
     modalHeader: "sticky top-0 bg-emerald-900/90 border-b border-emerald-700 p-6 z-10",
     modalTitle: "text-2xl font-bold text-emerald-100",

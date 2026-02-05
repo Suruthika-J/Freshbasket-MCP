@@ -635,77 +635,70 @@ const ProfileSettings = () => {
         </div>
 
         {/* Forgot Password Modal */}
-        {showForgotPasswordModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 max-w-md w-full shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white flex items-center">
-                  <FaLock className="mr-3 text-emerald-400" />
-                  Reset Password
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowForgotPasswordModal(false);
-                    setForgotPasswordEmail(userData?.email || '');
+        <Modal
+          isOpen={showForgotPasswordModal}
+          onClose={() => {
+            setShowForgotPasswordModal(false);
+            setForgotPasswordEmail(userData?.email || '');
+            setErrors({});
+          }}
+          title={
+            <div className="flex items-center">
+              <FaLock className="mr-3 text-emerald-400" />
+              Reset Password
+            </div>
+          }
+          size="sm"
+        >
+          <p className="text-gray-300 mb-6">
+            Enter your email address and we'll send you a verification code to reset your password.
+          </p>
+
+          <form onSubmit={handleForgotPassword}>
+            <div className="mb-4">
+              <label className="block text-gray-300 mb-2">Email Address</label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="email"
+                  value={forgotPasswordEmail}
+                  onChange={(e) => {
+                    setForgotPasswordEmail(e.target.value);
                     setErrors({});
                   }}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <FaTimes className="text-xl" />
-                </button>
+                  placeholder="Enter your email address"
+                  disabled={isLoadingForgotPassword}
+                  className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-emerald-400 focus:outline-none transition-colors disabled:bg-gray-600"
+                />
               </div>
-
-              <p className="text-gray-300 mb-6">
-                Enter your email address and we'll send you a verification code to reset your password.
-              </p>
-
-              <form onSubmit={handleForgotPassword}>
-                <div className="mb-4">
-                  <label className="block text-gray-300 mb-2">Email Address</label>
-                  <div className="relative">
-                    <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="email"
-                      value={forgotPasswordEmail}
-                      onChange={(e) => {
-                        setForgotPasswordEmail(e.target.value);
-                        setErrors({});
-                      }}
-                      placeholder="Enter your email address"
-                      disabled={isLoadingForgotPassword}
-                      className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-emerald-400 focus:outline-none transition-colors disabled:bg-gray-600"
-                    />
-                  </div>
-                  {errors.forgotPassword && (
-                    <p className="text-red-400 text-sm mt-2">{errors.forgotPassword}</p>
-                  )}
-                </div>
-
-                <div className="flex space-x-4">
-                  <button
-                    type="submit"
-                    disabled={isLoadingForgotPassword}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoadingForgotPassword ? 'Sending...' : 'Send Reset Code'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowForgotPasswordModal(false);
-                      setForgotPasswordEmail(userData?.email || '');
-                      setErrors({});
-                    }}
-                    disabled={isLoadingForgotPassword}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
+              {errors.forgotPassword && (
+                <p className="text-red-400 text-sm mt-2">{errors.forgotPassword}</p>
+              )}
             </div>
-          </div>
-        )}
+
+            <div className="flex space-x-4">
+              <button
+                type="submit"
+                disabled={isLoadingForgotPassword}
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingForgotPassword ? 'Sending...' : 'Send Reset Code'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPasswordModal(false);
+                  setForgotPasswordEmail(userData?.email || '');
+                  setErrors({});
+                }}
+                disabled={isLoadingForgotPassword}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </Modal>
       </div>
     </div>
   );
