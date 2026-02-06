@@ -331,15 +331,7 @@ const App = () => {
             />
 
             {/* Edit Product - Requires 'farmer' role AND approval */}
-            <Route
-              path="/farmer/edit-product/:productId"
-              element={
-                <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
-                  <EditProductFarmer />
-                </ProtectedRoute>
-              }
-            />
-
+            {/* NOTE: Using :id as the parameter to match FarmerDashboard navigation */}
             <Route
               path="/farmer/edit-product/:id"
               element={
@@ -347,7 +339,7 @@ const App = () => {
                   <EditProductFarmer />
                 </ProtectedRoute>
               }
-            />  
+            />
 
             {/* ==================== ADMIN ROUTES ==================== */}
             

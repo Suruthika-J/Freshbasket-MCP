@@ -179,17 +179,17 @@ export const createProduct = async (req, res, next) => {
   }
 };
 
-// PUT update a product by ID
+// PUT update a product by ID (Enhanced for Farmer Editing)
 export const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { price, stock, oldPrice, visibleDistricts } = req.body;
-    
+    const { name, description, category, price, stock, oldPrice, visibleDistricts } = req.body;
+
     console.log('\n=== Update Product Request ===');
     console.log('Product ID:', id);
-    console.log('New Stock:', stock);
-    console.log('Visible Districts:', visibleDistricts);
-    
+    console.log('User Role:', req.user?.role);
+    console.log('User ID:', req.user?._id);
+
     // Validate input
     if (price !== undefined && (isNaN(price) || price < 0)) {
       return res.status(400).json({ message: 'Invalid price value' });
@@ -197,28 +197,65 @@ export const updateProduct = async (req, res, next) => {
     if (stock !== undefined && (isNaN(stock) || stock < 0)) {
       return res.status(400).json({ message: 'Invalid stock value' });
     }
-    
+
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    
-    const previousStock = product.stock;
-    
-    // Update fields
-    if (price !== undefined) product.price = Number(price);
-    if (stock !== undefined) product.stock = Number(stock);
-    if (oldPrice !== undefined) product.oldPrice = Number(oldPrice);
-    
-    // Update visible districts if provided (admin only)
-    if (visibleDistricts !== undefined && product.adminUploaded) {
-      product.visibleDistricts = Array.isArray(visibleDistricts) 
-        ? visibleDistricts 
-        : JSON.parse(visibleDistricts);
+
+    // Ownership validation for farmers
+    if (req.user.role === 'farmer') {
+      if (product.farmerId?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          message: 'Access denied. You can only edit your own products.'
+        });
+      }
     }
-    
+
+    const previousStock = product.stock;
+
+    // Update fields based on user role
+    if (req.user.role === 'farmer') {
+      // Farmers can edit: name, description, category, price, stock, oldPrice, imageUrl
+      if (name !== undefined) product.name = name.trim();
+      if (description !== undefined) product.description = description.trim();
+      if (category !== undefined) product.category = category;
+      if (price !== undefined) product.price = Number(price);
+      if (stock !== undefined) product.stock = Number(stock);
+      if (oldPrice !== undefined) product.oldPrice = oldPrice ? Number(oldPrice) : null;
+
+      // Handle image upload for farmers
+      const filename = req.file?.filename ?? null;
+      if (filename) {
+        product.imageUrl = `/uploads/${filename}`;
+      }
+    } else if (req.user.role === 'admin') {
+      // Admins can edit all fields including visibleDistricts
+      if (name !== undefined) product.name = name.trim();
+      if (description !== undefined) product.description = description.trim();
+      if (category !== undefined) product.category = category;
+      if (price !== undefined) product.price = Number(price);
+      if (stock !== undefined) product.stock = Number(stock);
+      if (oldPrice !== undefined) product.oldPrice = oldPrice ? Number(oldPrice) : null;
+
+      // Update visible districts if provided (admin only)
+      if (visibleDistricts !== undefined && product.adminUploaded) {
+        product.visibleDistricts = Array.isArray(visibleDistricts)
+          ? visibleDistricts
+          : JSON.parse(visibleDistricts);
+      }
+
+      // Handle image upload for admins
+      const filename = req.file?.filename ?? null;
+      if (filename) {
+        product.imageUrl = `/uploads/${filename}`;
+      }
+    } else {
+      return res.status(403).json({ message: 'Access denied. Insufficient privileges.' });
+    }
+
     const updatedProduct = await product.save();
-    
+
     // Trigger SMS notification if stock changed
     if (stock !== undefined && stock !== previousStock) {
       console.log('📱 Stock changed! Checking for notifications...');
@@ -226,8 +263,12 @@ export const updateProduct = async (req, res, next) => {
         .then(() => console.log('✅ Notification check completed'))
         .catch(err => console.error('❌ Notification error:', err.message));
     }
-    
-    res.json(updatedProduct);
+
+    res.json({
+      success: true,
+      message: 'Product updated successfully',
+      product: updatedProduct
+    });
   } catch (err) {
     console.error('❌ Error in updateProduct:', err);
     next(err);

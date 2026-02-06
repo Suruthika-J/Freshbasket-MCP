@@ -4,8 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FiPackage, FiPlus, FiEdit, FiTrash2, FiEye, FiUser, FiSave, FiLogOut } from 'react-icons/fi';
+import { FiPackage, FiPlus, FiEdit, FiTrash2, FiEye, FiUser, FiSave, FiLogOut, FiAlertTriangle, FiXCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -21,6 +22,8 @@ const FarmerDashboard = () => {
     district: ''
   });
   const [profileLoading, setProfileLoading] = useState(false);
+  const [showLowStockModal, setShowLowStockModal] = useState(false);
+  const [showOutOfStockModal, setShowOutOfStockModal] = useState(false);
 
   useEffect(() => {
     fetchFarmerProducts();
@@ -141,6 +144,14 @@ const FarmerDashboard = () => {
       console.error('Error deleting product:', error);
       toast.error('Failed to delete product');
     }
+  };
+
+  const handleLowStockClick = () => {
+    setShowLowStockModal(true);
+  };
+
+  const handleOutOfStockClick = () => {
+    setShowOutOfStockModal(true);
   };
 
   const handleLogout = () => {
@@ -290,7 +301,7 @@ const FarmerDashboard = () => {
 
       {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center">
               <div className="bg-green-100 rounded-full p-3">
@@ -317,10 +328,30 @@ const FarmerDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div
+            className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={handleLowStockClick}
+          >
             <div className="flex items-center">
               <div className="bg-yellow-100 rounded-full p-3">
-                <FiPackage className="w-6 h-6 text-yellow-600" />
+                <FiAlertTriangle className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Low Stock</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {products.filter(p => p.stock > 0 && p.stock < 10).length}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="bg-white rounded-lg shadow-sm p-6 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={handleOutOfStockClick}
+          >
+            <div className="flex items-center">
+              <div className="bg-red-100 rounded-full p-3">
+                <FiXCircle className="w-6 h-6 text-red-600" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Out of Stock</p>
@@ -459,6 +490,116 @@ const FarmerDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Low Stock Modal */}
+      <Modal
+        isOpen={showLowStockModal}
+        onClose={() => setShowLowStockModal(false)}
+        title="Low Stock Products"
+        size="lg"
+      >
+        <div className="p-6">
+          {products.filter(p => p.stock > 0 && p.stock < 10).length === 0 ? (
+            <div className="text-center py-8">
+              <FiAlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Low Stock Products</h3>
+              <p className="text-gray-600">All your products have sufficient stock levels.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {products
+                .filter(p => p.stock > 0 && p.stock < 10)
+                .map((product) => (
+                  <div key={product._id} className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={`${API_BASE_URL}${product.imageUrl}`}
+                        alt={product.name}
+                        className="w-12 h-12 rounded-lg object-cover"
+                        onError={(e) => {
+                          e.target.src = '/placeholder-product.png';
+                        }}
+                      />
+                      <div>
+                        <h4 className="font-medium text-gray-900">{product.name}</h4>
+                        <p className="text-sm text-gray-600">{product.category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">₹{product.price}</p>
+                      <p className="text-sm text-yellow-600 font-medium">
+                        Stock: {product.stock} {product.unit}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowLowStockModal(false);
+                        handleEditProduct(product._id);
+                      }}
+                      className="ml-4 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                    >
+                      Update Stock
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Out of Stock Modal */}
+      <Modal
+        isOpen={showOutOfStockModal}
+        onClose={() => setShowOutOfStockModal(false)}
+        title="Out of Stock Products"
+        size="lg"
+      >
+        <div className="p-6">
+          {products.filter(p => p.stock === 0).length === 0 ? (
+            <div className="text-center py-8">
+              <FiXCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Out of Stock Products</h3>
+              <p className="text-gray-600">All your products are in stock!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {products
+                .filter(p => p.stock === 0)
+                .map((product) => (
+                  <div key={product._id} className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={`${API_BASE_URL}${product.imageUrl}`}
+                        alt={product.name}
+                        className="w-12 h-12 rounded-lg object-cover"
+                        onError={(e) => {
+                          e.target.src = '/placeholder-product.png';
+                        }}
+                      />
+                      <div>
+                        <h4 className="font-medium text-gray-900">{product.name}</h4>
+                        <p className="text-sm text-gray-600">{product.category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">₹{product.price}</p>
+                      <p className="text-sm text-red-600 font-medium">Out of Stock</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowOutOfStockModal(false);
+                        handleEditProduct(product._id);
+                      }}
+                      className="ml-4 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                    >
+                      Restock
+                    </button>
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

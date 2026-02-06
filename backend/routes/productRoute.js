@@ -10,7 +10,7 @@ import {
     getLowStockProducts,
     getOutOfStockProducts,
     getFarmerProducts,
-    getProductsByFarmerId, // NEW IMPORT
+    getProductsByFarmerId,
 } from '../controllers/productController.js';
 import auth, { requireAdmin } from '../middleware/auth.js';
 
@@ -43,8 +43,8 @@ itemrouter.get('/out-of-stock', getOutOfStockProducts);
 // POST create a new product (with optional image upload)
 itemrouter.post('/', auth, upload.single('image'), createProduct);
 
-// PUT update a product by ID
-itemrouter.put('/:id', updateProduct);
+// PUT update a product by ID (Protected for authenticated users) - UPDATED WITH IMAGE UPLOAD
+itemrouter.put('/:id', auth, upload.single('image'), updateProduct);
 
 // DELETE a product by ID
 itemrouter.delete('/:id', deleteProduct);
