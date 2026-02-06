@@ -341,13 +341,79 @@ export const getFarmerProducts = async (req, res, next) => {
   }
 };
 
+// ✅ PATCH update product stock (Inline Stock Adjuster)
+export const updateProductStock = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { stock } = req.body;
+
+    console.log('\n=== Update Product Stock Request ===');
+    console.log('Product ID:', id);
+    console.log('New Stock:', stock);
+    console.log('User Role:', req.user?.role);
+    console.log('User ID:', req.user?._id);
+
+    // Validate input
+    if (stock === undefined || isNaN(stock) || stock < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid stock value. Must be a non-negative number.'
+      });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Ownership validation for farmers
+    if (req.user.role === 'farmer') {
+      if (product.farmerId?.toString() !== req.user._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update stock for your own products.'
+        });
+      }
+    }
+
+    const previousStock = product.stock;
+
+    // Update stock
+    product.stock = Number(stock);
+    const updatedProduct = await product.save();
+
+    // Trigger SMS notification if stock changed significantly
+    if (stock !== previousStock) {
+      console.log('📱 Stock changed! Checking for notifications...');
+      checkAndNotifyStockLevel(updatedProduct, previousStock)
+        .then(() => console.log('✅ Notification check completed'))
+        .catch(err => console.error('❌ Notification error:', err.message));
+    }
+
+    res.json({
+      success: true,
+      message: 'Stock updated successfully',
+      product: {
+        _id: updatedProduct._id,
+        stock: updatedProduct.stock
+      }
+    });
+  } catch (err) {
+    console.error('❌ Error in updateProductStock:', err);
+    next(err);
+  }
+};
+
 // ADMIN-ONLY - GET PRODUCTS BY FARMER ID
 export const getProductsByFarmerId = async (req, res, next) => {
   try {
     const { farmerId } = req.params;
-    
+
     console.log('👨‍🌾 Admin fetching products for farmer:', farmerId);
-    
+
     // Verify the farmer exists
     const farmer = await User.findById(farmerId);
     if (!farmer) {
@@ -356,24 +422,24 @@ export const getProductsByFarmerId = async (req, res, next) => {
         message: 'Farmer not found'
       });
     }
-    
+
     if (farmer.role !== 'farmer') {
       return res.status(400).json({
         success: false,
         message: 'User is not a farmer'
       });
     }
-    
+
     // Fetch all products uploaded by this farmer
-    const products = await Product.find({ 
+    const products = await Product.find({
       farmerId: farmerId,
       uploaderRole: 'farmer'
     })
     .sort({ createdAt: -1 })
     .select('name category description price oldPrice stock imageUrl unit createdAt updatedAt');
-    
+
     console.log(`📦 Retrieved ${products.length} products for farmer ${farmer.name}`);
-    
+
     res.json({
       success: true,
       farmer: {

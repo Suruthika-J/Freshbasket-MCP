@@ -10,6 +10,7 @@ import {
     getLowStockProducts,
     getOutOfStockProducts,
     getFarmerProducts,
+    updateProductStock,  // ✅ ADDED THIS IMPORT
     getProductsByFarmerId,
 } from '../controllers/productController.js';
 import auth, { requireAdmin } from '../middleware/auth.js';
@@ -40,21 +41,24 @@ itemrouter.get('/low-stock', getLowStockProducts);
 // GET out of stock products
 itemrouter.get('/out-of-stock', getOutOfStockProducts);
 
-// POST create a new product (with optional image upload)
-itemrouter.post('/', auth, upload.single('image'), createProduct);
-
-// PUT update a product by ID (Protected for authenticated users) - UPDATED WITH IMAGE UPLOAD
-itemrouter.put('/:id', auth, upload.single('image'), updateProduct);
-
-// DELETE a product by ID
-itemrouter.delete('/:id', deleteProduct);
-
 // GET /api/product/farmer-products - Get products for logged-in farmer
 itemrouter.get('/farmer-products', auth, getFarmerProducts);
 
 // ====== NEW ADMIN-ONLY ROUTE ======
 // GET /api/items/admin/farmer/:farmerId/products - Get all products by a specific farmer (Admin only)
 itemrouter.get('/admin/farmer/:farmerId/products', auth, requireAdmin, getProductsByFarmerId);
+
+// POST create a new product (with optional image upload)
+itemrouter.post('/', auth, upload.single('image'), createProduct);
+
+// PUT update a product by ID (Protected for authenticated users) - WITH IMAGE UPLOAD
+itemrouter.put('/:id', auth, upload.single('image'), updateProduct);
+
+// PATCH update product stock (Inline Stock Adjuster) ✅ NOW CORRECTLY ROUTED
+itemrouter.patch('/:id/stock', auth, updateProductStock);
+
+// DELETE a product by ID
+itemrouter.delete('/:id', auth, deleteProduct);
 
 // ====== TEST ROUTES (Remove in Production) ======
 

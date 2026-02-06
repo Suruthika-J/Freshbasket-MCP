@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { FiPackage, FiPlus, FiEdit, FiTrash2, FiEye, FiUser, FiSave, FiLogOut, FiAlertTriangle, FiXCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
+import StockAdjuster from '../components/StockAdjuster';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -152,6 +153,17 @@ const FarmerDashboard = () => {
 
   const handleOutOfStockClick = () => {
     setShowOutOfStockModal(true);
+  };
+
+  const handleStockUpdate = (productId, newStock) => {
+    // Update the local state to reflect the stock change immediately
+    setProducts(prevProducts =>
+      prevProducts.map(product =>
+        product._id === productId
+          ? { ...product, stock: newStock }
+          : product
+      )
+    );
   };
 
   const handleLogout = () => {
@@ -455,9 +467,11 @@ const FarmerDashboard = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {product.stock}
-                        </span>
+                        <StockAdjuster
+                          productId={product._id}
+                          initialStock={product.stock}
+                          onStockUpdate={handleStockUpdate}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
