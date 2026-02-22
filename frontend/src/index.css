@@ -1,79 +1,691 @@
 @import "tailwindcss";
 
-::-webkit-scrollbar{
-    display: none;
+
+/* ============================================================
+   FRESHBASKET — GLOBAL THEME SYSTEM
+   Light / Dark mode via [data-theme] on <html>
+   ============================================================ */
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* Theme Variables */
-:root {
-  /* Dark Theme (Default) */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
-  --border-primary: #334155;
-  --border-secondary: #475569;
-  --accent-primary: #10b981;
-  --accent-secondary: #059669;
-  --accent-hover: #047857;
-  --card-bg: rgba(30, 41, 59, 0.8);
-  --dropdown-bg: rgba(15, 23, 42, 0.95);
-  --input-bg: #1e293b;
-  --button-primary: #10b981;
-  --button-primary-hover: #059669;
-  --navbar-bg: rgba(15, 23, 42, 0.95);
-  --navbar-blur: rgba(15, 23, 42, 0.8);
-  --text-maroon: #ffffff;
-  --banner-bg: #334155;
-  --feature-text: #ffffff;
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
 }
 
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+
+
+/* ============================================================
+   LIGHT MODE (default)
+   ============================================================ */
+:root,
 [data-theme="light"] {
-  /* Light Theme */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --border-primary: #e2e8f0;
-  --border-secondary: #cbd5e1;
-  --accent-primary: #10b981;
-  --accent-secondary: #059669;
-  --accent-hover: #047857;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --dropdown-bg: rgba(255, 255, 255, 0.95);
-  --input-bg: #ffffff;
-  --button-primary: #10b981;
-  --button-primary-hover: #059669;
-  --navbar-bg: rgba(255, 255, 255, 0.95);
-  --navbar-blur: rgba(255, 255, 255, 0.8);
-  --text-maroon: #475569;
-  --banner-bg: #ffffff;
-  --feature-text: #0f172a;
+  /* Brand */
+  --color-primary: #2E7D32;
+  --color-primary-hover: #1B5E20;
+  --color-primary-light: #81C784;
+  --color-primary-subtle: #E8F5E9;
+
+  /* Backgrounds */
+  --color-bg: #F9FBF7;
+  --color-bg-secondary: #F1F8F2;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F4FAF5;
+
+  /* Text */
+  --color-text: #1B1F1D;
+  --color-text-secondary: #4F5B57;
+  --color-text-muted: #7A8A84;
+  --color-text-inverse: #FFFFFF;
+
+  /* Borders */
+  --color-border: #E0E0E0;
+  --color-border-focus: #2E7D32;
+
+  /* Cards / Shadows */
+  --color-card-bg: #FFFFFF;
+  --shadow-card: 0 2px 12px rgba(46, 125, 50, 0.08), 0 1px 4px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(46, 125, 50, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-navbar: 0 2px 20px rgba(46, 125, 50, 0.12);
+
+  /* Inputs */
+  --color-input-bg: #FFFFFF;
+  --color-input-border: #E0E0E0;
+
+  /* Navbar */
+  --color-navbar-bg: rgba(245, 252, 245, 0.97);
+  --color-navbar-border: rgba(46, 125, 50, 0.18);
+  --color-navbar-text: #1B1F1D;
+  --color-navbar-link: #4F5B57;
+  --color-navbar-active: #2E7D32;
+
+  /* Footer */
+  --color-footer-bg: #1B5E20;
+  --color-footer-text: #E8F5E9;
+  --color-footer-muted: #A5D6A7;
+
+  /* Buttons */
+  --color-btn-primary-bg: #2E7D32;
+  --color-btn-primary-text: #FFFFFF;
+  --color-btn-primary-hover: #1B5E20;
+  --color-btn-secondary-bg: #E8F5E9;
+  --color-btn-secondary-text: #2E7D32;
+
+  /* Status */
+  --color-success: #2E7D32;
+  --color-warning: #F57F17;
+  --color-error: #C62828;
+  --color-info: #0277BD;
+
+  /* Misc */
+  --color-overlay: rgba(0, 0, 0, 0.45);
+  --color-divider: #E0E0E0;
+  --radius-card: 16px;
+  --radius-btn: 9999px;
+  --transition: all 0.25s ease;
 }
 
-/* Theme-aware utility classes */
-.theme-bg-primary { background-color: var(--bg-primary); }
-.theme-bg-secondary { background-color: var(--bg-secondary); }
-.theme-bg-tertiary { background-color: var(--bg-tertiary); }
-.theme-text-primary { color: var(--text-primary); }
-.theme-text-secondary { color: var(--text-secondary); }
-.theme-text-muted { color: var(--text-muted); }
-.theme-border-primary { border-color: var(--border-primary); }
-.theme-border-secondary { border-color: var(--border-secondary); }
-.theme-accent-primary { color: var(--accent-primary); }
-.theme-accent-secondary { background-color: var(--accent-secondary); }
-.theme-accent-hover:hover { background-color: var(--accent-hover); }
-.theme-card-bg { background-color: var(--card-bg); }
-.theme-dropdown-bg { background-color: var(--dropdown-bg); }
-.theme-input-bg { background-color: var(--input-bg); }
-.theme-button-primary { background-color: var(--button-primary); }
-.theme-button-primary-hover:hover { background-color: var(--button-primary-hover); }
-.theme-navbar-bg { background-color: var(--navbar-bg); }
-.theme-navbar-blur { background-color: var(--navbar-blur); }
-.theme-text-maroon { color: var(--text-maroon); }
-.theme-banner-bg { background-color: var(--banner-bg); }
-.theme-feature-text { color: var(--feature-text); }
+/* ============================================================
+   DARK MODE
+   ============================================================ */
+[data-theme="dark"] {
+  /* Brand */
+  --color-primary: #66BB6A;
+  --color-primary-hover: #81C784;
+  --color-primary-light: #388E3C;
+  --color-primary-subtle: #1A2E1B;
+
+  /* Backgrounds */
+  --color-bg: #121212;
+  --color-bg-secondary: #181818;
+  --color-surface: #1E1E1E;
+  --color-surface-alt: #252525;
+
+  /* Text */
+  --color-text: #E8F5E9;
+  --color-text-secondary: #B0BEC5;
+  --color-text-muted: #78909C;
+  --color-text-inverse: #121212;
+
+  /* Borders */
+  --color-border: #2C2C2C;
+  --color-border-focus: #66BB6A;
+
+  /* Cards / Shadows */
+  --color-card-bg: #1E1E1E;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(102, 187, 106, 0.1);
+  --shadow-navbar: 0 2px 20px rgba(0, 0, 0, 0.5);
+
+  /* Inputs */
+  --color-input-bg: #252525;
+  --color-input-border: #2C2C2C;
+
+  /* Navbar */
+  --color-navbar-bg: rgba(18, 18, 18, 0.97);
+  --color-navbar-text: #E8F5E9;
+  --color-navbar-link: #B0BEC5;
+  --color-navbar-active: #66BB6A;
+
+  /* Footer */
+  --color-footer-bg: #0D1F0E;
+  --color-footer-text: #E8F5E9;
+  --color-footer-muted: #81C784;
+
+  /* Buttons */
+  --color-btn-primary-bg: #66BB6A;
+  --color-btn-primary-text: #121212;
+  --color-btn-primary-hover: #81C784;
+  --color-btn-secondary-bg: #1A2E1B;
+  --color-btn-secondary-text: #66BB6A;
+
+  /* Status */
+  --color-success: #66BB6A;
+  --color-warning: #FFB300;
+  --color-error: #EF5350;
+  --color-info: #29B6F6;
+
+  /* Misc */
+  --color-overlay: rgba(0, 0, 0, 0.65);
+  --color-divider: #2C2C2C;
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', 'Poppins', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   THEME-AWARE UTILITY CLASSES
+   ============================================================ */
+
+/* Backgrounds */
+.fb-bg {
+  background-color: var(--color-bg);
+}
+
+.fb-bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+
+.fb-surface {
+  background-color: var(--color-surface);
+}
+
+.fb-surface-alt {
+  background-color: var(--color-surface-alt);
+}
+
+.fb-primary-subtle {
+  background-color: var(--color-primary-subtle);
+}
+
+/* Text */
+.fb-text {
+  color: var(--color-text);
+}
+
+.fb-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.fb-text-muted {
+  color: var(--color-text-muted);
+}
+
+.fb-text-primary {
+  color: var(--color-primary);
+}
+
+.fb-text-inverse {
+  color: var(--color-text-inverse);
+}
+
+.fb-text-error {
+  color: var(--color-error);
+}
+
+.fb-text-success {
+  color: var(--color-success);
+}
+
+.fb-text-warning {
+  color: var(--color-warning);
+}
+
+.fb-text-info {
+  color: var(--color-info);
+}
+
+/* Borders */
+.fb-border {
+  border-color: var(--color-border);
+}
+
+.fb-border-primary {
+  border-color: var(--color-primary);
+}
+
+.fb-divider {
+  border-color: var(--color-divider);
+}
+
+/* Cards */
+.fb-card {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+}
+
+.fb-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+/* Buttons */
+.fb-btn-primary {
+  background-color: var(--color-btn-primary-bg);
+  color: var(--color-btn-primary-text);
+  border-radius: var(--radius-btn);
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.fb-btn-primary:hover {
+  background-color: var(--color-btn-primary-hover);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+  transform: translateY(-1px);
+}
+
+.fb-btn-primary:active {
+  transform: translateY(0);
+}
+
+.fb-btn-secondary {
+  background-color: var(--color-btn-secondary-bg);
+  color: var(--color-btn-secondary-text);
+  border-radius: var(--radius-btn);
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  border: 1.5px solid var(--color-primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.fb-btn-secondary:hover {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* Inputs */
+.fb-input {
+  background-color: var(--color-input-bg);
+  color: var(--color-text);
+  border: 1.5px solid var(--color-input-border);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  width: 100%;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.fb-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+}
+
+.fb-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Navbar */
+.fb-navbar {
+  background-color: var(--color-navbar-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 16px rgba(46, 125, 50, 0.10), 0 1px 0 rgba(46, 125, 50, 0.15);
+  border-bottom: 1.5px solid var(--color-navbar-border, rgba(46, 125, 50, 0.15));
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Footer */
+.fb-footer {
+  background-color: var(--color-footer-bg);
+  color: var(--color-footer-text);
+}
+
+/* Modal overlay */
+.fb-overlay {
+  background-color: var(--color-overlay);
+  backdrop-filter: blur(4px);
+}
+
+/* Modal / Dropdown surface */
+.fb-modal {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Table */
+.fb-table-header {
+  background-color: var(--color-primary-subtle);
+}
+
+.fb-table-row:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.fb-table-cell {
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Status badges */
+.fb-badge-success {
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+.fb-badge-warning {
+  background-color: #FFF8E1;
+  color: #F57F17;
+}
+
+.fb-badge-error {
+  background-color: #FFEBEE;
+  color: var(--color-error);
+}
+
+.fb-badge-info {
+  background-color: #E3F2FD;
+  color: var(--color-info);
+}
+
+[data-theme="dark"] .fb-badge-warning {
+  background-color: #2C2000;
+  color: #FFB300;
+}
+
+[data-theme="dark"] .fb-badge-error {
+  background-color: #2C0A0A;
+  color: #EF5350;
+}
+
+[data-theme="dark"] .fb-badge-info {
+  background-color: #0A1929;
+  color: #29B6F6;
+}
+
+/* Theme toggle button */
+.fb-theme-toggle {
+  background-color: var(--color-surface-alt);
+  border: 1.5px solid var(--color-border);
+  border-radius: 9999px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.fb-theme-toggle:hover {
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Divider */
+.fb-hr {
+  border: none;
+  border-top: 1px solid var(--color-divider);
+  margin: 1rem 0;
+}
+
+/* Section backgrounds */
+.fb-section {
+  background-color: var(--color-bg);
+}
+
+.fb-section-alt {
+  background-color: var(--color-bg-secondary);
+}
+
+/* Link */
+.fb-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.fb-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   LEGACY COMPATIBILITY — keep old variable names working
+   (maps old vars → new vars so existing components don't break)
+   ============================================================ */
+:root,
+[data-theme="light"] {
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-secondary);
+  --bg-tertiary: var(--color-surface-alt);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-primary: var(--color-border);
+  --border-secondary: var(--color-border);
+  --accent-primary: var(--color-primary);
+  --accent-secondary: var(--color-primary-light);
+  --accent-hover: var(--color-primary-hover);
+  --card-bg: var(--color-card-bg);
+  --dropdown-bg: var(--color-surface);
+  --input-bg: var(--color-input-bg);
+  --button-primary: var(--color-btn-primary-bg);
+  --button-primary-hover: var(--color-btn-primary-hover);
+  --navbar-bg: var(--color-navbar-bg);
+  --navbar-blur: var(--color-navbar-bg);
+  --text-maroon: var(--color-text-secondary);
+  --banner-bg: var(--color-bg);
+  --feature-text: var(--color-text);
+}
+
+[data-theme="dark"] {
+  --bg-primary: var(--color-bg);
+  --bg-secondary: var(--color-bg-secondary);
+  --bg-tertiary: var(--color-surface-alt);
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-primary: var(--color-border);
+  --border-secondary: var(--color-border);
+  --accent-primary: var(--color-primary);
+  --accent-secondary: var(--color-primary-light);
+  --accent-hover: var(--color-primary-hover);
+  --card-bg: var(--color-card-bg);
+  --dropdown-bg: var(--color-surface);
+  --input-bg: var(--color-input-bg);
+  --button-primary: var(--color-btn-primary-bg);
+  --button-primary-hover: var(--color-btn-primary-hover);
+  --navbar-bg: var(--color-navbar-bg);
+  --navbar-blur: var(--color-navbar-bg);
+  --text-maroon: var(--color-text-secondary);
+  --banner-bg: var(--color-bg);
+  --feature-text: var(--color-text);
+}
+
+/* ── Legacy utility classes (kept for backward compat) ─────── */
+.theme-bg-primary {
+  background-color: var(--color-bg);
+}
+
+.theme-bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+
+.theme-bg-tertiary {
+  background-color: var(--color-surface-alt);
+}
+
+.theme-text-primary {
+  color: var(--color-text);
+}
+
+.theme-text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--color-text-muted);
+}
+
+.theme-border-primary {
+  border-color: var(--color-border);
+}
+
+.theme-border-secondary {
+  border-color: var(--color-border);
+}
+
+.theme-accent-primary {
+  color: var(--color-primary);
+}
+
+.theme-accent-secondary {
+  background-color: var(--color-primary-light);
+}
+
+.theme-accent-hover:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.theme-card-bg {
+  background-color: var(--color-card-bg);
+}
+
+.theme-dropdown-bg {
+  background-color: var(--color-surface);
+}
+
+.theme-input-bg {
+  background-color: var(--color-input-bg);
+}
+
+.theme-button-primary {
+  background-color: var(--color-btn-primary-bg);
+}
+
+.theme-button-primary-hover:hover {
+  background-color: var(--color-btn-primary-hover);
+}
+
+.theme-navbar-bg {
+  background-color: var(--color-navbar-bg);
+}
+
+.theme-navbar-blur {
+  background-color: var(--color-navbar-bg);
+}
+
+.theme-text-maroon {
+  color: var(--color-text-secondary);
+}
+
+.theme-banner-bg {
+  background-color: var(--color-bg);
+}
+
+.theme-feature-text {
+  color: var(--color-text);
+}
+
+/* ============================================================
+   COMPONENT-LEVEL OVERRIDES
+   Ensures hardcoded Tailwind dark classes adapt to theme
+   ============================================================ */
+
+/* Admin panel — always uses its own neutral palette */
+.admin-surface {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* Smooth page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fb-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fb-pulse-green {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(46, 125, 50, 0);
+  }
+}
+
+@keyframes fb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fb-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fb-float {
+  animation: fb-float 4s ease-in-out infinite;
+}
+
+.animate-fb-pulse {
+  animation: fb-pulse-green 2s ease-in-out infinite;
+}
+
+.animate-fb-spin {
+  animation: fb-spin 1s linear infinite;
+}
+
+/* Skeleton loader */
+.fb-skeleton {
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-alt) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: fb-shimmer 1.5s infinite;
+  border-radius: 8px;
+}

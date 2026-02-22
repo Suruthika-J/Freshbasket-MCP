@@ -1,4 +1,6 @@
-// backend/models/orderModel.js - UPDATED WITH TRACKING
+// backend/models/orderModel.js - LEGACY ORDER MODEL
+// NOTE: This model is maintained for backward compatibility
+// New orders should use ParentOrderModel.js and SubOrderModel.js
 import mongoose from 'mongoose';
 
 // Item sub-schema
@@ -24,15 +26,15 @@ const orderSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     customer: {
         name: { type: String, required: true },
-        email: { type: String, required: true},
+        email: { type: String, required: true },
         phone: { type: String, required: true, minlength: 10 },
         address: { type: String, required: true },
         notes: { type: String }
     },
-    paymentMethod: { 
-        type: String, 
-        enum: ['Cash on Delivery', 'Online Payment'], 
-        required: true 
+    paymentMethod: {
+        type: String,
+        enum: ['Cash on Delivery', 'Online Payment'],
+        required: true
     },
     items: { type: [orderItemSchema], default: [] },
     subtotal: { type: Number, default: 0, min: 0 },
@@ -41,15 +43,15 @@ const orderSchema = new mongoose.Schema({
     total: { type: Number, default: 0, min: 0 },
     sessionId: { type: String },
     paymentIntentId: { type: String },
-    paymentStatus: { 
-        type: String, 
-        enum: ['Unpaid', 'Paid'], 
-        default: 'Unpaid' 
+    paymentStatus: {
+        type: String,
+        enum: ['Unpaid', 'Paid'],
+        default: 'Unpaid'
     },
-    status: { 
-        type: String, 
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'], 
-        default: 'Pending' 
+    status: {
+        type: String,
+        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+        default: 'Pending'
     },
     // Delivery Agent Fields
     assignedTo: {
@@ -57,9 +59,9 @@ const orderSchema = new mongoose.Schema({
         ref: 'DeliveryAgent',
         default: null
     },
-    assignedAt: { 
-        type: Date, 
-        default: null 
+    assignedAt: {
+        type: Date,
+        default: null
     },
     // ========== NEW: TRACKING FIELDS ==========
     storeLocation: {
@@ -75,6 +77,19 @@ const orderSchema = new mongoose.Schema({
     trackingEnabled: {
         type: Boolean,
         default: false
+    },
+    // ==========================================
+    // LEGACY ORDER TRACKING (for migration to multi-vendor system)
+    // ==========================================
+    isLegacy: {
+        type: Boolean,
+        default: true,
+        index: true
+    },
+    migratedToParentOrder: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ParentOrder',
+        default: null
     },
     // ==========================================
     date: { type: Date, default: Date.now, index: true },

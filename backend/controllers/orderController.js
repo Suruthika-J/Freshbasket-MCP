@@ -19,32 +19,32 @@ const calculateShipping = (subtotal) => {
 // Helper function to validate and update stock
 const validateAndUpdateStock = async (items, session = null) => {
     const stockUpdates = [];
-    
+
     for (const item of items) {
         const product = await Product.findById(item.id);
-        
+
         if (!product) {
             throw new Error(`Product ${item.name} not found`);
         }
-        
+
         if (product.stock < item.quantity) {
             throw new Error(
                 `Insufficient stock for ${item.name}. Only ${product.stock} items available`
             );
         }
-        
+
         stockUpdates.push({
             product,
             quantity: item.quantity
         });
     }
-    
+
     // Update all stock quantities
     for (const { product, quantity } of stockUpdates) {
         product.stock -= quantity;
         await product.save({ session });
     }
-    
+
     return stockUpdates;
 };
 
@@ -60,7 +60,7 @@ const validateAndUpdateStock = async (items, session = null) => {
 export const createOrder = async (req, res) => {
     try {
         const { customer, items, paymentMethod, notes, deliveryDate } = req.body;
-        
+
         if (!Array.isArray(items) || !items.length) {
             return res.status(400).json({ message: 'Invalid or empty items array' });
         }
@@ -80,12 +80,12 @@ export const createOrder = async (req, res) => {
         for (const item of orderItems) {
             const product = await Product.findById(item.id);
             if (!product) {
-                return res.status(404).json({ 
-                    message: `Product ${item.name} not found` 
+                return res.status(404).json({
+                    message: `Product ${item.name} not found`
                 });
             }
             if (product.stock < item.quantity) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     message: `Insufficient stock for ${item.name}. Only ${product.stock} items available`,
                     availableStock: product.stock,
                     productId: item.id
@@ -163,14 +163,14 @@ export const createOrder = async (req, res) => {
             });
 
             await newOrder.save();
-            
+
             console.log('✅ Stripe checkout created');
             console.log('   Checkout URL:', session.url);
             console.log('   Success redirect:', session.success_url);
             console.log('   Cancel redirect:', session.cancel_url);
-            
-            return res.status(201).json({ 
-                order: newOrder, 
+
+            return res.status(201).json({
+                order: newOrder,
                 checkoutUrl: session.url,
                 message: 'Order created. Stock will be updated after payment confirmation.'
             });
@@ -179,7 +179,7 @@ export const createOrder = async (req, res) => {
         // Cash on Delivery - Update stock immediately
         try {
             await validateAndUpdateStock(orderItems);
-            
+
             newOrder = new Order({
                 orderId,
                 user: req.user._id,
@@ -194,22 +194,22 @@ export const createOrder = async (req, res) => {
             });
 
             await newOrder.save();
-            
+
             // ✅ CRITICAL FIX: Redirect to FRONTEND verify page (port 5174)
             const successUrl = `${process.env.FRONTEND_URL}/myorders/verify?order_id=${newOrder._id}`;
-            
+
             console.log('✅ COD Order created');
             console.log('   Order ID:', newOrder.orderId);
             console.log('   Success redirect:', successUrl);
-            
-            res.status(201).json({ 
-                order: newOrder, 
+
+            res.status(201).json({
+                order: newOrder,
                 checkoutUrl: successUrl,
                 message: 'Order placed successfully. Stock updated.'
             });
         } catch (stockError) {
-            return res.status(400).json({ 
-                message: stockError.message 
+            return res.status(400).json({
+                message: stockError.message
             });
         }
     } catch (err) {
@@ -237,22 +237,22 @@ export const confirmPayment = async (req, res) => {
 
         try {
             await validateAndUpdateStock(order.items);
-            
+
             order.paymentStatus = 'Paid';
             await order.save();
-            
+
             res.json({
                 ...order.toObject(),
                 message: 'Payment confirmed and stock updated successfully'
             });
         } catch (stockError) {
             console.error('CRITICAL: Payment confirmed but stock update failed:', stockError);
-            
+
             order.paymentStatus = 'Paid';
             order.notes = `${order.notes || ''}\n[ADMIN ACTION REQUIRED: Stock update failed - ${stockError.message}]`;
             await order.save();
-            
-            return res.status(500).json({ 
+
+            return res.status(500).json({
                 message: 'Payment confirmed but stock update failed. Admin will process manually.',
                 order: order,
                 error: stockError.message
@@ -281,16 +281,42 @@ export const getOrders = async (req, res, next) => {
 // GET /api/orders/:id — returns one order
 export const getOrderById = async (req, res, next) => {
     try {
-        const order = await Order.findById(req.params.id)
-            .populate('assignedTo', 'name email phone')
-            .lean();
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found' });
+        const { id } = req.params;
+        console.log(`🔍 Fetching order by ID: ${id}`);
+
+        // 1. Try to find by Mongoose _id (ObjectId)
+        // Only attempt if it's a valid hex string of length 24
+        let order = null;
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+            order = await Order.findById(id)
+                .populate('assignedTo', 'name email phone')
+                .lean();
         }
+
+        // 2. Fallback: Try to find by custom orderId (UUID/String)
+        if (!order) {
+            console.log(`ℹ️ Not a valid ObjectId, searching by orderId field: ${id}`);
+            order = await Order.findOne({ orderId: id })
+                .populate('assignedTo', 'name email phone')
+                .lean();
+        }
+
+        if (!order) {
+            console.log(`❌ Order not found: ${id}`);
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
         res.json(order);
     } catch (err) {
-        console.error('getOrderById error:', err);
-        next(err);
+        console.error('❌ getOrderById error:', err.message);
+        res.status(500).json({
+            success: false,
+            message: 'Server Error fetching order',
+            error: err.message
+        });
     }
 };
 
@@ -299,7 +325,7 @@ export const updateOrder = async (req, res, next) => {
     try {
         const allowed = ['status', 'paymentStatus', 'deliveryDate', 'notes'];
         const updateData = {};
-        
+
         allowed.forEach(field => {
             if (req.body[field] !== undefined) {
                 updateData[field] = req.body[field];
@@ -331,8 +357,8 @@ export const updateOrder = async (req, res, next) => {
             updateData,
             { new: true, runValidators: true }
         )
-        .populate('assignedTo', 'name email phone')
-        .lean();
+            .populate('assignedTo', 'name email phone')
+            .lean();
 
         if (!updated) {
             return res.status(404).json({ message: 'Order not found' });
@@ -370,7 +396,7 @@ export const deleteOrder = async (req, res, next) => {
         }
 
         await Order.findByIdAndDelete(req.params.id);
-        res.json({ 
+        res.json({
             message: 'Order deleted successfully',
             stockRestored: order.paymentStatus === 'Paid'
         });
@@ -389,9 +415,9 @@ export const getOrderStats = async (req, res, next) => {
     try {
         console.log('📊 Stats endpoint hit');
         console.log('Query params:', req.query);
-        
+
         const { startDate, endDate } = req.query;
-        
+
         let dateFilter = {};
         if (startDate || endDate) {
             dateFilter.createdAt = {};
@@ -443,7 +469,7 @@ export const getOrderStats = async (req, res, next) => {
             if (order.status && stats.hasOwnProperty(order.status)) {
                 stats[order.status]++;
             }
-            
+
             // ✅ FIX: Use display payment status logic
             const displayPaymentStatus = getDisplayPaymentStatus(order);
             if (displayPaymentStatus === 'Unpaid') {
@@ -487,13 +513,13 @@ export const getOrderStats = async (req, res, next) => {
         console.log('   Delivered:', stats.Delivered);
         console.log('   Cancelled:', stats.Cancelled);
         console.log('   Total Revenue: ₹' + totalRevenue);
-        
+
         res.status(200).json(response);
     } catch (err) {
         console.error('❌ getOrderStats error:', err);
         console.error('Error stack:', err.stack);
-        
-        res.status(500).json({ 
+
+        res.status(500).json({
             message: 'Failed to fetch order statistics',
             error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error'
         });
@@ -536,7 +562,7 @@ export const assignOrderToAgent = async (req, res) => {
 
         // Find the delivery agent
         const agent = await DeliveryAgent.findById(agentId);
-        
+
         if (!agent) {
             console.log('❌ Agent not found or invalid role');
             return res.status(404).json({
@@ -617,9 +643,9 @@ export const assignOrderToAgent = async (req, res) => {
 export const generateInvoice = async (req, res) => {
     try {
         const orderId = req.params.id;
-        
+
         console.log('📄 Generating invoice for order ID:', orderId);
-        
+
         // Fetch order from database
         const order = await Order.findById(orderId)
             .populate('user', 'name email')
@@ -627,9 +653,9 @@ export const generateInvoice = async (req, res) => {
 
         if (!order) {
             console.error('❌ Order not found:', orderId);
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'Order not found' 
+                message: 'Order not found'
             });
         }
 
@@ -658,9 +684,9 @@ export const generateInvoice = async (req, res) => {
         console.log('   Total:', total);
 
         // Create PDF document
-        const doc = new PDFDocument({ 
+        const doc = new PDFDocument({
             size: 'A4',
-            margin: 50 
+            margin: 50
         });
 
         // Set response headers for PDF download
@@ -672,76 +698,76 @@ export const generateInvoice = async (req, res) => {
 
         // ==================== HEADER ====================
         doc.fontSize(28)
-           .fillColor('#10b981')
-           .text('RUSHBASKET', 50, 50)
-           .fontSize(10)
-           .fillColor('#666')
-           .text('Fresh Groceries Delivered to Your Door', 50, 85);
+            .fillColor('#10b981')
+            .text('RUSHBASKET', 50, 50)
+            .fontSize(10)
+            .fillColor('#666')
+            .text('Fresh Groceries Delivered to Your Door', 50, 85);
 
         // Invoice Title
         doc.fontSize(24)
-           .fillColor('#000')
-           .text('INVOICE', 400, 50, { align: 'right' });
+            .fillColor('#000')
+            .text('INVOICE', 400, 50, { align: 'right' });
 
         // Horizontal line
         doc.moveTo(50, 110)
-           .lineTo(550, 110)
-           .strokeColor('#10b981')
-           .lineWidth(2)
-           .stroke();
+            .lineTo(550, 110)
+            .strokeColor('#10b981')
+            .lineWidth(2)
+            .stroke();
 
         // ==================== ORDER INFO ====================
         let yPos = 140;
-        
+
         doc.fontSize(10)
-           .fillColor('#666')
-           .text('Order ID:', 50, yPos)
-           .fillColor('#000')
-           .font('Helvetica-Bold')
-           .text(order.orderId, 150, yPos);
+            .fillColor('#666')
+            .text('Order ID:', 50, yPos)
+            .fillColor('#000')
+            .font('Helvetica-Bold')
+            .text(order.orderId, 150, yPos);
 
         yPos += 20;
         doc.font('Helvetica')
-           .fillColor('#666')
-           .text('Order Date:', 50, yPos)
-           .fillColor('#000')
-           .text(new Date(order.createdAt || order.date).toLocaleDateString('en-IN', {
-               year: 'numeric',
-               month: 'long',
-               day: 'numeric',
-               hour: '2-digit',
-               minute: '2-digit'
-           }), 150, yPos);
+            .fillColor('#666')
+            .text('Order Date:', 50, yPos)
+            .fillColor('#000')
+            .text(new Date(order.createdAt || order.date).toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }), 150, yPos);
 
         yPos += 20;
         doc.fillColor('#666')
-           .text('Payment Method:', 50, yPos)
-           .fillColor('#000')
-           .text(order.paymentMethod || 'N/A', 150, yPos);
+            .text('Payment Method:', 50, yPos)
+            .fillColor('#000')
+            .text(order.paymentMethod || 'N/A', 150, yPos);
 
         yPos += 20;
         doc.fillColor('#666')
-           .text('Payment Status:', 50, yPos)
-           .fillColor(order.paymentStatus === 'Paid' ? '#10b981' : '#ef4444')
-           .font('Helvetica-Bold')
-           .text(order.paymentStatus || 'Pending', 150, yPos);
+            .text('Payment Status:', 50, yPos)
+            .fillColor(order.paymentStatus === 'Paid' ? '#10b981' : '#ef4444')
+            .font('Helvetica-Bold')
+            .text(order.paymentStatus || 'Pending', 150, yPos);
 
         // ==================== CUSTOMER INFO ====================
         yPos = 140;
         doc.font('Helvetica-Bold')
-           .fontSize(12)
-           .fillColor('#000')
-           .text('BILL TO:', 350, yPos);
+            .fontSize(12)
+            .fillColor('#000')
+            .text('BILL TO:', 350, yPos);
 
         yPos += 25;
         doc.font('Helvetica')
-           .fontSize(10)
-           .fillColor('#000')
-           .text(order.customer?.name || 'N/A', 350, yPos);
+            .fontSize(10)
+            .fillColor('#000')
+            .text(order.customer?.name || 'N/A', 350, yPos);
 
         yPos += 15;
         doc.fillColor('#666')
-           .text(order.customer?.email || 'N/A', 350, yPos);
+            .text(order.customer?.email || 'N/A', 350, yPos);
 
         yPos += 15;
         doc.text(order.customer?.phone || 'N/A', 350, yPos);
@@ -759,40 +785,40 @@ export const generateInvoice = async (req, res) => {
 
         // Table header
         doc.fontSize(11)
-           .font('Helvetica-Bold')
-           .fillColor('#fff')
-           .rect(50, yPos, 500, 25)
-           .fillAndStroke('#10b981', '#10b981');
+            .font('Helvetica-Bold')
+            .fillColor('#fff')
+            .rect(50, yPos, 500, 25)
+            .fillAndStroke('#10b981', '#10b981');
 
         doc.fillColor('#fff')
-           .text('Item', 60, yPos + 8)
-           .text('Qty', 320, yPos + 8, { width: 50, align: 'center' })
-           .text('Price', 380, yPos + 8, { width: 70, align: 'right' })
-           .text('Total', 460, yPos + 8, { width: 80, align: 'right' });
+            .text('Item', 60, yPos + 8)
+            .text('Qty', 320, yPos + 8, { width: 50, align: 'center' })
+            .text('Price', 380, yPos + 8, { width: 70, align: 'right' })
+            .text('Total', 460, yPos + 8, { width: 80, align: 'right' });
 
         yPos += 25;
 
         // Table rows
         doc.font('Helvetica')
-           .fontSize(10);
+            .fontSize(10);
 
         if (!order.items || order.items.length === 0) {
             doc.fillColor('#666')
-               .text('No items found', 60, yPos + 10);
+                .text('No items found', 60, yPos + 10);
             yPos += 30;
         } else {
             order.items.forEach((item, index) => {
                 const bgColor = index % 2 === 0 ? '#f9fafb' : '#ffffff';
                 doc.rect(50, yPos, 500, 30)
-                   .fillAndStroke(bgColor, '#e5e7eb');
+                    .fillAndStroke(bgColor, '#e5e7eb');
 
                 const itemTotal = (item.price || 0) * (item.quantity || 0);
 
                 doc.fillColor('#000')
-                   .text(item.name || 'Unknown Item', 60, yPos + 10, { width: 240 })
-                   .text((item.quantity || 0).toString(), 320, yPos + 10, { width: 50, align: 'center' })
-                   .text(`₹${(item.price || 0).toFixed(2)}`, 380, yPos + 10, { width: 70, align: 'right' })
-                   .text(`₹${itemTotal.toFixed(2)}`, 460, yPos + 10, { width: 80, align: 'right' });
+                    .text(item.name || 'Unknown Item', 60, yPos + 10, { width: 240 })
+                    .text((item.quantity || 0).toString(), 320, yPos + 10, { width: 50, align: 'center' })
+                    .text(`₹${(item.price || 0).toFixed(2)}`, 380, yPos + 10, { width: 70, align: 'right' })
+                    .text(`₹${itemTotal.toFixed(2)}`, 460, yPos + 10, { width: 80, align: 'right' });
 
                 yPos += 30;
             });
@@ -803,57 +829,57 @@ export const generateInvoice = async (req, res) => {
 
         // Subtotal
         doc.fontSize(10)
-           .fillColor('#666')
-           .text('Subtotal:', 380, yPos)
-           .fillColor('#000')
-           .text(`₹${subtotal.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
+            .fillColor('#666')
+            .text('Subtotal:', 380, yPos)
+            .fillColor('#000')
+            .text(`₹${subtotal.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
 
         yPos += 20;
 
         // Tax
         doc.fillColor('#666')
-           .text('Tax (5%):', 380, yPos)
-           .fillColor('#000')
-           .text(`₹${tax.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
+            .text('Tax (5%):', 380, yPos)
+            .fillColor('#000')
+            .text(`₹${tax.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
 
         yPos += 20;
 
         // Shipping
         doc.fillColor('#666')
-           .text('Shipping:', 380, yPos)
-           .fillColor('#000')
-           .text(shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
+            .text('Shipping:', 380, yPos)
+            .fillColor('#000')
+            .text(shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
 
         yPos += 5;
 
         // Total line
         doc.moveTo(380, yPos)
-           .lineTo(550, yPos)
-           .strokeColor('#000')
-           .lineWidth(1)
-           .stroke();
+            .lineTo(550, yPos)
+            .strokeColor('#000')
+            .lineWidth(1)
+            .stroke();
 
         yPos += 15;
 
         // Grand Total
         doc.fontSize(12)
-           .font('Helvetica-Bold')
-           .fillColor('#10b981')
-           .text('Total Amount:', 380, yPos)
-           .fontSize(14)
-           .text(`₹${total.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
+            .font('Helvetica-Bold')
+            .fillColor('#10b981')
+            .text('Total Amount:', 380, yPos)
+            .fontSize(14)
+            .text(`₹${total.toFixed(2)}`, 460, yPos, { width: 80, align: 'right' });
 
         // ==================== FOOTER ====================
         doc.fontSize(9)
-           .fillColor('#999')
-           .text('Thank you for shopping with RushBasket!', 50, 750, { 
-               align: 'center',
-               width: 500 
-           })
-           .text('For any queries, contact us at support@rushbasket.com', 50, 765, {
-               align: 'center',
-               width: 500
-           });
+            .fillColor('#999')
+            .text('Thank you for shopping with RushBasket!', 50, 750, {
+                align: 'center',
+                width: 500
+            })
+            .text('For any queries, contact us at support@rushbasket.com', 50, 765, {
+                align: 'center',
+                width: 500
+            });
 
         // Finalize PDF
         doc.end();
@@ -863,7 +889,7 @@ export const generateInvoice = async (req, res) => {
     } catch (error) {
         console.error('❌ Generate invoice error:', error);
         console.error('Error stack:', error.stack);
-        
+
         // Make sure response hasn't been sent yet
         if (!res.headersSent) {
             res.status(500).json({
@@ -885,9 +911,9 @@ export const generateInvoice = async (req, res) => {
 export const getOrderTracking = async (req, res) => {
     try {
         const orderId = req.params.id;
-        
+
         console.log('🗺️ Fetching tracking for order:', orderId);
-        
+
         const order = await Order.findById(orderId)
             .populate('assignedTo', 'name email phone')
             .lean();

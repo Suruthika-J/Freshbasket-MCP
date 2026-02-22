@@ -17,23 +17,23 @@ const ChatbotIcon = () => {
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="group relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-full shadow-2xl hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-110 animate-pulse hover:animate-none"
+        className="group relative flex items-center justify-center w-16 h-16 fb-btn-primary rounded-full shadow-2xl hover:animate-none p-0 flex-shrink-0"
         aria-label="Open Recipe Chatbot"
       >
         {/* Ripple effect */}
-        <div className="absolute inset-0 rounded-full bg-emerald-400 opacity-75 animate-ping"></div>
-        
+        <div className="absolute inset-0 rounded-full fb-primary-subtle opacity-75 animate-ping"></div>
+
         {/* Icon */}
-        <div className="relative z-10 text-white">
-          <FiMessageCircle className="w-7 h-7" />
-          <IoSparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-300 animate-pulse" />
+        <div className="relative z-10 flex items-center justify-center">
+          <FiMessageCircle className="w-8 h-8" />
+          <IoSparkles className="absolute -top-1 -right-1 w-5 h-5 text-yellow-300 animate-pulse" />
         </div>
 
         {/* Tooltip */}
         {isHovered && (
-          <div className="absolute left-full ml-4 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg whitespace-nowrap shadow-xl border border-emerald-500/30">
+          <div className="absolute left-full ml-4 px-4 py-2 fb-modal fb-text text-sm font-medium rounded-lg whitespace-nowrap shadow-xl border fb-border-primary">
             AI Recipe Assistant
-            <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-gray-900"></div>
+            <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-[var(--color-surface)]"></div>
           </div>
         )}
       </button>

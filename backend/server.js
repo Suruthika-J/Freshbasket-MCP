@@ -5,6 +5,14 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
+
+// Pre-load all models to avoid population/registration issues
+import './models/userModel.js';
+import './models/productModel.js';
+import './models/ParentOrderModel.js';
+import './models/SubOrderModel.js';
+import './models/deliveryAgentModel.js';
+
 import returnRouter from './routes/returnRoute.js';
 
 // Middleware
@@ -13,11 +21,19 @@ import authMiddleware from './middleware/auth.js';
 // Routers
 import cartRouter from './routes/cartRoute.js';
 import chatbotRouter from './routes/chatbot.js';
+import chatRouter from './routes/chatRoute.js';
 import deliveryAgentRouter from './routes/deliveryAgentRoute.js';
 import orderRouter from './routes/orderRoute.js';
 import productRouter from './routes/productRoute.js';
 import userRouter from './routes/userRoute.js';
 import reviewRouter from './routes/reviewRoute.js';
+
+// Multi-vendor order routes
+import parentOrderRouter from './routes/parentOrderRoute.js';
+import subOrderRouter from './routes/subOrderRoute.js';
+
+// Voice transcription route
+import voiceRouter from './routes/voiceRoute.js';
 
 // ============================================
 // INITIAL ENVIRONMENT CHECK
@@ -46,7 +62,7 @@ const __dirname = path.dirname(__filename);
 // 1. CORS Configuration (Handles cross-origin requests first)
 app.use(
     cors({
-        origin: function(origin, callback) {
+        origin: function (origin, callback) {
             if (!origin) return callback(null, true);
 
             const allowedOrigins = [
@@ -127,14 +143,24 @@ app.use("/api/user", userRouter);
 app.use('/api/items', productRouter);
 app.use('/api/products', productRouter);
 
-// Order routes
+// Multi-vendor order routes (NEW)
+app.use('/api/parent-orders', parentOrderRouter);
+app.use('/api/sub-orders', subOrderRouter);
+
+// Legacy order routes (maintained for backward compatibility)
 app.use('/api/orders', orderRouter);
 
-// Chatbot routes
+// Chatbot routes (legacy)
 app.use('/api/chatbot', chatbotRouter);
+
+// New unified chat routes (customer + farmer)
+app.use('/api/chat', chatRouter);
 
 // Review routes
 app.use('/api/reviews', reviewRouter);
+
+// Voice transcription routes
+app.use('/api/voice', voiceRouter);
 
 // Return routes
 app.use('/api/returns', returnRouter);
@@ -159,7 +185,8 @@ app.get('/', (req, res) => {
             cart: '/api/cart',
             agents: '/api/agents',
             reviews: '/api/reviews',
-            chatbot: '/api/chatbot',
+            chat: '/api/chat',
+            chatbot: '/api/chatbot (legacy)',
             returns: '/api/returns'
         }
     });
@@ -189,7 +216,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
     console.error('❌ Global Error Handler:', err.message);
     console.error('Stack:', err.stack);
-    
+
     res.status(err.status || 500).json({
         success: false,
         message: err.message || 'An internal server error occurred',
@@ -200,9 +227,10 @@ app.use((err, req, res, next) => {
 // ============================================
 // START SERVER
 // ============================================
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log('\n🚀 ========================================');
     console.log(`✅ Server running on http://localhost:${port}`);
+    console.log(`🌐 Also accessible on http://0.0.0.0:${port} (for mobile testing)`);
     console.log(`📍 API Base: http://localhost:${port}/api`);
     console.log(`📦 Products: http://localhost:${port}/api/items`);
     console.log(`🛒 Cart: http://localhost:${port}/api/cart`);

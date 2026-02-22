@@ -42,22 +42,22 @@ const MealPlanner = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Try multiple possible endpoints
         const endpoints = [
           `${import.meta.env.VITE_API_URL}/api/products`,
           `${import.meta.env.VITE_API_URL}/api/items`,
         ];
-        
+
         let fetchedProducts = [];
         let lastError = null;
-        
+
         for (const endpoint of endpoints) {
           try {
             console.log('🔍 Trying to fetch from:', endpoint);
             const response = await axios.get(endpoint);
             console.log('✅ Response received:', response.data);
-            
+
             // Handle different response structures
             if (response.data.success && response.data.data) {
               fetchedProducts = response.data.data;
@@ -81,13 +81,13 @@ const MealPlanner = () => {
             lastError = err;
           }
         }
-        
+
         if (fetchedProducts.length > 0) {
           // Filter out products that don't have required fields
           const validProducts = fetchedProducts.filter(p => p._id && p.name && p.price);
           console.log('✅ Valid products:', validProducts.length);
           setProducts(validProducts);
-          
+
           if (validProducts.length === 0) {
             setError('No valid products found');
             toast.error('Products are missing required information');
@@ -97,7 +97,7 @@ const MealPlanner = () => {
           toast.error('No products found. Please check your product list.');
           console.error('❌ No products fetched from any endpoint');
         }
-        
+
       } catch (error) {
         console.error('❌ Error fetching products:', error);
         setError(error.response?.data?.message || 'Failed to load products');
@@ -125,7 +125,7 @@ const MealPlanner = () => {
 
     const selectedProduct = products.find(p => p._id === productId);
     console.log('🍽️ Selected product:', selectedProduct);
-    
+
     if (selectedProduct) {
       setMealPlan(prev => ({
         ...prev,
@@ -244,11 +244,11 @@ const MealPlanner = () => {
         window.dispatchEvent(new Event('cartUpdated'));
         setMealPlan(initializeMealPlan());
       }
-      
+
       if (failCount > 0) {
         toast.warning(`${failCount} item${failCount > 1 ? 's' : ''} failed to add`);
       }
-      
+
     } catch (error) {
       console.error('Error adding all to cart:', error);
       toast.error('Failed to add some items to cart');
@@ -270,10 +270,10 @@ const MealPlanner = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen fb-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-500 mx-auto mb-4"></div>
-          <div className="text-white text-xl">Loading products...</div>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 fb-border-primary mx-auto mb-4"></div>
+          <div className="fb-text text-xl">Loading products...</div>
         </div>
       </div>
     );
@@ -281,14 +281,14 @@ const MealPlanner = () => {
 
   if (error && products.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center py-20 px-4">
-        <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-xl border border-red-500/30 rounded-2xl p-8 text-center">
+      <div className="min-h-screen fb-bg flex items-center justify-center py-20 px-4">
+        <div className="max-w-md w-full fb-card p-8 text-center border-red-500/30">
           <FiAlertCircle className="text-6xl text-red-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">No Products Available</h2>
-          <p className="text-gray-300 mb-6">{error}</p>
+          <h2 className="text-2xl font-bold fb-text mb-2">No Products Available</h2>
+          <p className="fb-text-secondary mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            className="fb-btn-primary"
           >
             Retry
           </button>
@@ -298,21 +298,21 @@ const MealPlanner = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen fb-bg py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
-            <FiCalendar className="text-5xl text-emerald-400 mr-3" />
-            <h1 className="text-4xl md:text-5xl font-bold text-white">
+            <FiCalendar className="text-5xl fb-text-primary mr-3" />
+            <h1 className="text-4xl md:text-5xl font-bold fb-text">
               Weekly Meal Planner
             </h1>
           </div>
-          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+          <p className="fb-text-secondary text-lg max-w-2xl mx-auto">
             Plan your weekly meals and add them directly to your cart
           </p>
           {products.length > 0 && (
-            <p className="text-emerald-400 text-sm mt-2">
+            <p className="fb-text-primary text-sm mt-2 font-medium">
               {products.length} products available
             </p>
           )}
@@ -320,8 +320,8 @@ const MealPlanner = () => {
 
         {/* Not Logged In Warning */}
         {!isLoggedIn && (
-          <div className="mb-8 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 text-center">
-            <p className="text-yellow-300 text-lg">
+          <div className="mb-8 fb-badge-warning rounded-xl p-6 text-center border fb-border">
+            <p className="text-lg">
               ⚠️ Please <span className="font-semibold underline cursor-pointer" onClick={() => navigate('/login')}>login</span> to add meals to your cart
             </p>
           </div>
@@ -332,14 +332,14 @@ const MealPlanner = () => {
           <button
             onClick={handleAddAllToCart}
             disabled={addingAllToCart || countPlannedMeals() === 0 || !isLoggedIn}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-green-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="fb-btn-primary shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FiShoppingCart className="mr-2" />
             {addingAllToCart ? 'Adding...' : `Add All to Cart (${countPlannedMeals()} items)`}
           </button>
           <button
             onClick={() => setMealPlan(initializeMealPlan())}
-            className="px-6 py-3 bg-red-500/20 border border-red-500/30 text-red-300 rounded-xl font-semibold hover:bg-red-500/30 transition-all duration-300"
+            className="fb-btn-secondary border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white"
           >
             <FiTrash2 className="inline mr-2" />
             Clear All
@@ -351,10 +351,10 @@ const MealPlanner = () => {
           {daysOfWeek.map(day => (
             <div
               key={day}
-              className="bg-gray-800/50 backdrop-blur-xl border border-emerald-500/20 rounded-2xl p-6 shadow-xl"
+              className="fb-card p-6"
             >
               {/* Day Header */}
-              <h2 className="text-2xl font-bold text-emerald-400 mb-6 text-center border-b border-emerald-500/30 pb-3">
+              <h2 className="text-2xl font-bold fb-text-primary mb-6 text-center border-b fb-border-primary pb-3">
                 {day}
               </h2>
 
@@ -363,9 +363,9 @@ const MealPlanner = () => {
                 {mealTypes.map(mealType => (
                   <div
                     key={mealType}
-                    className="bg-gray-900/50 rounded-xl p-4 border border-gray-700/50"
+                    className="fb-surface-alt rounded-xl p-4 border fb-border"
                   >
-                    <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+                    <h3 className="text-lg font-semibold fb-text mb-3 flex items-center">
                       {mealType === 'Breakfast' && '🍳'}
                       {mealType === 'Lunch' && '🍱'}
                       {mealType === 'Dinner' && '🍽️'}
@@ -377,7 +377,7 @@ const MealPlanner = () => {
                       <select
                         value=""
                         onChange={(e) => handleMealSelection(day, mealType, e.target.value)}
-                        className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-emerald-500 transition-all"
+                        className="fb-input"
                       >
                         <option value="">Select a product...</option>
                         {products.map(product => (
@@ -391,24 +391,24 @@ const MealPlanner = () => {
                       <div className="space-y-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <p className="text-white font-medium">
+                            <p className="fb-text font-medium">
                               {mealPlan[day][mealType].name}
                             </p>
-                            <p className="text-emerald-400 text-sm">
+                            <p className="fb-text-primary text-sm font-semibold">
                               ₹{mealPlan[day][mealType].price}
                             </p>
                             {mealPlan[day][mealType].category && (
-                              <span className="inline-block mt-1 px-2 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded">
+                              <span className="inline-block mt-1 px-2 py-1 fb-badge-success text-xs rounded">
                                 {mealPlan[day][mealType].category}
                               </span>
                             )}
                           </div>
                           <button
                             onClick={() => handleRemoveMeal(day, mealType)}
-                            className="text-red-400 hover:text-red-300 transition-colors"
+                            className="fb-text-error hover:opacity-80 transition-opacity"
                             title="Remove meal"
                           >
-                            <FiTrash2 className="text-lg" />
+                            <FiTrash2 className="text-xl" />
                           </button>
                         </div>
 
@@ -416,7 +416,7 @@ const MealPlanner = () => {
                         <button
                           onClick={() => handleAddToCart(mealPlan[day][mealType], day, mealType)}
                           disabled={addingToCart[`${day}-${mealType}`] || !isLoggedIn}
-                          className="w-full px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-lg font-medium hover:bg-emerald-500/30 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                          className="w-full fb-btn-secondary text-sm py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {addingToCart[`${day}-${mealType}`] ? (
                             <>Adding...</>
@@ -438,12 +438,12 @@ const MealPlanner = () => {
 
         {/* Summary Card */}
         {countPlannedMeals() > 0 && (
-          <div className="mt-8 bg-gradient-to-r from-emerald-500/10 to-green-500/10 border border-emerald-500/30 rounded-2xl p-6 text-center">
-            <FiCheckCircle className="text-4xl text-emerald-400 mx-auto mb-3" />
-            <h3 className="text-2xl font-bold text-white mb-2">
+          <div className="mt-8 fb-card bg-gradient-to-r from-emerald-500/10 to-green-500/10 p-6 text-center">
+            <FiCheckCircle className="text-4xl fb-text-primary mx-auto mb-3" />
+            <h3 className="text-2xl font-bold fb-text mb-2">
               {countPlannedMeals()} Meals Planned
             </h3>
-            <p className="text-gray-300">
+            <p className="fb-text-secondary">
               Ready to add to cart and start shopping!
             </p>
           </div>

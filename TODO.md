@@ -1,14 +1,10 @@
-# Edit Product Feature Implementation
+# TODO List for Farmer Dashboard "My Orders" Fix
 
-## Backend Changes
-- [ ] Enhance updateProduct controller to allow farmers to edit name, price, stock, imageUrl with ownership validation
-- [ ] Update productRoute.js to add auth and farmer role protection to PUT /:id route
+## Completed Tasks
+- [x] Identified missing API calls in FarmerSubOrders component
+- [x] Added fetchSubOrders function to load farmer's sub-orders from backend
+- [x] Added updateOrderStatus function to allow farmers to update order statuses
+- [x] Verified backend routes and controller are properly set up
 
-## Frontend Changes
-- [ ] Create EditProduct.jsx page with pre-filled form for editing product details
-- [ ] Update App.jsx to add routing for `/farmer/edit-product/:id`
-
-## Testing
-- [ ] Test API endpoint with Postman/Insomnia
-- [ ] Test frontend form submission
-- [ ] Verify ownership validation and error handling
+## Summary
+The issue was that the FarmerSubOrders component was missing the implementation for fetching sub-orders from the backend API. The component had the UI structure but no actual data loading logic. Added the necessary axios calls to `/api/sub-orders/farmer/my-orders` endpoint and status update functionality.

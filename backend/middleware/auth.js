@@ -38,9 +38,9 @@ const authMiddleware = async (req, res, next) => {
         // No token found
         if (!token) {
             console.log('❌ No authentication token found in any location');
-            return res.status(401).json({ 
-                success: false, 
-                message: 'No authentication token provided. Please log in.' 
+            return res.status(401).json({
+                success: false,
+                message: 'No authentication token provided. Please log in.'
             });
         }
 
@@ -49,7 +49,7 @@ const authMiddleware = async (req, res, next) => {
         // ============================================
         if (token.startsWith('admin-session-token-')) {
             console.log('✅ Admin session token detected');
-            
+
             // Create a mock admin user object for session-based admin
             req.user = {
                 _id: 'admin-001',
@@ -59,7 +59,7 @@ const authMiddleware = async (req, res, next) => {
                 role: 'admin',
                 isActive: true
             };
-            
+
             console.log('✅ Admin session authenticated:', req.user.email);
             return next();
         }
@@ -70,7 +70,7 @@ const authMiddleware = async (req, res, next) => {
         console.log('✅ Token extracted, verifying JWT...');
 
         const decoded = jwt.verify(token, JWT_SECRET);
-        
+
         console.log('✅ JWT verified:', {
             userId: decoded.id || decoded.userId,
             role: decoded.role
@@ -81,29 +81,37 @@ const authMiddleware = async (req, res, next) => {
         // ============================================
         let user = null;
         const userId = decoded.id || decoded.userId;
-        
+
+        if (!userId) {
+            console.log('❌ No userId found in token payload');
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid token payload. Please log in again.'
+            });
+        }
+
         if (decoded.role === 'agent') {
             // Load from DeliveryAgent collection
             console.log('🚚 Loading delivery agent from database...');
             user = await DeliveryAgent.findById(userId).select('-password');
-            
+
             if (!user) {
                 console.log('❌ Delivery agent not found in database');
-                return res.status(401).json({ 
-                    success: false, 
-                    message: 'Delivery agent account not found. Please contact admin.' 
+                return res.status(401).json({
+                    success: false,
+                    message: 'Delivery agent account not found. Please contact admin.'
                 });
             }
         } else {
             // Load from User collection (regular user, farmer, or admin)
             console.log('👤 Loading user from database...');
             user = await User.findById(userId).select('-password -otp');
-            
+
             if (!user) {
                 console.log('❌ User not found in database');
-                return res.status(401).json({ 
-                    success: false, 
-                    message: 'User not found. Please log in again.' 
+                return res.status(401).json({
+                    success: false,
+                    message: 'User not found. Please log in again.'
                 });
             }
         }
@@ -113,9 +121,9 @@ const authMiddleware = async (req, res, next) => {
         // ============================================
         if (user.isActive === false) {
             console.log('❌ User account is deactivated');
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Account is deactivated. Please contact support.' 
+            return res.status(401).json({
+                success: false,
+                message: 'Account is deactivated. Please contact support.'
             });
         }
 
@@ -131,19 +139,23 @@ const authMiddleware = async (req, res, next) => {
         req.user = {
             ...user.toObject(),
             _id: user._id,
-            id: user._id,
+            id: user._id.toString(), // Ensure string ID for consistency
             role: decoded.role || user.role || 'user'
         };
-        
+
         next();
 
     } catch (err) {
         console.error('❌ Auth Middleware Error:', err.message);
-        console.error('Error name:', err.name);
-        
+        console.error('Error Details:', {
+            name: err.name,
+            message: err.message,
+            stack: err.stack
+        });
+
         let message = 'Authentication failed';
-        let statusCode = 401;
-        
+        let statusCode = 401; // Default to 401 for all authentication errors
+
         if (err.name === 'TokenExpiredError') {
             message = 'Token expired. Please log in again.';
             console.log('⏰ Token expired');
@@ -154,13 +166,15 @@ const authMiddleware = async (req, res, next) => {
             message = 'Token not active yet';
             console.log('⏳ Token not yet active');
         } else {
-            message = 'Authentication failed. Please try again.';
-            statusCode = 500;
+            // Log the unexpected error
+            console.error('🚨 Unexpected Auth Error:', err);
+            message = 'Authentication failed. Please log in again.';
+            // Keep status code as 401 because it's still an auth failure
         }
-        
-        return res.status(statusCode).json({ 
-            success: false, 
-            message 
+
+        return res.status(statusCode).json({
+            success: false,
+            message
         });
     }
 };
@@ -170,7 +184,7 @@ const authMiddleware = async (req, res, next) => {
 // ============================================
 export const requireAdmin = (req, res, next) => {
     console.log('👑 Admin Check - User:', req.user?.email, 'Role:', req.user?.role);
-    
+
     if (!req.user) {
         console.log('❌ No user object found in request');
         return res.status(401).json({
@@ -196,7 +210,7 @@ export const requireAdmin = (req, res, next) => {
 // ============================================
 export const requireFarmer = (req, res, next) => {
     console.log('🌾 Farmer Check - User:', req.user?.email, 'Role:', req.user?.role);
-    
+
     if (!req.user) {
         console.log('❌ No user object found in request');
         return res.status(401).json({
@@ -222,7 +236,7 @@ export const requireFarmer = (req, res, next) => {
 // ============================================
 export const requireAgent = (req, res, next) => {
     console.log('🚚 Agent Check - User:', req.user?.email, 'Role:', req.user?.role);
-    
+
     if (!req.user) {
         console.log('❌ No user object found in request');
         return res.status(401).json({
@@ -248,7 +262,7 @@ export const requireAgent = (req, res, next) => {
 // ============================================
 export const requireCustomer = (req, res, next) => {
     console.log('🛒 Customer Check - User:', req.user?.email, 'Role:', req.user?.role);
-    
+
     if (!req.user) {
         console.log('❌ No user object found in request');
         return res.status(401).json({

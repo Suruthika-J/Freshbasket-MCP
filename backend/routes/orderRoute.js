@@ -15,13 +15,14 @@ import {
     getOrderTracking,      // NEW - Tracking function
     updateAgentLocation     // NEW - Location update function
 } from '../controllers/orderController.js';
-import authMiddleware from '../middleware/auth.js';
+import { getFarmerSubOrders } from '../controllers/subOrderController.js';
+import authMiddleware, { requireFarmer } from '../middleware/auth.js';
 import { requireAgent } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // ============================================
-// GLOBAL DEBUGGING FOR ALL ORDER ROUTES
+// GLOBAL DEBUGGING FOR ALL ORDER ROUTES - MOVED TO TOP
 // ============================================
 router.use((req, res, next) => {
     console.log(`\n🔍 ORDER ROUTE: ${req.method} ${req.path}`);
@@ -32,8 +33,12 @@ router.use((req, res, next) => {
 });
 
 // ============================================
-// STATIC ROUTES (NO PARAMETERS) - HIGHEST PRIORITY
+// STATIC ROUTES - MUST BE DEFINED BEFORE PARAMETERIZED ROUTES
 // ============================================
+
+// Get farmer orders (ALIASED from sub-orders)
+// This MUST be defined BEFORE /:id to prevent "farmer" being treated as an ID
+router.get('/farmer', authMiddleware, requireFarmer, getFarmerSubOrders);
 
 // Get order statistics (Admin only)
 router.get('/stats', authMiddleware, getOrderStats);
@@ -95,6 +100,8 @@ router.put('/:id', authMiddleware, updateOrder);
 router.delete('/:id', authMiddleware, deleteOrder);
 
 // Get single order by ID (Requires auth)
+// IMPORTANT: This route uses the Order model (not SubOrder)
+// The /farmer route above must match first!
 router.get('/:id', authMiddleware, getOrderById);
 
 console.log('✅ Order routes with tracking loaded successfully');

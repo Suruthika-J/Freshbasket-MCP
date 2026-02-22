@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { CartProvider } from './CartContext';
-import { ThemeProvider } from './ThemeContext';
+import { ThemeProvider, useTheme } from './ThemeContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -47,6 +47,7 @@ import DeliveryDashboard from './page/DeliveryDashboard';
 import FarmerDashboard from './page/FarmerDashboard';
 import AddProductFarmer from './page/AddProductFarmer';
 import FarmerPendingApproval from './page/FarmerPendingApproval';
+import FarmerChatbot from './page/FarmerChatbot';
 
 // Admin Components
 import AdminApp from './admin/AdminApp';
@@ -54,11 +55,11 @@ import AdminApp from './admin/AdminApp';
 // ScrollToTop component
 const ScrollToTop = () => {
   const { pathname } = useLocation();
-  
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-  
+
   return null;
 };
 
@@ -70,7 +71,7 @@ const ProtectedRoute = ({ children, requiredRole, requiresApproval = false }) =>
   const token = localStorage.getItem('authToken');
   const userData = localStorage.getItem('userData');
   const userRole = localStorage.getItem('userRole');
-  
+
   // Parse user data
   let user = null;
   try {
@@ -111,7 +112,7 @@ const ProtectedRoute = ({ children, requiredRole, requiresApproval = false }) =>
   // ============================================
   if (requiredRole === 'farmer' && requiresApproval) {
     console.log('🌾 Checking farmer approval status:', user.isApproved);
-    
+
     if (user.isApproved !== true) {
       console.log('❌ Farmer not approved, redirecting to pending approval page');
       return <Navigate replace to="/farmer-pending-approval" />;
@@ -122,253 +123,275 @@ const ProtectedRoute = ({ children, requiredRole, requiresApproval = false }) =>
   return children;
 };
 
-const App = () => {
+// Inner component that can access ThemeContext
+const AppInner = () => {
+  const { theme } = useTheme();
   const location = useLocation();
-  
+
   // Track authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(
     Boolean(localStorage.getItem('authToken'))
   );
-  
+
   // Track user role
   const [userRole, setUserRole] = useState(
     localStorage.getItem('userRole') || 'user'
   );
-  
+
   // Debug: Check if Google Client ID is loaded
   useEffect(() => {
     console.log('Google Client ID:', import.meta.env.VITE_GOOGLE_CLIENT_ID ? '✅ Loaded' : '❌ Missing');
     console.log('API URL:', import.meta.env.VITE_API_URL);
   }, []);
-  
+
   // Listen for auth state changes
   useEffect(() => {
     const handler = () => {
       const newAuthStatus = Boolean(localStorage.getItem('authToken'));
       const newRole = localStorage.getItem('userRole') || 'user';
-      
+
       console.log('🔄 Auth state changed:', {
         authenticated: newAuthStatus,
         role: newRole
       });
-      
+
       setIsAuthenticated(newAuthStatus);
       setUserRole(newRole);
     };
-    
+
     window.addEventListener('authStateChanged', handler);
     return () => window.removeEventListener('authStateChanged', handler);
   }, []);
-  
+
   // Check if current route is admin route
   const isAdminRoute = location.pathname.startsWith('/admin');
-  
+
   // Check if current route is order success page
   const isOrderSuccessRoute = location.pathname.startsWith('/order-success');
-  
+
   // Check if current route is farmer pending approval page
   const isFarmerPendingRoute = location.pathname === '/farmer-pending-approval';
 
   // Check if current route is farmer dashboard or related pages
-  const isFarmerRoute = location.pathname.startsWith('/farmer/') || location.pathname === '/farmer-dashboard';
+  const isFarmerRoute = location.pathname.startsWith('/farmer/') || location.pathname === '/farmer-dashboard' || location.pathname === '/farmer/market-prices';
 
   // Don't show navbar, chatbot for admin routes and order success page
   const showNavbar = !isAdminRoute &&
-                     !isOrderSuccessRoute &&
-                     !isFarmerPendingRoute &&
-                     !isFarmerRoute &&
-                     (userRole !== 'agent' || location.pathname !== '/delivery-dashboard');
-  
-  const showChatbotIcon = !isAdminRoute && 
-                          !isOrderSuccessRoute &&
-                          !isFarmerPendingRoute &&
-                          !['/recipe-chatbot', '/delivery-dashboard'].includes(location.pathname);
+    !isOrderSuccessRoute &&
+    !isFarmerPendingRoute &&
+    !isFarmerRoute &&
+    (userRole !== 'agent' || location.pathname !== '/delivery-dashboard');
 
+  const showChatbotIcon = !isAdminRoute &&
+    !isOrderSuccessRoute &&
+    !isFarmerPendingRoute &&
+    !['/recipe-chatbot', '/delivery-dashboard', '/farmer/market-prices'].includes(location.pathname);
+
+  return (
+    <CartProvider>
+      <ScrollToTop />
+
+      {/* Only show Navbar for non-admin and non-delivery-agent routes */}
+      {showNavbar && <Navbar isAuthenticated={isAuthenticated} />}
+
+      {/* Main content — pt-20 prevents fixed navbar overlap */}
+      <div className={showNavbar ? 'pt-20' : ''}>
+        <Routes>
+          {/* ==================== PUBLIC ROUTES ==================== */}
+
+          {/* Home & Shopping */}
+          <Route path="/" element={<Home />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/items" element={<Items />} />
+
+          {/* Recipe Chatbot */}
+          <Route path="/recipe-chatbot" element={<RecipeChatbot />} />
+
+          {/* ==================== AUTHENTICATION ROUTES ==================== */}
+
+          {/* Signup Flow with OTP Verification */}
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-otp" element={<OtpVerification />} />
+
+          {/* Login */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Forgot Password Flow with OTP Verification */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-forgot-otp" element={<ForgotOtpVerification />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
+          {/* Logout */}
+          <Route path="/logout" element={<Logout />} />
+
+          {/* ==================== FARMER PENDING APPROVAL ==================== */}
+          <Route path="/farmer-pending-approval" element={<FarmerPendingApproval />} />
+
+          {/* ==================== PROTECTED ROUTES (Regular Users) ==================== */}
+
+          {/* Cart - Requires Authentication */}
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Checkout - Requires Authentication */}
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* My Orders - Requires Authentication */}
+          <Route
+            path="/myorders"
+            element={
+              <ProtectedRoute>
+                <MyOrders />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Payment Verification - Requires Authentication */}
+          <Route
+            path="/myorders/verify"
+            element={
+              <ProtectedRoute>
+                <VerifyPaymentPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Order Success Page - Requires Authentication */}
+          <Route
+            path="/order-success/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderSuccessPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Meal Planner - Requires Authentication */}
+          <Route
+            path="/meal-planner"
+            element={
+              <ProtectedRoute>
+                <MealPlanner />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Profile Settings - Requires Authentication */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfileSettings />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ==================== DELIVERY AGENT ROUTES ==================== */}
+
+          {/* Delivery Dashboard - Requires 'agent' role */}
+          <Route
+            path="/delivery-dashboard"
+            element={
+              <ProtectedRoute requiredRole="agent">
+                <DeliveryDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ==================== FARMER ROUTES ==================== */}
+
+          {/* Farmer Dashboard - Requires 'farmer' role AND approval */}
+          <Route
+            path="/farmer-dashboard"
+            element={
+              <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
+                <FarmerDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Add Product - Requires 'farmer' role AND approval */}
+          <Route
+            path="/farmer/add-product"
+            element={
+              <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
+                <AddProductFarmer />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Edit Product - Requires 'farmer' role AND approval */}
+          {/* NOTE: Using :id as the parameter to match FarmerDashboard navigation */}
+          <Route
+            path="/farmer/edit-product/:id"
+            element={
+              <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
+                <EditProductFarmer />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Farmer Market Price Chatbot - Requires 'farmer' role AND approval */}
+          <Route
+            path="/farmer/market-prices"
+            element={
+              <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
+                <FarmerChatbot />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ==================== ADMIN ROUTES ==================== */}
+
+          {/* Admin Panel - All admin routes handled by AdminApp */}
+          <Route path="/admin/*" element={<AdminApp />} />
+
+          {/* ==================== FALLBACK ROUTE ==================== */}
+
+          {/* 404 - Redirect to home */}
+          <Route path="*" element={<Navigate replace to="/" />} />
+        </Routes>
+      </div>
+
+      {/* Floating Chatbot Icon (shown on appropriate pages) */}
+      {showChatbotIcon && <ChatbotIcon />}
+
+      {/* Toast Container for notifications */}
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={theme}
+      />
+    </CartProvider>
+  );
+};
+
+// Outer App wraps everything in providers
+const App = () => {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <ThemeProvider>
-        <CartProvider>
-          <ScrollToTop />
-
-          {/* Only show Navbar for non-admin and non-delivery-agent routes */}
-          {showNavbar && <Navbar isAuthenticated={isAuthenticated} />}
-
-          <Routes>
-            {/* ==================== PUBLIC ROUTES ==================== */}
-            
-            {/* Home & Shopping */}
-            <Route path="/" element={<Home />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/items" element={<Items />} />
-            
-            {/* Recipe Chatbot */}
-            <Route path="/recipe-chatbot" element={<RecipeChatbot />} />
-            
-            {/* ==================== AUTHENTICATION ROUTES ==================== */}
-            
-            {/* Signup Flow with OTP Verification */}
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/verify-otp" element={<OtpVerification />} />
-            
-            {/* Login */}
-            <Route path="/login" element={<Login />} />
-            
-            {/* Forgot Password Flow with OTP Verification */}
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/verify-forgot-otp" element={<ForgotOtpVerification />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            
-            {/* Logout */}
-            <Route path="/logout" element={<Logout />} />
-            
-            {/* ==================== FARMER PENDING APPROVAL ==================== */}
-            <Route path="/farmer-pending-approval" element={<FarmerPendingApproval />} />
-            
-            {/* ==================== PROTECTED ROUTES (Regular Users) ==================== */}
-            
-            {/* Cart - Requires Authentication */}
-            <Route
-              path="/cart"
-              element={
-                <ProtectedRoute>
-                  <Cart />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Checkout - Requires Authentication */}
-            <Route
-              path="/checkout"
-              element={
-                <ProtectedRoute>
-                  <CheckoutPage />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* My Orders - Requires Authentication */}
-            <Route
-              path="/myorders"
-              element={
-                <ProtectedRoute>
-                  <MyOrders />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Payment Verification - Requires Authentication */}
-            <Route
-              path="/myorders/verify"
-              element={
-                <ProtectedRoute>
-                  <VerifyPaymentPage />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Order Success Page - Requires Authentication */}
-            <Route
-              path="/order-success/:orderId"
-              element={
-                <ProtectedRoute>
-                  <OrderSuccessPage />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Meal Planner - Requires Authentication */}
-            <Route
-              path="/meal-planner"
-              element={
-                <ProtectedRoute>
-                  <MealPlanner />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Profile Settings - Requires Authentication */}
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfileSettings />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* ==================== DELIVERY AGENT ROUTES ==================== */}
-
-            {/* Delivery Dashboard - Requires 'agent' role */}
-            <Route
-              path="/delivery-dashboard"
-              element={
-                <ProtectedRoute requiredRole="agent">
-                  <DeliveryDashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* ==================== FARMER ROUTES ==================== */}
-
-            {/* Farmer Dashboard - Requires 'farmer' role AND approval */}
-            <Route
-              path="/farmer-dashboard"
-              element={
-                <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
-                  <FarmerDashboard />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Add Product - Requires 'farmer' role AND approval */}
-            <Route
-              path="/farmer/add-product"
-              element={
-                <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
-                  <AddProductFarmer />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Edit Product - Requires 'farmer' role AND approval */}
-            {/* NOTE: Using :id as the parameter to match FarmerDashboard navigation */}
-            <Route
-              path="/farmer/edit-product/:id"
-              element={
-                <ProtectedRoute requiredRole="farmer" requiresApproval={true}>
-                  <EditProductFarmer />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* ==================== ADMIN ROUTES ==================== */}
-            
-            {/* Admin Panel - All admin routes handled by AdminApp */}
-            <Route path="/admin/*" element={<AdminApp />} />
-            
-            {/* ==================== FALLBACK ROUTE ==================== */}
-            
-            {/* 404 - Redirect to home */}
-            <Route path="*" element={<Navigate replace to="/" />} />
-          </Routes>
-          
-          {/* Floating Chatbot Icon (shown on appropriate pages) */}
-          {showChatbotIcon && <ChatbotIcon />}
-          
-          {/* Toast Container for notifications */}
-          <ToastContainer
-            position="top-center"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={true}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-        </CartProvider>
+        <AppInner />
       </ThemeProvider>
     </GoogleOAuthProvider>
   );

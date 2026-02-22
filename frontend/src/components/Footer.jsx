@@ -3,7 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FaEnvelope,
-  FaMobileAlt ,
+  FaMobileAlt,
   FaMapMarkerAlt,
   FaFacebookF,
   FaTwitter,
@@ -18,62 +18,50 @@ import {
 import { BiMailSend } from 'react-icons/bi';
 import { BsTelephone } from 'react-icons/bs';
 import { FiLink, FiBookmark, FiMail } from 'react-icons/fi';
-import { footerStyles } from "../assets/dummyStyles";
 
 const Footer = () => {
   const { t } = useTranslation();
 
-  // Social media links with their respective URLs
   const socialLinks = [
-    {
-      icon: FaFacebookF,
-      url: 'https://www.facebook.com/'
-    },
-    {
-      icon: FaTwitter,
-      url: 'https://twitter.com/'
-    },
-    {
-      icon: FaInstagram,
-      url: 'https://www.instagram.com/'
-    },
-    {
-      icon: FaYoutube,
-      url: 'https://www.youtube.com/'
-    }
+    { icon: FaFacebookF, url: 'https://www.facebook.com/' },
+    { icon: FaTwitter, url: 'https://twitter.com/' },
+    { icon: FaInstagram, url: 'https://www.instagram.com/' },
+    { icon: FaYoutube, url: 'https://www.youtube.com/' }
   ];
 
   return (
-    <footer className={footerStyles.footer}>
-      {/* Decorative backgrounds - hide on small screens */}
-      <div className={footerStyles.topBorder}></div>
-
+    <footer
+      className="pt-12 pb-8 relative overflow-hidden border-t-4"
+      style={{ backgroundColor: 'var(--color-footer-bg)', color: 'var(--color-footer-text)', borderTopColor: 'var(--color-primary)' }}
+    >
       {/* Floating shapes */}
-      <div className={`${footerStyles.floatingShape} -top-24 -right-24 w-80 h-80 opacity-20`}></div>
-      <div className={`${footerStyles.floatingShape} -bottom-40 -left-24 w-96 h-96 opacity-15 animation-delay-2000`}></div>
-      <div className={`${footerStyles.floatingShape} top-1/4 left-1/3 w-64 h-64 bg-emerald-600 opacity-10 animate-pulse animation-delay-1000`}></div>
+      <div className="hidden lg:block absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-10"
+        style={{ backgroundColor: 'var(--color-primary-light)' }} />
+      <div className="hidden lg:block absolute -bottom-40 -left-24 w-96 h-96 rounded-full opacity-10"
+        style={{ backgroundColor: 'var(--color-primary)' }} />
 
-      <div className={footerStyles.container}>
-        <div className={footerStyles.grid}>
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div>
-            <h2 className={footerStyles.brandTitle}>
-              Fresh<span className={footerStyles.brandSpan}>BASKET</span>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-wider mb-4">
+              Fresh<span style={{ color: 'var(--color-primary-light)' }}>BASKET</span>
             </h2>
-            <p className={footerStyles.brandText}>
+            <p className="mb-6 leading-relaxed text-sm sm:text-base opacity-80">
               {t('footer.brandDescription')}
             </p>
             <div className="flex space-x-3">
               {socialLinks.map((social, idx) => (
-                <a 
-                  key={idx} 
+                <a
+                  key={idx}
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={footerStyles.socialLink}
-                  aria-label={`Visit our ${social.icon.name.replace('Fa', '')} page`}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-transform transform hover:-translate-y-1 shadow-md"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
+                  aria-label={`Visit our ${social.icon.name?.replace('Fa', '')} page`}
                 >
-                  <social.icon className={footerStyles.socialIcon} />
+                  <social.icon className="text-white" />
                 </a>
               ))}
             </div>
@@ -81,14 +69,16 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className={footerStyles.sectionTitle}>
-              <FiLink className={footerStyles.sectionIcon} /> {t('footer.quickLinks')}
+            <h3 className="text-xl sm:text-2xl font-bold mb-4 pb-2 border-b-2 inline-flex items-center"
+              style={{ borderBottomColor: 'var(--color-primary-light)' }}>
+              <FiLink className="mr-2 opacity-70" /> {t('footer.quickLinks')}
             </h3>
-            <ul className={footerStyles.linkList}>
+            <ul className="space-y-2 text-sm sm:text-base">
               {[t('nav.home'), t('nav.shop'), t('nav.contact')].map((item, idx) => (
                 <li key={idx}>
-                  <a href={`/${item.toLowerCase()}`} className={footerStyles.linkItem}>
-                    <span className={footerStyles.linkBullet}></span>
+                  <a href={`/${item.toLowerCase()}`} className="flex items-center group opacity-80 hover:opacity-100 transition-opacity">
+                    <span className="inline-block w-2 h-2 rounded-full mr-3 group-hover:scale-125 transition-transform"
+                      style={{ backgroundColor: 'var(--color-primary-light)' }} />
                     {item}
                   </a>
                 </li>
@@ -98,102 +88,97 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className={footerStyles.sectionTitle}>
-              <BsTelephone className={footerStyles.sectionIcon} /> {t('footer.contactUs')}
+            <h3 className="text-xl sm:text-2xl font-bold mb-4 pb-2 border-b-2 inline-flex items-center"
+              style={{ borderBottomColor: 'var(--color-primary-light)' }}>
+              <BsTelephone className="mr-2 opacity-70" /> {t('footer.contactUs')}
             </h3>
             <ul className="space-y-4 text-sm sm:text-base">
-              <li className={footerStyles.contactItem}>
-                <div className={footerStyles.contactIconContainer}>
-                  <FaMapMarkerAlt className={footerStyles.contactIcon} />
+              <li className="flex items-start">
+                <div className="mt-1 p-2 rounded-lg mr-3" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                  <FaMapMarkerAlt style={{ color: 'var(--color-primary-light)' }} />
                 </div>
-                <div>
-                  <p>123 Organic Valley, Green City, GC 54321</p>
-                </div>
+                <div><p className="opacity-80">123 Organic Valley, Green City, GC 54321</p></div>
               </li>
-              <li className={footerStyles.contactItem}>
-                <div className={footerStyles.contactIconContainer}>
-                  <FaMobileAlt className={footerStyles.contactIcon} />
+              <li className="flex items-start">
+                <div className="mt-1 p-2 rounded-lg mr-3" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                  <FaMobileAlt style={{ color: 'var(--color-primary-light)' }} />
                 </div>
-                <div>
-                  <p>+91 7373728111</p>
-                </div>
+                <div><p className="opacity-80">+91 7373728111</p></div>
               </li>
-              <li className={footerStyles.contactItem}>
-                <div className={footerStyles.contactIconContainer}>
-                  <FaEnvelope className={footerStyles.contactIcon} />
+              <li className="flex items-start">
+                <div className="mt-1 p-2 rounded-lg mr-3" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                  <FaEnvelope style={{ color: 'var(--color-primary-light)' }} />
                 </div>
-                <div>
-                  <p>suruthikajegadeesan@gmail.com</p>
-                </div>
+                <div><p className="opacity-80">suruthikajegadeesan@gmail.com</p></div>
               </li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h3 className={footerStyles.sectionTitle}>
-              <FiMail className={footerStyles.sectionIcon} /> {t('footer.newsletter')}
+            <h3 className="text-xl sm:text-2xl font-bold mb-4 pb-2 border-b-2 inline-flex items-center"
+              style={{ borderBottomColor: 'var(--color-primary-light)' }}>
+              <FiMail className="mr-2 opacity-70" /> {t('footer.newsletter')}
             </h3>
-            <p className={footerStyles.newsletterText}>
-              {t('footer.newsletterText')}
-            </p>
-            <div className={footerStyles.newsletterForm}>
+            <p className="opacity-80 mb-4 text-sm sm:text-base">{t('footer.newsletterText')}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4">
               <input
                 type="email"
                 placeholder={t('footer.emailPlaceholder')}
-                className={footerStyles.newsletterInput}
+                className="w-full sm:flex-1 rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none px-4 py-2 focus:outline-none mb-2 sm:mb-0 text-gray-800"
+                style={{ backgroundColor: 'rgba(255,255,255,0.9)' }}
               />
-              <button className={footerStyles.newsletterButton}>
+              <button
+                className="w-full sm:w-auto px-4 py-2 rounded-b-xl sm:rounded-r-xl sm:rounded-bl-none flex items-center justify-center transition-transform transform hover:-translate-y-1 text-white font-semibold"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+              >
                 <BiMailSend className="mr-2 text-lg" />
                 <span>{t('footer.subscribe')}</span>
               </button>
             </div>
-            <p className={footerStyles.privacyText}>
-              {t('footer.privacyText')}
-            </p>
+            <p className="opacity-60 text-xs sm:text-sm">{t('footer.privacyText')}</p>
           </div>
         </div>
 
         {/* Payment Methods */}
-        <div className={footerStyles.paymentSection}>
-          <h4 className={footerStyles.paymentTitle}>
-            <FiBookmark className={footerStyles.paymentIcon} /> {t('footer.paymentMethods')}
+        <div className="border-t-2 border-white/10 pt-6">
+          <h4 className="opacity-70 mb-4 font-medium flex items-center justify-center text-sm sm:text-base">
+            <FiBookmark className="mr-2 opacity-70 text-lg" /> {t('footer.paymentMethods')}
           </h4>
-          <div className={footerStyles.paymentMethods}>
+          <div className="flex flex-wrap justify-center gap-4">
             {[FaCcVisa, FaCcMastercard, FaCcPaypal, FaCcAmex, FaApplePay].map((Icon, idx) => (
-              <div key={idx} className={footerStyles.paymentItem}>
-                <Icon className={footerStyles.paymentIcon} />
+              <div key={idx} className="p-3 rounded-lg hover:opacity-100 opacity-70 transition-all transform hover:-translate-y-1"
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                <Icon className="text-2xl text-white" />
               </div>
             ))}
           </div>
         </div>
 
         {/* Attribution */}
-        <div className={footerStyles.attribution}>
-          <div className={footerStyles.attributionBadge}>
-            <div className={footerStyles.hexagonContainer}>
-              <div className={footerStyles.hexagon}></div>
-              <div className={footerStyles.hexagonInner}>
-                <div className={footerStyles.hexagonInnerShape}></div>
+        <div className="mt-8 text-center">
+          <div className="inline-flex items-center px-6 py-3 rounded-full border border-white/20 shadow-lg"
+            style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+            <div className="relative mr-3">
+              <div className="w-6 h-6 rounded-sm transform rotate-45" style={{ backgroundColor: 'var(--color-primary)' }} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-3 h-3 bg-white transform -rotate-45" />
               </div>
             </div>
-            <span className={footerStyles.attributionText}>
+            <span className="opacity-80 text-sm sm:text-base">
               Designed by{' '}
               <a
                 href="www.linkedin.com/in/suruthika-jegadeesan"
                 target="_blank"
                 rel="noopener noreferrer"
-                className={footerStyles.attributionLink}
+                className="font-bold underline hover:opacity-100 opacity-90"
               >
-                Freshbasket
+                FreshBasket
               </a>
             </span>
           </div>
         </div>
       </div>
-
-      {/* Custom animations */}
-      <style>{footerStyles.customCSS}</style>
     </footer>
   );
 };

@@ -66,68 +66,68 @@ const FarmerAddressCard = ({ farmer }) => {
 
   const formatAddress = () => {
     const parts = [];
-    
+
     if (farmer.location?.city && farmer.location.city !== '-') {
       parts.push(farmer.location.city);
     }
-    
+
     if (farmer.district) {
       parts.push(farmer.district);
     }
-    
+
     if (farmer.location?.state && farmer.location.state !== 'Tamil Nadu') {
       parts.push(farmer.location.state);
     } else if (!farmer.location?.state) {
       parts.push('Tamil Nadu');
     }
-    
+
     if (farmer.pincode) {
       parts.push(farmer.pincode);
     }
-    
+
     return parts.join(', ') || 'Address not available';
   };
 
   return (
-    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4 shadow-sm">
+    <div className="fb-primary-subtle border-2 fb-border-primary rounded-lg p-4 shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-primary)' }}>
           <span className="text-white text-lg">🌾</span>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-bold text-green-900 mb-2">
+          <h3 className="text-sm font-bold fb-text-primary mb-2">
             Farmer Information
           </h3>
-          
+
           <div className="space-y-2 text-sm">
             <div className="flex items-start gap-2">
-              <span className="text-green-700 font-semibold min-w-[70px]">Name:</span>
-              <span className="text-green-900">{farmer.name}</span>
+              <span className="fb-text-primary font-semibold min-w-[70px]">Name:</span>
+              <span className="fb-text">{farmer.name}</span>
             </div>
 
             <div className="flex items-start gap-2">
-              <span className="text-green-700 font-semibold min-w-[70px]">📍 Address:</span>
-              <span className="text-green-900 font-medium">{formatAddress()}</span>
+              <span className="fb-text-primary font-semibold min-w-[70px]">📍 Address:</span>
+              <span className="fb-text font-medium">{formatAddress()}</span>
             </div>
 
             {farmer.certification && farmer.certification !== 'None' && (
               <div className="flex items-start gap-2">
-                <span className="text-green-700 font-semibold min-w-[70px]">✓ Certified:</span>
-                <span className="text-green-900">{farmer.certification}</span>
+                <span className="fb-text-primary font-semibold min-w-[70px]">✓ Certified:</span>
+                <span className="fb-text">{farmer.certification}</span>
               </div>
             )}
 
             {farmer.experience && (
               <div className="flex items-start gap-2">
-                <span className="text-green-700 font-semibold min-w-[70px]">📅 Experience:</span>
-                <span className="text-green-900">{farmer.experience} years</span>
+                <span className="fb-text-primary font-semibold min-w-[70px]">📅 Experience:</span>
+                <span className="fb-text">{farmer.experience} years</span>
               </div>
             )}
 
             {farmer.phone && (
               <div className="flex items-start gap-2">
-                <span className="text-green-700 font-semibold min-w-[70px]">📞 Phone:</span>
-                <span className="text-green-900">{farmer.phone}</span>
+                <span className="fb-text-primary font-semibold min-w-[70px]">📞 Phone:</span>
+                <span className="fb-text">{farmer.phone}</span>
               </div>
             )}
           </div>
@@ -156,7 +156,7 @@ const QuantityInput = ({ product, onAdd, selectedDistrict }) => {
 
   const checkAvailability = async (value) => {
     const numValue = parseFloat(value);
-    
+
     if (!value || numValue <= 0 || isNaN(numValue)) {
       setAvailabilityStatus(null);
       return;
@@ -170,8 +170,8 @@ const QuantityInput = ({ product, onAdd, selectedDistrict }) => {
         setAvailabilityStatus({
           available: false,
           message: `Only ${stock}${unit} available from this seller`,
-          suggestion: selectedDistrict 
-            ? `Try checking other sellers in ${selectedDistrict}` 
+          suggestion: selectedDistrict
+            ? `Try checking other sellers in ${selectedDistrict}`
             : 'Try checking sellers in other districts'
         });
       } else {
@@ -186,7 +186,7 @@ const QuantityInput = ({ product, onAdd, selectedDistrict }) => {
 
   const handleInputChange = (e) => {
     const value = e.target.value;
-    
+
     // Allow only numbers and decimal point
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
       setInputValue(value);
@@ -196,7 +196,7 @@ const QuantityInput = ({ product, onAdd, selectedDistrict }) => {
 
   const handleAddToCart = () => {
     const numValue = parseFloat(inputValue);
-    
+
     if (!numValue || numValue <= 0) {
       toast.warning('Please enter a valid quantity', {
         position: 'top-center',
@@ -227,21 +227,20 @@ const QuantityInput = ({ product, onAdd, selectedDistrict }) => {
             value={inputValue}
             onChange={handleInputChange}
             placeholder={`Enter ${unit}`}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+            className="fb-input w-full px-3 py-2 rounded-lg text-sm"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 fb-text-muted text-sm font-medium">
             {unit}
           </span>
         </div>
-        
+
         <button
           onClick={handleAddToCart}
           disabled={!inputValue || !availabilityStatus?.available}
-          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-            !inputValue || !availabilityStatus?.available
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-emerald-600 text-white hover:bg-emerald-700'
-          }`}
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${!inputValue || !availabilityStatus?.available
+            ? 'opacity-40 cursor-not-allowed fb-surface-alt fb-text-muted'
+            : 'fb-btn-primary'
+            }`}
         >
           Add
         </button>
@@ -275,13 +274,13 @@ const ItemsHome = () => {
   const [selectedDistrict, setSelectedDistrict] = useState(() =>
     localStorage.getItem("selectedDistrict") || ""
   );
-  
+
   const navigate = useNavigate();
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const isAuthenticated = Boolean(localStorage.getItem('authToken'));
-  
+
   const userDistrict = (() => {
     try {
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -308,13 +307,13 @@ const ItemsHome = () => {
   const fetchProducts = async () => {
     try {
       let url = `${API_BASE_URL}/api/items`;
-      
+
       if (selectedDistrict) {
         url += `?district=${encodeURIComponent(selectedDistrict)}`;
       }
-      
+
       console.log('📡 Fetching products from:', url);
-      
+
       const res = await axios.get(url);
       const normalized = res.data.map(p => ({
         ...p,
@@ -472,16 +471,16 @@ const ItemsHome = () => {
 
   return (
     <div className={itemsHomeStyles.page}>
-      <div className="bg-white border-b shadow-sm py-3">
+      <div className="fb-surface border-b fb-border shadow-sm py-3">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FiFilter className="text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Filter by District:</span>
+              <FiFilter className="fb-text-primary" />
+              <span className="text-sm font-medium fb-text-secondary">Filter by District:</span>
               <select
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="fb-input px-4 py-2 rounded-lg text-sm"
               >
                 <option value="">All Districts</option>
                 {tamilNaduDistricts.map(district => (
@@ -492,7 +491,7 @@ const ItemsHome = () => {
             {userDistrict && (
               <button
                 onClick={() => setSelectedDistrict(userDistrict)}
-                className="text-sm text-green-600 hover:text-green-700 font-medium"
+                className="text-sm fb-text-primary hover:opacity-70 font-medium transition-opacity"
               >
                 Show My District ({userDistrict})
               </button>
@@ -502,48 +501,68 @@ const ItemsHome = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row flex-1">
-        <aside className={itemsHomeStyles.sidebar}>
-          <div className={itemsHomeStyles.sidebarHeader}>
+        <aside
+          className="hidden lg:flex w-64 rounded-r-3xl text-white p-4 shadow-2xl flex-col"
+          style={{ background: 'linear-gradient(160deg, #2E7D32 0%, #1B5E20 100%)' }}
+        >
+          {/* Sidebar Title */}
+          <div className="text-center mb-4 pt-2">
             <h1
-              className={itemsHomeStyles.sidebarTitle}
+              className="text-2xl font-bold text-white tracking-wide"
               style={{
                 fontFamily: "'Playfair Display', serif",
-                textShadow: "2px 2px 4px rgba(0,0,0,0.2)",
+                textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
               }}
             >
               FreshCart
             </h1>
-            <div className={itemsHomeStyles.sidebarDivider} />
+            <div className="w-24 h-0.5 mx-auto mt-2 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.4)' }} />
           </div>
-          <div className={itemsHomeStyles.categoryList}>
-            <ul className="space-y-3">
-              {sidebarCategories.map((category) => (
-                <li key={category.name}>
-                  <button
-                    onClick={() => {
-                      setActiveCategory(category.value || category.name);
-                      setSearchTerm('');
-                    }}
-                    className={`${itemsHomeStyles.categoryItem} ${(activeCategory === (category.value || category.name)) && !searchTerm
-                        ? itemsHomeStyles.activeCategory
-                        : itemsHomeStyles.inactiveCategory
-                      }`}
-                  >
-                    <div className={itemsHomeStyles.categoryIcon}>
-                      {category.icon}
-                    </div>
-                    <span className={itemsHomeStyles.categoryName}>{category.name}</span>
-                  </button>
-                </li>
-              ))}
+
+          {/* Category List */}
+          <nav className="flex-1 overflow-y-auto">
+            <ul className="space-y-1.5">
+              {sidebarCategories.map((category) => {
+                const isActive = (activeCategory === (category.value || category.name)) && !searchTerm;
+                return (
+                  <li key={category.name}>
+                    <button
+                      onClick={() => {
+                        setActiveCategory(category.value || category.name);
+                        setSearchTerm('');
+                      }}
+                      style={isActive
+                        ? { backgroundColor: 'rgba(255,255,255,0.25)', borderLeft: '4px solid rgba(255,255,255,0.9)' }
+                        : { borderLeft: '4px solid transparent' }
+                      }
+                      className="w-full cursor-pointer flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 hover:bg-white/10"
+                    >
+                      {/* Icon circle */}
+                      <div
+                        className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-base"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
+                      >
+                        {category.icon}
+                      </div>
+                      {/* Label */}
+                      <span
+                        className="text-sm font-semibold text-white truncate"
+                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
+                      >
+                        {category.name}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
-          </div>
+          </nav>
         </aside>
 
         <main className={itemsHomeStyles.mainContent}>
           {selectedDistrict && (
-            <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-sm text-green-800">
+            <div className="mb-4 fb-primary-subtle border fb-border-primary rounded-lg p-3">
+              <p className="text-sm fb-text-primary">
                 <span className="font-semibold">Showing products for:</span> {selectedDistrict} district
               </p>
             </div>
@@ -559,8 +578,8 @@ const ItemsHome = () => {
                     setSearchTerm('');
                   }}
                   className={`${itemsHomeStyles.mobileCategoryItem} ${activeCategory === (cat.value || cat.name) && !searchTerm
-                      ? itemsHomeStyles.activeMobileCategory
-                      : itemsHomeStyles.inactiveMobileCategory
+                    ? itemsHomeStyles.activeMobileCategory
+                    : itemsHomeStyles.inactiveMobileCategory
                     }`}
                 >
                   {cat.name}
@@ -570,16 +589,16 @@ const ItemsHome = () => {
           </div>
 
           {searchTerm && (
-            <div className={itemsHomeStyles.searchResults}>
+            <div className="text-center mb-6 fb-card rounded-xl p-4 shadow-sm max-w-2xl mx-auto">
               <div className="flex items-center justify-center">
-                <span className="text-emerald-700 font-medium">
+                <span className="fb-text-primary font-medium">
                   Search results for: <span className="font-bold">"{searchTerm}"</span>
                 </span>
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="ml-4 text-emerald-500 hover:text-emerald-700 p-1 rounded-full transition-colors"
+                  className="ml-4 fb-text-primary hover:opacity-70 p-1 rounded-full transition-colors"
                 >
-                  <span className="text-sm bg-emerald-100 px-2 py-1 rounded-full">Clear</span>
+                  <span className="text-sm fb-primary-subtle px-2 py-1 rounded-full">Clear</span>
                 </button>
               </div>
             </div>
@@ -597,7 +616,7 @@ const ItemsHome = () => {
                   : `Best ${activeCategory}`)
               }
             </h2>
-            <div className={itemsHomeStyles.sectionDivider} />
+            <div className={itemsHomeStyles.sectionDivider} style={{ backgroundColor: 'var(--color-primary)' }} />
           </div>
 
           <div className={itemsHomeStyles.productsGrid}>
@@ -605,7 +624,7 @@ const ItemsHome = () => {
               searchedProducts.map((product) => {
                 const qty = getQuantity(product._id);
                 const stock = product.stock || 0;
-                
+
                 return (
                   <div
                     key={product._id}
@@ -630,16 +649,16 @@ const ItemsHome = () => {
                       <h3 className={itemsHomeStyles.productTitle}>
                         {product.name}
                       </h3>
-                      
-                      <UploaderBadge 
-                        uploaderRole={product.uploaderRole} 
-                        uploaderName={product.uploaderName} 
+
+                      <UploaderBadge
+                        uploaderRole={product.uploaderRole}
+                        uploaderName={product.uploaderName}
                       />
 
                       <div className="mb-2">
                         <StockBadge stock={stock} />
                       </div>
-                      
+
                       <div className={itemsHomeStyles.priceContainer}>
                         <div>
                           <p className={itemsHomeStyles.currentPrice}>
@@ -692,7 +711,7 @@ const ItemsHome = () => {
       {/* UPDATED: Product Detail Modal with Quantity Input */}
       {/* ============================================ */}
       {selectedProduct && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           onClick={closeModal}
           style={{
@@ -701,24 +720,24 @@ const ItemsHome = () => {
             backgroundColor: 'rgba(0, 0, 0, 0.3)'
           }}
         >
-          <div 
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+          <div
+            className="fb-modal rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
-              <h2 className="text-xl font-semibold text-gray-800">Product Details</h2>
+            <div className="sticky top-0 fb-surface border-b fb-border p-4 flex items-center justify-between z-10 rounded-t-xl">
+              <h2 className="text-xl font-semibold fb-text">Product Details</h2>
               <button
                 onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 p-2 transition-colors rounded-full hover:bg-gray-100"
+                className="fb-text-muted hover:fb-text p-2 transition-colors rounded-full hover:fb-surface-alt"
               >
                 <span className="text-2xl">&times;</span>
               </button>
             </div>
-            
+
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                  <div className="aspect-square rounded-lg overflow-hidden fb-surface-alt">
                     <img
                       src={`${API_BASE_URL}${selectedProduct.imageUrl}`}
                       alt={selectedProduct.name}
@@ -736,46 +755,46 @@ const ItemsHome = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                    <h1 className="text-2xl font-bold fb-text mb-2">
                       {selectedProduct.name}
                     </h1>
-                    <p className="text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-full inline-block">
+                    <p className="text-sm fb-text-secondary fb-surface-alt px-3 py-1 rounded-full inline-block">
                       {selectedProduct.category || 'Grocery'}
                     </p>
                   </div>
-                  
-                  <div className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-green-50 border border-gray-200">
-                    <UploaderBadge 
-                      uploaderRole={selectedProduct.uploaderRole} 
-                      uploaderName={selectedProduct.uploaderName} 
+
+                  <div className="p-3 rounded-lg fb-primary-subtle border fb-border">
+                    <UploaderBadge
+                      uploaderRole={selectedProduct.uploaderRole}
+                      uploaderName={selectedProduct.uploaderName}
                     />
                   </div>
-                  
+
                   {selectedProduct.farmerId && !selectedProduct.adminUploaded && (
                     <FarmerAddressCard farmer={selectedProduct.farmerId} />
                   )}
-                  
-                  <div className="p-3 rounded-lg bg-gray-50 border">
+
+                  <div className="p-3 rounded-lg fb-surface-alt border fb-border">
                     <StockBadge stock={selectedProduct.stock || 0} />
                   </div>
-                  
-                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+
+                  <div className="p-4 fb-primary-subtle rounded-lg border fb-border-primary">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-700 font-medium">Price per {selectedProduct.unit || 'kg'}</span>
-                      <span className="text-2xl font-bold text-emerald-600">
+                      <span className="text-sm fb-text-secondary font-medium">Price per {selectedProduct.unit || 'kg'}</span>
+                      <span className="text-2xl font-bold fb-text-primary">
                         ₹{selectedProduct.price.toFixed(2)}
                       </span>
                     </div>
                     {selectedProduct.oldPrice && (
                       <>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">Original Price</span>
-                          <span className="text-gray-500 line-through">
+                          <span className="fb-text-muted">Original Price</span>
+                          <span className="fb-text-muted line-through">
                             ₹{selectedProduct.oldPrice.toFixed(2)}
                           </span>
                         </div>
                         <div className="mt-2 text-right">
-                          <span className="text-green-600 text-sm font-medium">
+                          <span className="fb-text-primary text-sm font-medium">
                             Save ₹{(selectedProduct.oldPrice - selectedProduct.price).toFixed(2)}
                           </span>
                         </div>
@@ -784,20 +803,20 @@ const ItemsHome = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-gray-800">Description</h3>
-                    <p className="text-gray-600 leading-relaxed text-sm">
-                      {selectedProduct.description || 
-                       `Fresh and organic ${selectedProduct.name.toLowerCase()} sourced directly from local farms. 
+                    <h3 className="font-semibold fb-text">Description</h3>
+                    <p className="fb-text-secondary leading-relaxed text-sm">
+                      {selectedProduct.description ||
+                        `Fresh and organic ${selectedProduct.name.toLowerCase()} sourced directly from local farms. 
                         Premium quality guaranteed with natural taste and maximum nutritional value. 
                         Perfect for healthy cooking and daily consumption.`}
                     </p>
                   </div>
-                  
-                  <div className="border-t pt-4">
+
+                  <div className="border-t fb-border pt-4">
                     {selectedProduct.stock === 0 ? (
                       <button
                         disabled
-                        className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg font-medium cursor-not-allowed"
+                        className="w-full fb-surface-alt fb-text-muted py-3 px-4 rounded-lg font-medium cursor-not-allowed opacity-60"
                       >
                         Out of Stock
                       </button>

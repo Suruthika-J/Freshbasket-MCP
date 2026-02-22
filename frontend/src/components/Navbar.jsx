@@ -53,7 +53,7 @@ export default function Navbar() {
     const loadUserData = () => {
       const token = localStorage.getItem('authToken');
       const storedUserData = localStorage.getItem('userData');
-      
+
       if (token && storedUserData) {
         try {
           const parsedData = JSON.parse(storedUserData);
@@ -102,7 +102,7 @@ export default function Navbar() {
     const handler = () => {
       const token = localStorage.getItem('authToken');
       const storedUserData = localStorage.getItem('userData');
-      
+
       if (token && storedUserData) {
         try {
           const parsedData = JSON.parse(storedUserData);
@@ -128,7 +128,7 @@ export default function Navbar() {
         !mobileMenuRef.current.contains(event.target)) {
         setIsOpen(false);
       }
-      
+
       // Close profile dropdown when clicking outside
       if (showProfileDropdown && profileDropdownRef.current &&
         !profileDropdownRef.current.contains(event.target)) {
@@ -159,7 +159,7 @@ export default function Navbar() {
     if (isLoggedIn) {
       const shopIndex = baseItems.findIndex(item => item.name === t('nav.shop'));
       if (shopIndex !== -1) {
-        baseItems.splice(shopIndex + 1, 0, 
+        baseItems.splice(shopIndex + 1, 0,
           {
             name: t('nav.myOrders'),
             path: "/myorders",
@@ -258,6 +258,7 @@ export default function Navbar() {
                       : navbarStyles.inactiveIndicator
                     }
                   `}
+                  style={activeTab === item.path ? { backgroundColor: 'var(--color-primary)' } : {}}
                 />
               </Link>
             ))}
@@ -271,35 +272,35 @@ export default function Navbar() {
               <div className="relative" ref={profileDropdownRef}>
                 <button
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-500/20 to-green-500/20 border border-emerald-500/30 hover:from-emerald-500/30 hover:to-green-500/30 transition-all duration-300 backdrop-blur-sm"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg fb-primary-subtle border fb-border hover:opacity-90 transition-all duration-300"
                   aria-label="Profile menu"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white text-sm font-semibold shadow-lg">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center text-white text-sm font-semibold shadow-lg">
                     {getUserInitials(userData.name)}
                   </div>
-                  <span className="text-white text-sm font-medium hidden sm:block">
+                  <span className="fb-text text-sm font-medium hidden sm:block">
                     {userData.name?.split(' ')[0] || t('nav.user')}
                   </span>
                 </button>
 
                 {/* Profile Dropdown */}
                 {showProfileDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-gray-900/95 backdrop-blur-xl border border-emerald-500/30 rounded-xl shadow-2xl z-50 overflow-hidden">
-                    <div className="p-4 border-b border-gray-700/50">
+                  <div className="absolute right-0 top-full mt-2 w-64 fb-modal z-50 overflow-hidden">
+                    <div className="p-4 border-b fb-border">
                       <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white text-lg font-semibold shadow-lg">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center text-white text-lg font-semibold shadow-lg">
                           {getUserInitials(userData.name)}
                         </div>
                         <div>
-                          <h3 className="text-white font-semibold">{userData.name}</h3>
-                          <p className="text-gray-300 text-sm">{userData.email}</p>
+                          <h3 className="fb-text font-semibold">{userData.name}</h3>
+                          <p className="fb-text-secondary text-sm">{userData.email}</p>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="py-2">
                       {/* Language Switcher in Profile Dropdown */}
-                      <div className="px-4 py-3 border-b border-gray-700/50">
+                      <div className="px-4 py-3 border-b fb-border">
                         <LanguageSwitcher />
                       </div>
 
@@ -309,43 +310,43 @@ export default function Navbar() {
                           toggleTheme();
                           setShowProfileDropdown(false);
                         }}
-                        className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-emerald-500/20 transition-all duration-200"
+                        className="w-full flex items-center px-4 py-3 fb-text-secondary hover:fb-text hover:fb-primary-subtle transition-all duration-200"
                       >
-                        {isDark ? <FiSun className="mr-3" /> : <FiMoon className="mr-3" />}
-                        {isDark ? 'Light Mode' : 'Dark Mode'}
+                        {isDark ? <FiSun className="mr-3 fb-text-primary" /> : <FiMoon className="mr-3 fb-text-primary" />}
+                        <span className="fb-text">{isDark ? 'Light Mode' : 'Dark Mode'}</span>
                       </button>
 
                       <Link
                         to="/profile"
-                        className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-emerald-500/20 transition-all duration-200"
+                        className="flex items-center px-4 py-3 fb-text-secondary hover:fb-text hover:fb-primary-subtle transition-all duration-200"
                         onClick={() => setShowProfileDropdown(false)}
                       >
-                        <FiSettings className="mr-3" />
-                        {t('nav.profileSettings')}
+                        <FiSettings className="mr-3 fb-text-primary" />
+                        <span className="fb-text">{t('nav.profileSettings')}</span>
                       </Link>
                       <Link
                         to="/myorders"
-                        className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-emerald-500/20 transition-all duration-200"
+                        className="flex items-center px-4 py-3 fb-text-secondary hover:fb-text hover:fb-primary-subtle transition-all duration-200"
                         onClick={() => setShowProfileDropdown(false)}
                       >
-                        <FiPackage className="mr-3" />
-                        {t('nav.myOrders')}
+                        <FiPackage className="mr-3 fb-text-primary" />
+                        <span className="fb-text">{t('nav.myOrders')}</span>
                       </Link>
                       {/* ✅ NEW: Meal Planner Link in Dropdown */}
                       <Link
                         to="/meal-planner"
-                        className="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-emerald-500/20 transition-all duration-200"
+                        className="flex items-center px-4 py-3 fb-text-secondary hover:fb-text hover:fb-primary-subtle transition-all duration-200"
                         onClick={() => setShowProfileDropdown(false)}
                       >
-                        <FiCalendar className="mr-3" />
-                        Meal Planner
+                        <FiCalendar className="mr-3 fb-text-primary" />
+                        <span className="fb-text">Meal Planner</span>
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center px-4 py-3 text-gray-300 hover:text-red-400 hover:bg-red-500/20 transition-all duration-200"
+                        className="w-full flex items-center px-4 py-3 fb-text-secondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
                       >
                         <FiLogOut className="mr-3" />
-                        {t('nav.logout')}
+                        <span>{t('nav.logout')}</span>
                       </button>
                     </div>
                   </div>
@@ -359,13 +360,21 @@ export default function Navbar() {
               </Link>
             )}
 
-            <Link to="/cart" className={navbarStyles.cartLink}>
+            <Link
+              to="/cart"
+              className={navbarStyles.cartLink}
+              aria-label={`Cart (${cartCount} items)`}
+            >
               <FaOpencart
-                className={`${navbarStyles.cartIcon} ${cartBounce ? 'animate-bounce' : ''
-                  }`}
+                className={`${navbarStyles.cartIcon} ${cartBounce ? 'scale-125' : ''} transition-transform duration-300`}
               />
               {cartCount > 0 && (
-                <span className={navbarStyles.cartBadge}>{cartCount}</span>
+                <span
+                  className={navbarStyles.cartBadge}
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                >
+                  {cartCount}
+                </span>
               )}
             </Link>
 
@@ -375,9 +384,9 @@ export default function Navbar() {
               aria-label={isOpen ? 'Close menu' : 'Open menu'}
             >
               {isOpen ? (
-                <FiX className="h-6 w-6 text-white" />
+                <FiX className="h-6 w-6 fb-text" />
               ) : (
-                <FiMenu className="h-6 w-6 text-white" />
+                <FiMenu className="h-6 w-6 fb-text" />
               )}
             </button>
           </div>
@@ -407,38 +416,38 @@ export default function Navbar() {
               <div className={navbarStyles.mobileLogo}>
                 <img
                   src={logo}
-                  alt="RushBasket Logo"
+                  alt="FreshBasket Logo"
                   className={navbarStyles.mobileLogoImage}
                 />
-                <span className={navbarStyles.mobileLogoText}>RushBasket</span>
+                <span className={navbarStyles.mobileLogoText}>FreshBasket</span>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className={navbarStyles.closeButton}
+              className={`${navbarStyles.closeButton} fb-text`}
               aria-label="Close menu"
             >
-              <FiX className="h-6 w-6 text-white" />
+              <FiX className="h-6 w-6" />
             </button>
           </div>
 
           {/* Mobile Profile Section */}
           {isLoggedIn && userData && (
-            <div className="p-4 border-b border-orange-100/0">
+            <div className="p-4 border-b fb-border">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white text-lg font-semibold shadow-lg">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center text-white text-lg font-semibold shadow-lg">
                   {getUserInitials(userData.name)}
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold">{userData.name}</h3>
-                  <p className="text-gray-300 text-sm">{userData.email}</p>
+                  <h3 className="fb-text font-semibold">{userData.name}</h3>
+                  <p className="fb-text-secondary text-sm">{userData.email}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Mobile Language Switcher */}
-          <div className="p-4 border-b border-gray-700/50">
+          <div className="p-4 border-b fb-border">
             <LanguageSwitcher />
           </div>
 
@@ -447,16 +456,17 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 to={item.path}
-                className={navbarStyles.mobileItem}
+                className={`${navbarStyles.mobileItem} ${activeTab === item.path ? 'fb-primary-subtle border-l-4' : ''}`}
                 style={{
                   transitionDelay: isOpen ? `${idx * 100}ms` : '0ms',
                   opacity: isOpen ? 1 : 0,
                   transform: `translateX(${isOpen ? 0 : '20px'})`,
+                  borderLeftColor: activeTab === item.path ? 'var(--color-primary)' : 'transparent',
                 }}
                 onClick={() => setIsOpen(false)}
               >
-                <span className={navbarStyles.mobileItemIcon}>{item.icon}</span>
-                <span className={navbarStyles.mobileItemText}>{item.name}</span>
+                <span className={`${navbarStyles.mobileItemIcon} ${activeTab === item.path ? 'fb-text-primary' : ''}`}>{item.icon}</span>
+                <span className={`${navbarStyles.mobileItemText} ${activeTab === item.path ? 'fb-text-primary font-semibold' : ''}`}>{item.name}</span>
               </Link>
             ))}
 

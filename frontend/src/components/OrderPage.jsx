@@ -8,9 +8,35 @@ import {
 import { ordersPageStyles } from "../assets/dummyStyles.js";
 import axios from 'axios';
 import RatingModal from './RatingModal';
-import UserOrderTracking from './UserOrderTracking'; // NEW IMPORT
-import ReturnModal from './ReturnModal'; // NEW IMPORT
+import UserOrderTracking from './UserOrderTracking';
+import ReturnModal from './ReturnModal';
 import Modal from './Modal';
+
+// ── Vivid, theme-aware status badge helper ──────────────────────────────────
+const getStatusBadgeStyle = (status) => {
+  const map = {
+    'Delivered': { bg: '#E8F5E9', color: '#1B5E20', border: '#2E7D32' },
+    'Processing': { bg: '#FFF8E1', color: '#E65100', border: '#F57C00' },
+    'Shipped': { bg: '#E3F2FD', color: '#0D47A1', border: '#1565C0' },
+    'Cancelled': { bg: '#FFEBEE', color: '#B71C1C', border: '#C62828' },
+    'Pending': { bg: '#FFF3E0', color: '#BF360C', border: '#E64A19' },
+    'Paid': { bg: '#E8F5E9', color: '#1B5E20', border: '#2E7D32' },
+    'Unpaid': { bg: '#FFEBEE', color: '#B71C1C', border: '#C62828' },
+  };
+  return map[status] || { bg: '#F5F5F5', color: '#424242', border: '#9E9E9E' };
+};
+
+const StatusBadge = ({ status, size = 'sm' }) => {
+  const style = getStatusBadgeStyle(status);
+  return (
+    <span
+      className={`inline-flex items-center font-semibold rounded-full border ${size === 'sm' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'}`}
+      style={{ backgroundColor: style.bg, color: style.color, borderColor: style.border }}
+    >
+      {status}
+    </span>
+  );
+};
 
 const UserOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -21,14 +47,12 @@ const UserOrdersPage = () => {
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [orderToRate, setOrderToRate] = useState(null);
   const [orderReviews, setOrderReviews] = useState({});
-  
+
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
   const [orderToTrack, setOrderToTrack] = useState(null);
 
-  // NEW: Return modal state
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [orderToReturn, setOrderToReturn] = useState(null);
-  // NEW: Tracking modal state
 
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userEmail = userData.email || '';
@@ -37,11 +61,9 @@ const UserOrdersPage = () => {
     try {
       const resp = await axios.get('http://localhost:4000/api/orders');
       const allOrders = resp.data;
-
       const mine = allOrders.filter(o =>
         o.customer?.email?.toLowerCase() === userEmail.toLowerCase()
       );
-
       setOrders(mine);
       await checkOrderReviews(mine);
     } catch (err) {
@@ -51,120 +73,54 @@ const UserOrdersPage = () => {
 
   const checkOrderReviews = async (orders) => {
     const reviewsMap = {};
-
     for (const order of orders) {
       try {
-        const response = await axios.get(
-          `http://localhost:4000/api/reviews/order/${order._id}`
-        );
-        if (response.data.success) {
-          reviewsMap[order._id] = response.data.review;
-        } else {
-          reviewsMap[order._id] = null;
-        }
+        const response = await axios.get(`http://localhost:4000/api/reviews/order/${order._id}`);
+        reviewsMap[order._id] = (response.data.success && response.data.review) ? response.data.review : null;
       } catch (err) {
-        // Only log if it's not a 404 (which is expected for orders without reviews)
-        if (err.response?.status !== 404) {
-          console.error('Error fetching review for order:', order._id, err);
-        }
+        console.error('Error fetching review for order:', order._id, err);
         reviewsMap[order._id] = null;
       }
     }
-
     setOrderReviews(reviewsMap);
   };
 
-  useEffect(() => {
-    fetchAndFilterOrders();
-  }, []);
+  useEffect(() => { fetchAndFilterOrders(); }, []);
 
   useEffect(() => {
     setFilteredOrders(
       orders.filter(o =>
         o.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.items.some(i =>
-          i.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        o.items.some(i => i.name.toLowerCase().includes(searchTerm.toLowerCase()))
       )
     );
   }, [orders, searchTerm]);
 
-  const viewOrderDetails = (order) => {
-    setSelectedOrder(order);
-    setIsDetailModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsDetailModalOpen(false);
-    setSelectedOrder(null);
-  };
-
-  const openRatingModal = (order) => {
-    setOrderToRate(order);
-    setIsRatingModalOpen(true);
-  };
-
-  const closeRatingModal = () => {
-    setIsRatingModalOpen(false);
-    setOrderToRate(null);
-  };
-
+  const viewOrderDetails = (order) => { setSelectedOrder(order); setIsDetailModalOpen(true); };
+  const closeModal = () => { setIsDetailModalOpen(false); setSelectedOrder(null); };
+  const openRatingModal = (order) => { setOrderToRate(order); setIsRatingModalOpen(true); };
+  const closeRatingModal = () => { setIsRatingModalOpen(false); setOrderToRate(null); };
   const handleReviewSubmitted = (review) => {
-    setOrderReviews(prev => ({
-      ...prev,
-      [review.orderId]: review
-    }));
+    setOrderReviews(prev => ({ ...prev, [review.orderId]: review }));
     fetchAndFilterOrders();
   };
-
-  const canReviewOrder = (order) => {
-    return order.status === 'Delivered' && !orderReviews[order._id];
-  };
-
+  const canReviewOrder = (order) => order.status === 'Delivered' && !orderReviews[order._id];
   const canReturnOrder = (order) => {
     if (order.status !== 'Delivered') return false;
-
-    // Check if order is within 7 days of delivery
-    const deliveryDate = new Date(order.date);
-    const currentDate = new Date();
-    const daysSinceDelivery = Math.floor((currentDate - deliveryDate) / (1000 * 60 * 60 * 24));
-
-    return daysSinceDelivery <= 7;
+    const daysSince = Math.floor((new Date() - new Date(order.date)) / (1000 * 60 * 60 * 24));
+    return daysSince <= 7;
   };
+  const getReviewForOrder = (orderId) => orderReviews[orderId];
+  const openTrackingModal = (order) => { setOrderToTrack(order); setIsTrackingModalOpen(true); };
+  const closeTrackingModal = () => { setIsTrackingModalOpen(false); setOrderToTrack(null); };
+  const canTrackOrder = (order) => ['Processing', 'Shipped'].includes(order.status);
+  const openReturnModal = (order) => { setOrderToReturn(order); setIsReturnModalOpen(true); };
+  const closeReturnModal = () => { setIsReturnModalOpen(false); setOrderToReturn(null); };
 
-  const getReviewForOrder = (orderId) => {
-    return orderReviews[orderId];
-  };
-
-  // NEW: Tracking functions
-  const openTrackingModal = (order) => {
-    setOrderToTrack(order);
-    setIsTrackingModalOpen(true);
-  };
-
-  const closeTrackingModal = () => {
-    setIsTrackingModalOpen(false);
-    setOrderToTrack(null);
-  };
-
-  const canTrackOrder = (order) => {
-    return ['Processing', 'Shipped'].includes(order.status);
-  };
-
-  // NEW: Return functions
-  const openReturnModal = (order) => {
-    setOrderToReturn(order);
-    setIsReturnModalOpen(true);
-  };
-
-  const closeReturnModal = () => {
-    setIsReturnModalOpen(false);
-    setOrderToReturn(null);
-  };
-  
   return (
     <div className={ordersPageStyles.page}>
       <div className={ordersPageStyles.container}>
+
         {/* Header */}
         <div className={ordersPageStyles.header}>
           <a href="#" className={ordersPageStyles.backLink}>
@@ -177,7 +133,7 @@ const UserOrdersPage = () => {
             View your order history and track current orders
           </p>
           <div className={ordersPageStyles.titleDivider}>
-            <div className={ordersPageStyles.dividerLine}></div>
+            <div className={ordersPageStyles.dividerLine} style={{ backgroundColor: 'var(--color-primary)' }}></div>
           </div>
         </div>
 
@@ -211,44 +167,49 @@ const UserOrdersPage = () => {
                   <th className={ordersPageStyles.tableHeaderCell}>Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-emerald-700/50">
+              <tbody className="divide-y fb-border">
                 {filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <FiPackage className="text-emerald-400 text-4xl mb-4" />
-                        <h3 className="text-lg font-medium text-emerald-100 mb-1">No orders found</h3>
-                        <p className="text-emerald-300">Try adjusting your search criteria</p>
+                        <FiPackage className="fb-text-muted text-4xl mb-4" />
+                        <h3 className="text-lg font-medium fb-text mb-1">No orders found</h3>
+                        <p className="fb-text-secondary">Try adjusting your search criteria</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   filteredOrders.map(order => (
                     <tr key={order._id} className={ordersPageStyles.tableRow}>
-                      <td className={`${ordersPageStyles.tableCell} font-medium text-emerald-200`}>
+                      {/* Order ID */}
+                      <td className={`${ordersPageStyles.tableCell} font-medium fb-text-primary text-sm`}>
                         {order.orderId}
                       </td>
-                      <td className={`${ordersPageStyles.tableCell} text-sm`}>
+
+                      {/* Date */}
+                      <td className={`${ordersPageStyles.tableCell} fb-text-secondary text-sm`}>
                         {order.date}
                       </td>
+
+                      {/* Items count */}
                       <td className={ordersPageStyles.tableCell}>
-                        <div className="text-emerald-100">
-                          {order.items.length} items
-                        </div>
-                      </td>
-                      <td className={`${ordersPageStyles.tableCell} font-medium`}>
-                        ₹{order.total.toFixed(2)}
-                      </td>
-                      <td className={ordersPageStyles.tableCell}>
-                        <span className={`${ordersPageStyles.statusBadge} ${
-                          order.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-200' :
-                          order.status === 'Processing' ? 'bg-amber-500/20 text-amber-200' :
-                          order.status === 'Shipped' ? 'bg-blue-500/20 text-blue-200' :
-                          'bg-red-500/20 text-red-200'
-                        }`}>
-                          {order.status}
+                        <span className="inline-flex items-center gap-1 font-medium fb-text">
+                          <FiPackage size={14} className="fb-text-primary" />
+                          {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                         </span>
                       </td>
+
+                      {/* Total */}
+                      <td className={`${ordersPageStyles.tableCell} font-semibold fb-text`}>
+                        ₹{order.total.toFixed(2)}
+                      </td>
+
+                      {/* Status badge — vivid & readable */}
+                      <td className={ordersPageStyles.tableCell}>
+                        <StatusBadge status={order.status} />
+                      </td>
+
+                      {/* Actions */}
                       <td className={ordersPageStyles.tableCell}>
                         <div className="flex gap-2 flex-wrap">
                           <button
@@ -258,42 +219,42 @@ const UserOrdersPage = () => {
                             View Details
                           </button>
 
-
-                          
-                          {/* NEW: Track Order Button */}
                           {canTrackOrder(order) && (
                             <button
                               onClick={() => openTrackingModal(order)}
-                              className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-full text-white text-sm font-medium transition-opacity hover:opacity-90 flex items-center gap-1"
+                              style={{ backgroundColor: 'var(--color-info)' }}
                             >
-                              <FiTruck size={14} />
-                              Track Order
+                              <FiTruck size={13} />
+                              Track
                             </button>
                           )}
-                          
+
                           {canReturnOrder(order) && (
                             <button
                               onClick={() => openReturnModal(order)}
-                              className="px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-full text-white text-sm font-medium transition-opacity hover:opacity-90 flex items-center gap-1"
+                              style={{ backgroundColor: 'var(--color-warning)' }}
                             >
-                              <FiRotateCcw size={14} />
-                              Return Order
+                              <FiRotateCcw size={13} />
+                              Return
                             </button>
                           )}
 
                           {canReviewOrder(order) && (
                             <button
                               onClick={() => openRatingModal(order)}
-                              className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-full text-white text-sm font-medium transition-opacity hover:opacity-90 flex items-center gap-1"
+                              style={{ backgroundColor: '#F59E0B' }}
                             >
-                              <FiStar size={14} />
+                              <FiStar size={13} />
                               Rate Order
                             </button>
                           )}
 
                           {getReviewForOrder(order._id) && (
-                            <div className="flex items-center gap-1 px-3 py-1 bg-emerald-600/30 text-emerald-200 rounded-lg text-sm">
-                              <FiStar className="fill-yellow-400 text-yellow-400" size={14} />
+                            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium fb-primary-subtle fb-text-primary border fb-border-primary">
+                              <FiStar className="fill-yellow-400 text-yellow-500" size={13} />
                               Reviewed
                             </div>
                           )}
@@ -308,7 +269,7 @@ const UserOrdersPage = () => {
         </div>
       </div>
 
-      {/* Order Detail Modal */}
+      {/* ── Order Detail Modal ─────────────────────────────────────────────── */}
       <Modal
         isOpen={isDetailModalOpen}
         onClose={closeModal}
@@ -317,7 +278,7 @@ const UserOrdersPage = () => {
       >
         {selectedOrder && (
           <>
-            <div className="text-emerald-300 mb-6">
+            <div className="fb-text-secondary mb-6 text-sm">
               Ordered on {selectedOrder.date}
             </div>
 
@@ -326,64 +287,58 @@ const UserOrdersPage = () => {
               <div>
                 {/* Customer Info */}
                 <div className="mb-6">
-                  <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
-                    <FiUser className="mr-2 text-emerald-300" />
+                  <h3 className="flex items-center text-lg font-bold fb-text mb-4">
+                    <FiUser className="mr-2 fb-text-primary" />
                     My Information
                   </h3>
-                  <div className="bg-emerald-800/50 rounded-xl p-4 border border-emerald-700/50">
+                  <div className="fb-surface-alt rounded-xl p-4 border fb-border">
                     <div className="mb-3">
-                      <div className="font-medium text-emerald-100">{selectedOrder.customer.name}</div>
-                      <div className="text-emerald-300 flex items-center mt-2">
-                        <FiMail className="mr-2 flex-shrink-0" />
+                      <div className="font-semibold fb-text">{selectedOrder.customer.name}</div>
+                      <div className="fb-text-secondary flex items-center mt-2 text-sm">
+                        <FiMail className="mr-2 flex-shrink-0 fb-text-primary" />
                         {selectedOrder.customer.email || 'No email provided'}
                       </div>
-                      <div className="text-emerald-300 flex items-center mt-2">
-                        <FiPhone className="mr-2 flex-shrink-0" />
+                      <div className="fb-text-secondary flex items-center mt-2 text-sm">
+                        <FiPhone className="mr-2 flex-shrink-0 fb-text-primary" />
                         {selectedOrder.customer.phone}
                       </div>
                     </div>
                     <div className="flex items-start mt-3">
-                      <FiMapPin className="text-emerald-400 mr-2 mt-1 flex-shrink-0" />
-                      <div className="text-emerald-300">{selectedOrder.customer.address}</div>
+                      <FiMapPin className="fb-text-primary mr-2 mt-1 flex-shrink-0" />
+                      <div className="fb-text-secondary text-sm">{selectedOrder.customer.address}</div>
                     </div>
                   </div>
                 </div>
 
                 {selectedOrder.notes && (
                   <div className="mb-6">
-                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
-                      Delivery Notes
-                    </h3>
-                    <div className="bg-emerald-800/50 border-l-4 border-emerald-400 p-4 rounded-lg">
-                      <p className="text-emerald-200">{selectedOrder.notes}</p>
+                    <h3 className="flex items-center text-lg font-bold fb-text mb-4">Delivery Notes</h3>
+                    <div className="fb-primary-subtle border-l-4 p-4 rounded-lg" style={{ borderColor: 'var(--color-primary)' }}>
+                      <p className="fb-text-secondary text-sm">{selectedOrder.notes}</p>
                     </div>
                   </div>
                 )}
 
                 {getReviewForOrder(selectedOrder._id) && (
                   <div className="mb-6">
-                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
-                      <FiStar className="mr-2 text-yellow-400" />
+                    <h3 className="flex items-center text-lg font-bold fb-text mb-4">
+                      <FiStar className="mr-2 text-yellow-500" />
                       Your Review
                     </h3>
-                    <div className="bg-emerald-800/50 border border-emerald-600/50 p-4 rounded-lg">
+                    <div className="fb-surface-alt border fb-border p-4 rounded-xl">
                       <div className="flex items-center gap-1 mb-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <FiStar
                             key={star}
-                            className={`${
-                              star <= getReviewForOrder(selectedOrder._id).rating
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-500'
-                            }`}
+                            className={star <= getReviewForOrder(selectedOrder._id).rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'fb-text-muted'}
                             size={18}
                           />
                         ))}
                       </div>
-                      <p className="text-emerald-200">
-                        {getReviewForOrder(selectedOrder._id).comment}
-                      </p>
-                      <p className="text-emerald-400 text-xs mt-2">
+                      <p className="fb-text text-sm">{getReviewForOrder(selectedOrder._id).comment}</p>
+                      <p className="fb-text-muted text-xs mt-2">
                         Reviewed on {new Date(getReviewForOrder(selectedOrder._id).createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -394,15 +349,15 @@ const UserOrdersPage = () => {
               {/* Right Column */}
               <div>
                 <div className="mb-6">
-                  <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
-                    <FiPackage className="mr-2 text-emerald-300" />
+                  <h3 className="flex items-center text-lg font-bold fb-text mb-4">
+                    <FiPackage className="mr-2 fb-text-primary" />
                     Order Summary
                   </h3>
-                  <div className="border border-emerald-700 rounded-xl overflow-hidden">
+                  <div className="border fb-border rounded-xl overflow-hidden">
                     {selectedOrder.items.map((item, index) => (
                       <div
                         key={item._id || index}
-                        className={`flex items-center p-4 bg-emerald-900/30 ${index !== selectedOrder.items.length - 1 ? 'border-b border-emerald-700' : ''}`}
+                        className={`flex items-center p-4 fb-surface ${index !== selectedOrder.items.length - 1 ? 'border-b fb-border' : ''}`}
                       >
                         {item.imageUrl ? (
                           <img
@@ -411,93 +366,85 @@ const UserOrdersPage = () => {
                             className="w-16 h-16 object-cover rounded-lg mr-4"
                           />
                         ) : (
-                          <div className="bg-emerald-800 border-2 border-dashed border-emerald-700 rounded-xl w-16 h-16 mr-4 flex items-center justify-center">
-                            <FiPackage className="text-emerald-500" />
+                          <div className="fb-surface-alt border-2 border-dashed fb-border rounded-xl w-16 h-16 mr-4 flex items-center justify-center">
+                            <FiPackage className="fb-text-muted" />
                           </div>
                         )}
                         <div className="flex-grow">
-                          <div className="font-medium text-emerald-100">{item.name}</div>
-                          <div className="text-emerald-400">₹{item.price.toFixed(2)} × {item.quantity}</div>
+                          <div className="font-medium fb-text">{item.name}</div>
+                          <div className="fb-text-secondary text-sm">₹{item.price.toFixed(2)} × {item.quantity}</div>
                           {item.stock !== undefined && (
                             <div className="mt-1">
                               {item.stock > 0 ? (
-                                <div className="flex items-center text-xs">
-                                  <span className={`${item.stock <= 5 ? 'text-amber-300' : 'text-green-400'}`}>
-                                    {item.stock <= 5 ? `Only ${item.stock} left in stock` : `${item.stock} in stock`}
-                                  </span>
-                                </div>
+                                <span className={`text-xs font-medium ${item.stock <= 5 ? 'text-amber-600' : 'text-green-600'}`}>
+                                  {item.stock <= 5 ? `Only ${item.stock} left` : `${item.stock} in stock`}
+                                </span>
                               ) : (
-                                <div className="flex items-center text-xs text-red-400">
+                                <div className="flex items-center text-xs text-red-600">
                                   <FiAlertTriangle className="mr-1" size={12} />
-                                  <span>Currently out of stock</span>
+                                  Out of stock
                                 </div>
                               )}
                             </div>
                           )}
                         </div>
-                        <div className="font-medium text-emerald-100">
+                        <div className="font-semibold fb-text-primary">
                           ₹{(item.price * item.quantity).toFixed(2)}
                         </div>
                       </div>
                     ))}
 
-                    <div className="p-4 bg-emerald-800/50">
-                      <div className="flex justify-between py-2">
-                        <span className="text-emerald-300">Subtotal</span>
-                        <span className="font-medium text-emerald-100">₹{selectedOrder.total.toFixed(2)}</span>
+                    {/* Totals */}
+                    <div className="p-4 fb-surface-alt border-t fb-border">
+                      <div className="flex justify-between py-1.5 text-sm">
+                        <span className="fb-text-secondary">Subtotal</span>
+                        <span className="font-medium fb-text">₹{selectedOrder.total.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span className="text-emerald-300">Shipping</span>
-                        <span className="font-medium text-emerald-400">Free</span>
+                      <div className="flex justify-between py-1.5 text-sm">
+                        <span className="fb-text-secondary">Shipping</span>
+                        <span className="font-medium fb-text-primary">Free</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span className="text-emerald-300">Tax</span>
-                        <span className="font-medium text-emerald-100">₹{(selectedOrder.total * 0.05).toFixed(2)}</span>
+                      <div className="flex justify-between py-1.5 text-sm">
+                        <span className="fb-text-secondary">Tax (5%)</span>
+                        <span className="font-medium fb-text">₹{(selectedOrder.total * 0.05).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between pt-4 mt-2 border-t border-emerald-700">
-                        <span className="text-lg font-bold text-emerald-100">Total</span>
-                        <span className="text-lg font-bold text-emerald-300">
-                          ₹{(selectedOrder.total * 1.05).toFixed(2)}
-                        </span>
+                      <div className="flex justify-between pt-3 mt-1 border-t fb-border">
+                        <span className="text-base font-bold fb-text">Total</span>
+                        <span className="text-base font-bold fb-text-primary">₹{(selectedOrder.total * 1.05).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Payment */}
                   <div>
-                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
-                      <FiCreditCard className="mr-2 text-emerald-300" />
+                    <h3 className="flex items-center text-base font-bold fb-text mb-3">
+                      <FiCreditCard className="mr-2 fb-text-primary" />
                       Payment
                     </h3>
-                    <div className="bg-emerald-800/50 rounded-xl p-4 border border-emerald-700/50">
-                      <div className="flex justify-between mb-3">
-                        <span className="text-emerald-300">Method:</span>
-                        <span className="font-medium text-emerald-100">{selectedOrder.paymentMethod}</span>
+                    <div className="fb-surface-alt rounded-xl p-4 border fb-border space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="fb-text-secondary">Method:</span>
+                        <span className="font-medium fb-text">{selectedOrder.paymentMethod}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-emerald-300">Status:</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-red-500/20 text-red-200'}`}>
-                          {selectedOrder.paymentStatus}
-                        </span>
+                      <div className="flex justify-between text-sm items-center">
+                        <span className="fb-text-secondary">Status:</span>
+                        <StatusBadge status={selectedOrder.paymentStatus} />
                       </div>
                     </div>
                   </div>
 
+                  {/* Shipping */}
                   <div>
-                    <h3 className="flex items-center text-lg font-bold text-emerald-100 mb-4">
-                      <FiTruck className="mr-2 text-emerald-300" />
+                    <h3 className="flex items-center text-base font-bold fb-text mb-3">
+                      <FiTruck className="mr-2 fb-text-primary" />
                       Shipping
                     </h3>
-                    <div className="bg-emerald-800/50 rounded-xl p-4 border border-emerald-700/50">
-                      <div className="flex justify-between mb-3">
-                        <span className="text-emerald-300">Status:</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedOrder.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-200' :
-                          selectedOrder.status === 'Shipped' ? 'bg-blue-500/20 text-blue-200' :
-                          selectedOrder.status === 'Cancelled' ? 'bg-red-500/20 text-red-200' :
-                          'bg-amber-500/20 text-amber-200'}`}>
-                          {selectedOrder.status}
-                        </span>
+                    <div className="fb-surface-alt rounded-xl p-4 border fb-border space-y-2">
+                      <div className="flex justify-between text-sm items-center">
+                        <span className="fb-text-secondary">Status:</span>
+                        <StatusBadge status={selectedOrder.status} />
                       </div>
                     </div>
                   </div>
@@ -505,36 +452,29 @@ const UserOrdersPage = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              {/* NEW: Track Order button in modal footer */}
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-3 pt-4 mt-4 border-t fb-border">
               {canTrackOrder(selectedOrder) && (
                 <button
-                  onClick={() => {
-                    closeModal();
-                    openTrackingModal(selectedOrder);
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                  onClick={() => { closeModal(); openTrackingModal(selectedOrder); }}
+                  className="px-4 py-2 rounded-full text-white font-medium transition-opacity hover:opacity-90 flex items-center gap-2 text-sm"
+                  style={{ backgroundColor: 'var(--color-info)' }}
                 >
-                  <FiTruck size={16} />
-                  Track Order
+                  <FiTruck size={15} /> Track Order
                 </button>
               )}
-
               {canReviewOrder(selectedOrder) && (
                 <button
-                  onClick={() => {
-                    closeModal();
-                    openRatingModal(selectedOrder);
-                  }}
-                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                  onClick={() => { closeModal(); openRatingModal(selectedOrder); }}
+                  className="px-4 py-2 rounded-full text-white font-medium transition-opacity hover:opacity-90 flex items-center gap-2 text-sm"
+                  style={{ backgroundColor: '#F59E0B' }}
                 >
-                  <FiStar size={16} />
-                  Rate This Order
+                  <FiStar size={15} /> Rate This Order
                 </button>
               )}
               <button
                 onClick={closeModal}
-                className="px-4 py-2 bg-emerald-700/50 hover:bg-emerald-700 text-emerald-100 rounded-full transition"
+                className="px-5 py-2 fb-btn-secondary rounded-full text-sm font-medium"
               >
                 Close
               </button>
@@ -542,7 +482,7 @@ const UserOrdersPage = () => {
           </>
         )}
       </Modal>
-      
+
       {/* Rating Modal */}
       <RatingModal
         isOpen={isRatingModalOpen}
@@ -551,21 +491,19 @@ const UserOrdersPage = () => {
         onReviewSubmitted={handleReviewSubmitted}
       />
 
-      {/* NEW: Tracking Modal */}
+      {/* Tracking Modal */}
       <UserOrderTracking
         isOpen={isTrackingModalOpen}
         onClose={closeTrackingModal}
         order={orderToTrack}
       />
 
-      {/* NEW: Return Modal */}
+      {/* Return Modal */}
       <ReturnModal
         isOpen={isReturnModalOpen}
         onClose={closeReturnModal}
         order={orderToReturn}
-        onReturnSubmitted={() => {
-          fetchAndFilterOrders(); // Refresh orders after return submission
-        }}
+        onReturnSubmitted={() => { fetchAndFilterOrders(); }}
       />
     </div>
   );

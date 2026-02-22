@@ -82,7 +82,7 @@ export const categories = [
   },
   {
     name: 'Vegetables',
-    icon: <GiBroccoli className="text-green-100 text-2xl" />
+    icon: <GiBroccoli className="text-green-500 text-2xl" />
   },
   {
     name: 'Dairy',
@@ -98,7 +98,7 @@ export const categories = [
   },
   {
     name: 'Seafood',
-    icon: <GiShrimp className="text-teal-100 text-2xl" />
+    icon: <GiShrimp className="text-teal-400 text-2xl" />
   },
   {
     name: 'Bakery',
@@ -200,101 +200,101 @@ export const products = [
 ];
 
 export const orders = [
-    {
-      id: "ORD-78901",
-      userId: "user-12345",
-      date: "2023-06-15",
-      deliveryDate: "2023-06-20",
-      status: "Delivered",
-      paymentStatus: "Paid",
-      paymentMethod: "Credit Card",
-      total: 124.95,
-      customer: {
-        name: "Alex Johnson",
-        phone: "+1 (555) 123-4567",
-        email: "alex.johnson@example.com",
-        address: "123 Main Street, Apt 4B, New York, NY 10001"
-      },
-      items: [
-        {
-          id: "item-001",
-          name: "Premium Wireless Headphones",
-          price: 89.99,
-          quantity: 1,
-          image: ""
-        },
-        {
-          id: "item-002",
-          name: "Phone Case",
-          price: 24.99,
-          quantity: 2,
-          image: ""
-        }
-      ],
-      notes: "Please leave package at the front desk if I'm not home"
+  {
+    id: "ORD-78901",
+    userId: "user-12345",
+    date: "2023-06-15",
+    deliveryDate: "2023-06-20",
+    status: "Delivered",
+    paymentStatus: "Paid",
+    paymentMethod: "Credit Card",
+    total: 124.95,
+    customer: {
+      name: "Alex Johnson",
+      phone: "+1 (555) 123-4567",
+      email: "alex.johnson@example.com",
+      address: "123 Main Street, Apt 4B, New York, NY 10001"
     },
-    {
-      id: "ORD-78902",
-      userId: "user-12345",
-      date: "2023-06-20",
-      deliveryDate: "2023-06-25",
-      status: "Processing",
-      paymentStatus: "Paid",
-      paymentMethod: "PayPal",
-      total: 67.50,
-      customer: {
-        name: "Alex Johnson",
-        phone: "+1 (555) 123-4567",
-        email: "alex.johnson@example.com",
-        address: "123 Main Street, Apt 4B, New York, NY 10001"
+    items: [
+      {
+        id: "item-001",
+        name: "Premium Wireless Headphones",
+        price: 89.99,
+        quantity: 1,
+        image: ""
       },
-      items: [
-        {
-          id: "item-003",
-          name: "Smart Watch Band",
-          price: 19.99,
-          quantity: 1,
-          image: ""
-        },
-        {
-          id: "item-004",
-          name: "Screen Protector",
-          price: 11.99,
-          quantity: 4,
-          image: ""
-        }
-      ]
+      {
+        id: "item-002",
+        name: "Phone Case",
+        price: 24.99,
+        quantity: 2,
+        image: ""
+      }
+    ],
+    notes: "Please leave package at the front desk if I'm not home"
+  },
+  {
+    id: "ORD-78902",
+    userId: "user-12345",
+    date: "2023-06-20",
+    deliveryDate: "2023-06-25",
+    status: "Processing",
+    paymentStatus: "Paid",
+    paymentMethod: "PayPal",
+    total: 67.50,
+    customer: {
+      name: "Alex Johnson",
+      phone: "+1 (555) 123-4567",
+      email: "alex.johnson@example.com",
+      address: "123 Main Street, Apt 4B, New York, NY 10001"
     },
-    {
-      id: "ORD-78903",
-      userId: "user-12345",
-      date: "2023-06-25",
-      deliveryDate: "2023-06-30",
-      status: "Shipped",
-      paymentStatus: "Paid",
-      paymentMethod: "Credit Card",
-      total: 42.25,
-      customer: {
-        name: "Alex Johnson",
-        phone: "+1 (555) 123-4567",
-        email: "alex.johnson@example.com",
-        address: "123 Main Street, Apt 4B, New York, NY 10001"
+    items: [
+      {
+        id: "item-003",
+        name: "Smart Watch Band",
+        price: 19.99,
+        quantity: 1,
+        image: ""
       },
-      items: [
-        {
-          id: "item-005",
-          name: "USB-C Charging Cable",
-          price: 14.99,
-          quantity: 2,
-          image: ""
-        },
-        {
-          id: "item-006",
-          name: "Portable Power Bank",
-          price: 29.99,
-          quantity: 1,
-          image: ""
-        }
-      ]
-    }
-  ];
+      {
+        id: "item-004",
+        name: "Screen Protector",
+        price: 11.99,
+        quantity: 4,
+        image: ""
+      }
+    ]
+  },
+  {
+    id: "ORD-78903",
+    userId: "user-12345",
+    date: "2023-06-25",
+    deliveryDate: "2023-06-30",
+    status: "Shipped",
+    paymentStatus: "Paid",
+    paymentMethod: "Credit Card",
+    total: 42.25,
+    customer: {
+      name: "Alex Johnson",
+      phone: "+1 (555) 123-4567",
+      email: "alex.johnson@example.com",
+      address: "123 Main Street, Apt 4B, New York, NY 10001"
+    },
+    items: [
+      {
+        id: "item-005",
+        name: "USB-C Charging Cable",
+        price: 14.99,
+        quantity: 2,
+        image: ""
+      },
+      {
+        id: "item-006",
+        name: "Portable Power Bank",
+        price: 29.99,
+        quantity: 1,
+        image: ""
+      }
+    ]
+  }
+];

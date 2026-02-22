@@ -1,93 +1,94 @@
 // assets/dummyStyles.js
+// ─── All styles use CSS variables from index.css so they adapt to Light/Dark theme ───
+
 export const bannerStyles = {
-  backgroundGradient: "absolute inset-0 theme-banner-bg z-0",
+  backgroundGradient: "absolute inset-0 fb-bg z-0",
   decorativeCircle: "hidden absolute rounded-full",
-  tag: "inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full mb-3 border border-green-200",
-  heading: "text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold theme-text-primary mb-4",
-  headingItalic: "font-serif italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-green-600",
-  paragraph: "text-sm sm:text-base md:text-lg theme-text-secondary mb-6 mx-auto md:mx-0 max-w-md md:max-w-lg",
+  tag: "inline-block px-3 py-1 rounded-full mb-3 border text-sm font-medium fb-badge-success",
+  heading: "text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold fb-text mb-4",
+  headingItalic: "font-serif italic text-3xl sm:text-4xl md:text-5xl lg:text-6xl fb-text-primary",
+  paragraph: "text-sm sm:text-base md:text-lg fb-text-secondary mb-6 mx-auto md:mx-0 max-w-md md:max-w-lg",
   form: "relative max-w-md mx-auto md:mx-0 mb-6",
-  input: "w-full py-3 sm:py-4 px-4 pr-12 rounded-2xl theme-border-primary focus:outline-none focus:ring-2 focus:ring-green-300 shadow-sm theme-input-bg theme-text-primary",
-  searchButton: "absolute right-2 top-1/2 transform -translate-y-1/2 bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors",
-  featureIcon: "h-6 w-6",
-  featureItem: "theme-card-bg rounded-xl p-2 sm:p-3 flex flex-col items-center shadow-sm theme-border-primary hover:shadow-md transition-shadow",
-  featureText: "theme-feature-text font-medium text-xs sm:text-sm",
+  input: "w-full py-3 sm:py-4 px-4 pr-12 rounded-2xl fb-border focus:outline-none focus:ring-2 focus:ring-green-400 shadow-sm fb-input",
+  searchButton: "absolute right-2 top-1/2 transform -translate-y-1/2 fb-btn-primary p-2 rounded-full",
+  featureIcon: "h-6 w-6 fb-text-primary",
+  featureItem: "fb-card rounded-xl p-2 sm:p-3 flex flex-col items-center hover:shadow-md transition-shadow",
+  featureText: "fb-text font-medium text-xs sm:text-sm",
   imageContainer: "z-10 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md w-full transform transition-transform duration-500 hover:scale-[1.02]",
-  imageInner: "rounded-xl overflow-hidden w-full h-48 sm:h-56 md:h-64 lg:h-[350px] shadow-lg border-4 border-gray-100"
+  imageInner: "rounded-xl overflow-hidden w-full h-48 sm:h-56 md:h-64 lg:h-[350px] shadow-lg border-4 fb-border"
 };
 
 // assets/cartStyles.js
 export const cartStyles = {
-  pageContainer: "min-h-screen bg-gray-50 py-12 px-4",
+  pageContainer: "min-h-screen fb-bg py-12 px-4",
   maxContainer: "container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8",
   maxContainerLarge: "container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8",
-  continueShopping: "inline-flex cursor-pointer items-center text-green-600 hover:text-green-500 mb-8 text-sm sm:text-base",
-  emptyCartContainer: "bg-white rounded-2xl p-6 sm:p-8 text-center border border-gray-200 shadow-lg",
-  emptyCartIcon: "text-green-500 text-4xl sm:text-5xl mb-4",
-  emptyCartHeading: "text-2xl sm:text-3xl font-bold text-gray-800 mb-3",
-  emptyCartText: "text-green-600 mb-6 max-w-md mx-auto text-sm sm:text-base",
-  emptyCartButton: "inline-block cursor-pointer bg-green-500 hover:bg-green-400 text-white font-bold py-2.5 px-6 sm:py-3 sm:px-8 rounded-full transition-all duration-300 hover:scale-[1.03] text-sm sm:text-base",
+  continueShopping: "inline-flex cursor-pointer items-center fb-text-primary hover:opacity-80 mb-8 text-sm sm:text-base transition-opacity",
+  emptyCartContainer: "fb-card rounded-2xl p-6 sm:p-8 text-center",
+  emptyCartIcon: "fb-text-primary text-4xl sm:text-5xl mb-4",
+  emptyCartHeading: "text-2xl sm:text-3xl font-bold fb-text mb-3",
+  emptyCartText: "fb-text-secondary mb-6 max-w-md mx-auto text-sm sm:text-base",
+  emptyCartButton: "inline-block cursor-pointer fb-btn-primary font-bold py-2.5 px-6 sm:py-3 sm:px-8 transition-all duration-300 hover:scale-[1.03] text-sm sm:text-base",
   headerContainer: "text-center mb-10",
-  headerTitle: "text-3xl sm:text-4xl font-bold font-cursive text-gray-800 mt-8 sm:mt-12",
-  clearCartButton: "text-green-600 mt-2 cursor-pointer hover:text-red-500 flex justify-center items-center text-sm sm:text-base",
+  headerTitle: "text-3xl sm:text-4xl font-bold fb-text mt-8 sm:mt-12",
+  clearCartButton: "fb-text-primary mt-2 cursor-pointer hover:text-red-500 flex justify-center items-center text-sm sm:text-base transition-colors",
   cartGrid: "grid grid-cols-1 lg:grid-cols-3 gap-8",
   cartItemsSection: "lg:col-span-2",
   cartItemsGrid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6",
-  cartItemCard: "bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 flex flex-col items-center shadow-lg",
-  cartItemImageContainer: "w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center mb-4",
+  cartItemCard: "fb-card rounded-2xl p-5 sm:p-6 flex flex-col items-center",
+  cartItemImageContainer: "w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden fb-surface-alt flex items-center justify-center mb-4",
   cartItemImage: "object-contain w-12 h-12 sm:w-16 sm:h-16",
-  cartItemName: "font-bold text-gray-800 text-base sm:text-lg mb-2 text-center",
-  cartItemPrice: "text-green-600 mb-4 text-sm sm:text-base",
+  cartItemName: "font-bold fb-text text-base sm:text-lg mb-2 text-center",
+  cartItemPrice: "fb-text-primary mb-4 text-sm sm:text-base font-semibold",
   cartItemQuantityContainer: "flex items-center space-x-4 mb-4",
-  cartItemQuantityButton: "p-2 cursor-pointer text-green-600 hover:text-green-500",
-  cartItemQuantity: "text-gray-800 w-6 sm:w-8 text-center",
-  cartItemRemoveButton: "flex items-center cursor-pointer text-green-600 hover:text-red-500 text-sm sm:text-base",
-  orderSummaryCard: "bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 shadow-lg",
-  orderSummaryTitle: "text-lg sm:text-xl font-bold text-gray-800 mb-6",
+  cartItemQuantityButton: "p-2 cursor-pointer fb-text-primary hover:opacity-70 transition-opacity",
+  cartItemQuantity: "fb-text w-6 sm:w-8 text-center font-semibold",
+  cartItemRemoveButton: "flex items-center cursor-pointer fb-text-primary hover:text-red-500 text-sm sm:text-base transition-colors",
+  orderSummaryCard: "fb-card rounded-2xl p-5 sm:p-6",
+  orderSummaryTitle: "text-lg sm:text-xl font-bold fb-text mb-6",
   orderSummaryRow: "flex justify-between",
-  orderSummaryLabel: "text-gray-600",
-  orderSummaryValue: "text-gray-800",
-  orderSummaryDivider: "h-px bg-gray-200 my-4",
+  orderSummaryLabel: "fb-text-secondary",
+  orderSummaryValue: "fb-text",
+  orderSummaryDivider: "h-px fb-divider my-4",
   orderSummaryTotalRow: "flex justify-between text-base sm:text-lg font-bold",
-  orderSummaryTotalLabel: "text-gray-800",
-  orderSummaryTotalValue: "text-gray-800",
-  checkoutButton: "mt-6 sm:mt-8 w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 sm:py-4 cursor-pointer rounded-xl transition-all duration-300 text-sm sm:text-base",
+  orderSummaryTotalLabel: "fb-text",
+  orderSummaryTotalValue: "fb-text",
+  checkoutButton: "mt-6 sm:mt-8 w-full fb-btn-primary font-bold py-3 sm:py-4 cursor-pointer rounded-xl transition-all duration-300 text-sm sm:text-base",
   continueShoppingBottom: "mt-4 sm:mt-6 text-center"
 };
 
 // assets/contactStyles.js
 const contactStyles = {
-  pageContainer: "min-h-screen bg-gradient-to-br from-emerald-900 to-green-900 flex items-center justify-center py-12 px-4 sm:px-6 relative overflow-hidden",
-  toast: "fixed top-17 right-6 bg-green-600 text-black inline-flex items-center px-4 py-2 rounded-lg shadow-lg z-50 whitespace-nowrap hover:opacity-90 transition-opacity duration-200",
+  pageContainer: "min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 relative overflow-hidden",
+  toast: "fixed top-17 right-6 bg-green-600 text-white inline-flex items-center px-4 py-2 rounded-lg shadow-lg z-50 whitespace-nowrap hover:opacity-90 transition-opacity duration-200",
   centeredContainer: "w-full max-w-md z-10",
   headingContainer: "flex flex-col items-center justify-center mt-15",
-  heading: "text-4xl sm:text-5xl font-semibold text-center text-emerald-100 whitespace-nowrap",
-  divider: "w-32 h-1 bg-gradient-to-r from-emerald-400 to-green-300 rounded-full mt-4",
+  heading: "text-4xl sm:text-5xl font-semibold text-center fb-text whitespace-nowrap",
+  divider: "w-32 h-1 rounded-full mt-4",
   contactFormContainer: "contact-form-container relative overflow-hidden",
   form: "space-y-6 relative z-10",
   formField: "form-field",
   inputContainer: "relative",
   inputIconContainer: "absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none",
-  inputIcon: "h-5 w-5 text-emerald-400",
+  inputIcon: "h-5 w-5 fb-text-primary",
   textareaIconContainer: "absolute top-3 left-3",
   formInput: "form-input",
   formTextarea: "form-textarea",
   submitButton: "submit-button",
-  submitButtonText: "font-semibold text-xl text-black mr-2",
+  submitButtonText: "font-semibold text-xl mr-2",
   customCSS: `@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@400;600&display=swap');
   
   .font-cursive {
     font-family: 'Dancing Script', cursive;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
   
   .contact-form-container {
-    background: rgba(5, 46, 22, 0.6);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     backdrop-filter: blur(8px);
     border-radius: 20px;
-    box-shadow: 
-      0 10px 25px rgba(0,0,0,0.4),
-      inset 0 0 0 1px rgba(52, 211, 153, 0.2);
+    box-shadow: var(--shadow-card-hover);
     padding: 30px;
     transition: all 0.3s ease;
     position: relative;
@@ -95,9 +96,7 @@ const contactStyles = {
   }
   
   .contact-form-container:hover {
-    box-shadow: 
-      0 15px 35px rgba(0,0,0,0.5),
-      inset 0 0 0 1px rgba(52, 211, 153, 0.3);
+    box-shadow: var(--shadow-card-hover);
   }
   
   .form-field {
@@ -112,28 +111,24 @@ const contactStyles = {
   .form-input, .form-textarea {
     width: 100%;
     padding: 15px 15px 15px 45px;
-    border: 1px solid rgba(52, 211, 153, 0.2);
+    border: 1.5px solid var(--color-input-border);
     border-radius: 12px;
     font-size: 16px;
     transition: all 0.3s ease;
-    background: rgba(6, 78, 59, 0.4);
+    background: var(--color-input-bg);
     font-family: 'Poppins', sans-serif;
-    color: #d1fae5;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    color: var(--color-text);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
   }
   
   .form-input::placeholder, .form-textarea::placeholder {
-    color: #a7f3d0;
-    opacity: 0.7;
+    color: var(--color-text-muted);
   }
   
   .form-input:focus, .form-textarea:focus {
     outline: none;
-    border-color: #34d399;
-    box-shadow: 
-      0 0 0 3px rgba(52, 211, 153, 0.25),
-      inset 0 2px 4px rgba(0,0,0,0.2);
-    background: rgba(6, 78, 59, 0.6);
+    border-color: var(--color-border-focus);
+    box-shadow: 0 0 0 3px rgba(46,125,50,0.15), inset 0 2px 4px rgba(0,0,0,0.05);
   }
   
   .form-textarea {
@@ -143,11 +138,11 @@ const contactStyles = {
   
   .submit-button {
     width: 100%;
-    background: linear-gradient(to right, #10b981, #34d399);
-    color: white;
+    background: var(--color-btn-primary-bg);
+    color: var(--color-btn-primary-text);
     padding: 16px;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);
+    box-shadow: 0 4px 6px rgba(46,125,50,0.2);
     font-weight: 600;
     display: flex;
     justify-content: center;
@@ -160,36 +155,15 @@ const contactStyles = {
     font-family: 'Poppins', sans-serif;
   }
   
-  .submit-button::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -60%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-      to right,
-      rgba(255,255,255,0) 0%,
-      rgba(255,255,255,0.4) 50%,
-      rgba(255,255,255,0) 100%
-    );
-    transform: rotate(30deg);
-    transition: all 0.6s ease;
-  }
-  
   .submit-button:hover {
+    background: var(--color-btn-primary-hover);
     transform: translateY(-3px);
-    box-shadow: 0 7px 14px rgba(5, 150, 105, 0.3);
-    background: linear-gradient(to right, #059669, #10b981);
-  }
-  
-  .submit-button:hover::after {
-    left: 120%;
+    box-shadow: 0 7px 14px rgba(46,125,50,0.3);
   }
   
   .submit-button:active {
     transform: translateY(1px);
-    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+    box-shadow: 0 2px 4px rgba(46,125,50,0.2);
   }`
 };
 
@@ -198,53 +172,47 @@ export default contactStyles;
 
 // assets/footerStyles.js
 export const footerStyles = {
-  footer: "bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 text-white pt-12 pb-8 relative overflow-hidden border-t-8 border-emerald-500",
-  topBorder: "hidden md:block absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-emerald-400 z-20",
-  floatingShape: "hidden lg:block absolute rounded-full bg-emerald-700 animate-pulse-slow",
+  footer: "fb-footer pt-12 pb-8 relative overflow-hidden border-t-4",
+  topBorder: "hidden md:block absolute top-0 left-0 w-full h-1 z-20",
+  floatingShape: "hidden lg:block absolute rounded-full opacity-10",
   pattern: "absolute inset-0 opacity-5",
   container: "container mx-auto px-4 relative z-10",
   grid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12",
   brandTitle: "text-2xl sm:text-3xl font-bold tracking-wider mb-4",
-  brandSpan: "text-emerald-300",
-  brandText: "text-emerald-200 mb-6 leading-relaxed text-sm sm:text-base",
-  socialLink: "bg-emerald-700 hover:bg-emerald-600 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-transform transform hover:-translate-y-1 shadow-md",
-  socialIcon: "text-emerald-100 hover:text-white",
-  sectionTitle: "text-xl sm:text-2xl font-bold mb-4 pb-2 border-b-2 border-emerald-500 inline-flex items-center",
-  sectionIcon: "mr-2 text-emerald-400",
+  brandSpan: "opacity-80",
+  brandText: "opacity-80 mb-6 leading-relaxed text-sm sm:text-base",
+  socialLink: "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-transform transform hover:-translate-y-1 shadow-md opacity-80 hover:opacity-100",
+  socialIcon: "",
+  sectionTitle: "text-xl sm:text-2xl font-bold mb-4 pb-2 border-b-2 inline-flex items-center",
+  sectionIcon: "mr-2 opacity-70",
   linkList: "space-y-2 text-sm sm:text-base",
-  linkItem: "flex items-center group hover:text-white",
-  linkBullet: "inline-block w-2 h-2 bg-emerald-400 rounded-full mr-3 group-hover:bg-white transition-colors",
+  linkItem: "flex items-center group hover:opacity-100 opacity-80 transition-opacity",
+  linkBullet: "inline-block w-2 h-2 rounded-full mr-3 group-hover:scale-125 transition-transform",
   contactItem: "flex items-start",
-  contactIconContainer: "mt-1 bg-emerald-700 p-2 rounded-lg mr-3",
-  contactIcon: "text-emerald-300",
-  newsletterText: "text-emerald-200 mb-4 text-sm sm:text-base",
+  contactIconContainer: "mt-1 p-2 rounded-lg mr-3 opacity-80",
+  contactIcon: "",
+  newsletterText: "opacity-80 mb-4 text-sm sm:text-base",
   newsletterForm: "flex flex-col sm:flex-row sm:items-center sm:space-x-4 mb-4",
-  newsletterInput: "w-full sm:flex-1 bg-emerald-800 border-2 border-emerald-600 rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none px-4 py-2 text-white placeholder-emerald-300 focus:outline-none focus:border-emerald-400 mb-2 sm:mb-0",
-  newsletterButton: "w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 px-4 py-2 rounded-b-xl sm:rounded-r-xl sm:rounded-bl-none flex items-center justify-center transition-transform transform hover:-translate-y-1",
-  privacyText: "text-emerald-300 text-xs sm:text-sm",
-  paymentSection: "border-t-2 border-emerald-800 pt-6",
-  paymentTitle: "text-emerald-300 mb-4 font-medium flex items-center justify-center text-sm sm:text-base",
-  paymentIcon: "mr-2 text-emerald-400 text-lg",
+  newsletterInput: "w-full sm:flex-1 rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none px-4 py-2 placeholder-opacity-60 focus:outline-none mb-2 sm:mb-0",
+  newsletterButton: "w-full sm:w-auto px-4 py-2 rounded-b-xl sm:rounded-r-xl sm:rounded-bl-none flex items-center justify-center transition-transform transform hover:-translate-y-1",
+  privacyText: "opacity-60 text-xs sm:text-sm",
+  paymentSection: "border-t-2 border-opacity-20 pt-6",
+  paymentTitle: "opacity-70 mb-4 font-medium flex items-center justify-center text-sm sm:text-base",
+  paymentIcon: "mr-2 opacity-70 text-lg",
   paymentMethods: "flex flex-wrap justify-center gap-4",
-  paymentItem: "bg-emerald-800 p-3 rounded-lg hover:bg-emerald-700 transition-transform transform hover:-translate-y-1",
-  paymentIcon: "text-2xl hover:text-white",
+  paymentItem: "p-3 rounded-lg hover:opacity-100 opacity-70 transition-all transform hover:-translate-y-1",
   attribution: "mt-8 text-center",
-  attributionBadge: "inline-flex items-center bg-emerald-900 px-6 py-3 rounded-full border border-emerald-700 shadow-lg",
+  attributionBadge: "inline-flex items-center px-6 py-3 rounded-full border border-opacity-20 shadow-lg",
   hexagonContainer: "relative mr-3",
-  hexagon: "w-6 h-6 bg-emerald-500 rounded-sm transform rotate-45",
+  hexagon: "w-6 h-6 rounded-sm transform rotate-45",
   hexagonInner: "absolute inset-0 flex items-center justify-center",
   hexagonInnerShape: "w-3 h-3 bg-white transform -rotate-45",
-  attributionText: "text-emerald-200 text-sm sm:text-base",
-  attributionLink: "font-bold text-white underline hover:text-purple-400",
-  customCSS: `@keyframes pulse {
-    0% { opacity: 0.1; transform: scale(1); }
-    50% { opacity: 0.2; transform: scale(1.05); }
-    100% { opacity: 0.1; transform: scale(1); }
-  }
-  @keyframes pulse-slow {
-    0% { opacity: 0.1; }
-    50% { opacity: 0.2; }
-    100% { opacity: 0.1; }
+  attributionText: "opacity-80 text-sm sm:text-base",
+  attributionLink: "font-bold underline hover:opacity-100 opacity-90",
+  customCSS: `@keyframes pulse-slow {
+    0% { opacity: 0.05; }
+    50% { opacity: 0.12; }
+    100% { opacity: 0.05; }
   }
   @keyframes float {
     0% { transform: translateY(0) rotate(0deg); }
@@ -252,7 +220,6 @@ export const footerStyles = {
     100% { transform: translateY(0) rotate(0deg); }
   }
   .animate-pulse-slow { animation: pulse-slow 6s ease-in-out infinite; }
-  .animate-pulse { animation: pulse 4s ease-in-out infinite; }
   .animate-float { animation: float 8s ease-in-out infinite; }
   .animation-delay-1000 { animation-delay: 1s; }
   .animation-delay-2000 { animation-delay: 2s; }
@@ -261,253 +228,231 @@ export const footerStyles = {
 
 // assets/itemsPageStyles.js
 export const itemsPageStyles = {
-  // Page styles
-  page: "min-h-screen bg-gradient-to-br from-emerald-900 to-emerald-950",
+  page: "min-h-screen fb-bg",
   container: "container mx-auto px-4 py-8",
   header: "mb-12 text-center py-8 relative",
-  backLink: "absolute top-5 left-0 flex items-center text-emerald-300 hover:text-emerald-100 cursor-pointer transition-colors",
-  mainTitle: "text-5xl font-bold text-emerald-100 mt-7",
-  titleSpan: "text-emerald-400 font-playfair",
-  subtitle: "text-emerald-300 mt-4 max-w-2xl mx-auto text-lg",
+  backLink: "absolute top-5 left-0 flex items-center fb-text-primary hover:opacity-70 cursor-pointer transition-opacity",
+  mainTitle: "text-5xl font-bold fb-text mt-7",
+  titleSpan: "fb-text-primary",
+  subtitle: "fb-text-secondary mt-4 max-w-2xl mx-auto text-lg",
   titleDivider: "mt-8 flex justify-center",
-  dividerLine: "w-24 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full",
+  dividerLine: "w-24 h-1 rounded-full",
   searchContainer: "mb-10 max-w-2xl mx-auto",
   searchForm: "relative",
-  searchInput: "w-full py-3 px-4 pr-12 rounded-2xl bg-emerald-800 text-emerald-100 border border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner",
-  searchButton: "absolute right-2 top-1/2 transform -translate-y-1/2 bg-emerald-600 text-white p-2 rounded-full",
-  expandButton: "flex items-center bg-emerald-800 hover:bg-emerald-700 cursor-pointer text-emerald-200 py-3 px-6 rounded-full transition-all shadow-lg shadow-emerald-950 hover:shadow-emerald-900/50",
+  searchInput: "w-full py-3 px-4 pr-12 rounded-2xl fb-input shadow-inner",
+  searchButton: "absolute right-2 top-1/2 transform -translate-y-1/2 fb-btn-primary p-2 rounded-full",
+  expandButton: "flex items-center fb-surface hover:fb-surface-alt cursor-pointer fb-text py-3 px-6 rounded-full transition-all shadow-md fb-border border",
   categorySection: "mb-16",
   categoryHeader: "flex items-center mb-8",
-  categoryIcon: "w-3 h-8 bg-emerald-400 rounded-full mr-3",
-  categoryTitle: "text-3xl font-bold text-emerald-100",
-  categoryDivider: "ml-4 flex-1 h-px bg-gradient-to-r from-emerald-700 to-transparent",
+  categoryIcon: "w-3 h-8 rounded-full mr-3",
+  categoryTitle: "text-3xl font-bold fb-text",
+  categoryDivider: "ml-4 flex-1 h-px",
   productsGrid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8",
-  showMoreButton: "flex items-center bg-emerald-600 hover:bg-emerald-500 text-black py-3 px-6 rounded-full transition-all shadow-lg cursor-pointer shadow-emerald-950 hover:shadow-emerald-900/50",
+  showMoreButton: "flex items-center fb-btn-primary py-3 px-6 rounded-full transition-all shadow-lg cursor-pointer",
   noProductsContainer: "text-center py-16",
-  noProductsCard: "bg-emerald-800 p-8 rounded-2xl max-w-md mx-auto",
-  noProductsIcon: "text-emerald-400 mb-4",
-  noProductsTitle: "text-xl font-bold text-emerald-100 mb-2",
-  noProductsText: "text-emerald-300 mb-6",
-  clearSearchButton: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white cursor-pointer px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transition-colors",
-  
+  noProductsCard: "fb-card p-8 rounded-2xl max-w-md mx-auto",
+  noProductsIcon: "fb-text-primary mb-4",
+  noProductsTitle: "text-xl font-bold fb-text mb-2",
+  noProductsText: "fb-text-secondary mb-6",
+  clearSearchButton: "fb-btn-primary cursor-pointer px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transition-all",
+
   // ProductCard styles
-  productCard: "bg-emerald-900 rounded-2xl overflow-hidden shadow-2xl shadow-emerald-950 hover:shadow-emerald-900/50 transition-all duration-300 hover:-translate-y-1 border-2 border-emerald-700",
-  imageContainer: "h-48 relative overflow-hidden bg-emerald-950 flex items-center justify-center",
+  productCard: "fb-card rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1",
+  imageContainer: "h-48 relative overflow-hidden fb-surface-alt flex items-center justify-center",
   productImage: "object-contain w-full h-full transition-transform duration-500",
   cardContent: "p-5",
   titleContainer: "flex justify-between items-start",
-  productTitle: "font-bold text-emerald-50 text-lg truncate max-w-[70%]",
-  organicTag: "text-black text-sm bg-emerald-400 px-2 py-1 rounded-full",
-  productDescription: "mt-2 text-emerald-200 text-sm h-12 overflow-hidden",
+  productTitle: "font-bold fb-text text-lg truncate max-w-[70%]",
+  organicTag: "text-xs fb-badge-success px-2 py-1 rounded-full font-medium",
+  productDescription: "mt-2 fb-text-secondary text-sm h-12 overflow-hidden",
   priceContainer: "mt-4 flex justify-between items-center",
-  currentPrice: "text-emerald-50 font-bold text-xl",
-  oldPrice: "text-emerald-300 line-through text-sm",
-  quantityControls: "flex items-center justify-between bg-emerald-400 text-black rounded-full",
-  quantityButton: "p-3 cursor-pointer hover:bg-emerald-300 transition-colors",
+  currentPrice: "fb-text font-bold text-xl",
+  oldPrice: "fb-text-muted line-through text-sm",
+  quantityControls: "flex items-center justify-between rounded-full overflow-hidden",
+  quantityButton: "p-3 cursor-pointer transition-colors",
   quantityButtonLeft: "rounded-l-full",
   quantityButtonRight: "rounded-r-full",
   quantityValue: "font-bold",
-  addButton: "w-full bg-emerald-400 hover:bg-emerald-300 text-black cursor-pointer py-3 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-[1.02] group font-bold shadow-lg shadow-emerald-900/20",
+  addButton: "w-full fb-btn-primary cursor-pointer py-3 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-[1.02] group font-bold shadow-lg",
   addButtonArrow: "ml-2 text-xl transform group-hover:translate-x-1 transition-transform"
 };
 
-  export const checkoutStyles = {
-    page: "min-h-screen bg-gradient-to-br from-emerald-900 to-emerald-950",
-    container: "container mx-auto px-4 py-8",
-    backLink: "inline-flex items-center text-emerald-300 hover:text-emerald-100 mb-6 transition-colors",
-    header: "mb-8",
-    mainTitle: "text-4xl md:text-5xl font-bold text-emerald-100 mb-2",
-    subtitle: "text-emerald-300 mb-8",
-    card: "bg-emerald-800/50 backdrop-blur-sm rounded-2xl shadow-2xl shadow-emerald-950 p-6 border border-emerald-700",
-    sectionTitle: "text-xl font-bold text-emerald-100 mb-6 flex items-center",
-    input: "w-full px-4 py-3 rounded-xl bg-emerald-900 text-emerald-100 border border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner",
-    inputError: "border-red-500",
-    radioCard: "flex items-center p-4 border border-emerald-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors",
-    cartItem: "flex items-center border-b border-emerald-700/50 pb-4 last:border-0",
-    cartImage: "bg-emerald-800 border-2 border-dashed border-emerald-700 rounded-xl w-16 h-16 mr-4 flex items-center justify-center",
-    summaryCard: "bg-emerald-800/50 border border-emerald-700 rounded-xl p-4",
-    infoCard: "bg-emerald-800/50 border border-emerald-700 rounded-xl p-4",
-    button: "w-full py-3 px-6 rounded-xl font-medium flex items-center justify-center transition-colors shadow-lg shadow-emerald-900/30",
-    submitButton: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white",
-    disabledButton: "bg-gray-500 cursor-not-allowed",
-    link: "text-emerald-400 hover:text-emerald-200 hover:underline",
-     emptyPage: "min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 to-emerald-950 p-4",
-  emptyCard: "max-w-md w-full bg-emerald-800/50 backdrop-blur-sm rounded-2xl shadow-2xl shadow-emerald-950 p-8 text-center border border-emerald-700",
-  emptyIcon: "text-emerald-400 text-6xl mb-4",
-  emptyTitle: "text-2xl font-bold text-emerald-100 mb-2",
-  emptyText: "text-emerald-300 mb-6",
-  emptyButton: "inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium py-2 px-6 rounded-full transition-colors shadow-lg shadow-emerald-900/30",
-  
-  // Checkout page styles
-  page: "min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-900 p-4 md:p-8",
-  container: "max-w-6xl mx-auto",
-  backLink: "inline-flex items-center text-emerald-300 hover:text-emerald-100 mb-8",
+export const checkoutStyles = {
+  page: "min-h-screen fb-bg",
+  container: "container mx-auto px-4 py-8",
+  backLink: "inline-flex items-center fb-text-primary hover:opacity-70 mb-6 transition-opacity",
   header: "mb-8",
-  mainTitle: "text-3xl md:text-4xl font-bold text-emerald-100 mb-2",
-  subtitle: "text-emerald-400",
-  card: "bg-emerald-800/50 backdrop-blur-sm rounded-2xl shadow-xl shadow-emerald-950/30 p-6 border border-emerald-700/50",
-  sectionTitle: "flex items-center text-xl font-bold text-emerald-100 mb-6 pb-2 border-b border-emerald-700/50",
-  input: "w-full bg-emerald-900/30 border border-emerald-700/50 rounded-xl px-4 py-3 text-emerald-100 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none transition",
-  inputError: "border-red-500 focus:ring-red-500 focus:border-red-500",
-  radioCard: "flex items-start p-4 mb-3 bg-emerald-900/30 border border-emerald-700/50 rounded-xl hover:border-emerald-500 transition",
-  cartItem: "flex gap-4 items-center",
-  cartImage: "w-16 h-16 flex-shrink-0 rounded-xl bg-emerald-900/50 flex items-center justify-center overflow-hidden",
-  button: "w-full flex items-center justify-center font-medium py-3 px-6 rounded-xl transition-colors",
+  mainTitle: "text-4xl md:text-5xl font-bold fb-text mb-2",
+  subtitle: "fb-text-secondary mb-8",
+  card: "fb-card rounded-2xl p-6",
+  sectionTitle: "text-xl font-bold fb-text mb-6 flex items-center",
+  input: "fb-input w-full px-4 py-3 rounded-xl",
+  inputError: "border-red-500",
+  radioCard: "flex items-center p-4 border fb-border rounded-xl cursor-pointer hover:border-green-500 transition-colors fb-surface",
+  cartItem: "flex items-center border-b fb-border pb-4 last:border-0",
+  cartImage: "fb-surface-alt border-2 border-dashed fb-border rounded-xl w-16 h-16 mr-4 flex items-center justify-center",
+  summaryCard: "fb-card border fb-border rounded-xl p-4",
+  infoCard: "fb-card border fb-border rounded-xl p-4",
+  button: "w-full py-3 px-6 rounded-xl font-medium flex items-center justify-center transition-colors shadow-lg",
+  submitButton: "fb-btn-primary",
   disabledButton: "opacity-50 cursor-not-allowed",
-  submitButton: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-900/30",
-  link: "text-emerald-300 hover:text-emerald-100 underline transition",
-  
-  // Delivery info styles
-  deliveryInfo: "mt-8 p-6 bg-amber-500/20 rounded-2xl border border-amber-500/30 backdrop-blur-sm",
-  deliveryTitle: "font-bold text-amber-200 flex items-center mb-2",
-  deliveryText: "text-amber-100"
-  };
+  link: "fb-text-primary hover:opacity-70 hover:underline transition-opacity",
+  emptyPage: "min-h-screen flex items-center justify-center fb-bg p-4",
+  emptyCard: "max-w-md w-full fb-card rounded-2xl p-8 text-center",
+  emptyIcon: "fb-text-primary text-6xl mb-4",
+  emptyTitle: "text-2xl font-bold fb-text mb-2",
+  emptyText: "fb-text-secondary mb-6",
+  emptyButton: "inline-flex items-center fb-btn-primary font-medium py-2 px-6 rounded-full transition-colors shadow-lg",
+  deliveryInfo: "mt-8 p-6 rounded-2xl border",
+  deliveryTitle: "font-bold flex items-center mb-2",
+  deliveryText: "fb-text-secondary"
+};
 
- // Styles object matching the requested theme
-  export const ordersPageStyles = {
-    page: "min-h-screen bg-gradient-to-br from-emerald-900 to-emerald-950",
-    container: "container mx-auto px-4 py-8",
-    header: "mb-8 text-center py-8 relative",
-    backLink: "absolute top-5 left-0 flex items-center text-emerald-300 hover:text-emerald-100 cursor-pointer transition-colors",
-    mainTitle: "text-4xl md:text-5xl font-bold text-emerald-100 mt-7",
-    titleSpan: "text-emerald-400 font-playfair",
-    subtitle: "text-emerald-300 mt-4 max-w-2xl mx-auto text-lg",
-    titleDivider: "mt-6 flex justify-center",
-    dividerLine: "w-24 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full",
-    searchContainer: "mb-8 max-w-2xl mx-auto",
-    searchForm: "relative",
-    searchInput: "w-full py-3 px-4 pr-12 rounded-2xl bg-emerald-800 text-emerald-100 border border-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-inner",
-    searchButton: "absolute right-2 top-1/2 transform -translate-y-1/2 bg-emerald-600 text-white p-2 rounded-full",
-    ordersTable: "bg-emerald-800/30 backdrop-blur-sm rounded-2xl shadow-2xl shadow-emerald-950 overflow-hidden",
-    tableHeader: "bg-emerald-800/50",
-    tableHeaderCell: "py-4 px-4 text-left text-sm font-semibold text-emerald-300",
-    tableRow: "hover:bg-emerald-900/30 transition-colors",
-    tableCell: "py-4 px-4 text-emerald-100",
-    statusBadge: "px-3 py-1 rounded-full text-xs font-medium",
-    actionButton: "text-sm bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 px-4 rounded-full transition-colors shadow-md shadow-emerald-950/50",
-    modalOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 backdrop-blur-md bg-black/20",
-    modalContainer: "bg-emerald-900/80 backdrop-blur-md rounded-2xl shadow-2xl shadow-emerald-950 w-full max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-emerald-700",
-    modalHeader: "sticky top-0 bg-emerald-900/90 border-b border-emerald-700 p-6 z-10",
-    modalTitle: "text-2xl font-bold text-emerald-100",
-    modalCloseButton: "text-emerald-300 hover:text-emerald-100 transition-colors",
-    modalBody: "p-6",
-    modalSection: "mb-8",
-    modalSectionTitle: "text-lg font-bold text-emerald-100 mb-4 flex items-center",
-    modalCard: "bg-emerald-800/50 rounded-xl p-4 border border-emerald-700",
-    modalFooter: "sticky bottom-0 bg-emerald-900/90 border-t border-emerald-700 p-6",
-    closeButton: "px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full transition-colors shadow-lg shadow-emerald-900/30 font-medium"
-  };
+// Styles object matching the requested theme
+export const ordersPageStyles = {
+  page: "min-h-screen fb-bg",
+  container: "container mx-auto px-4 py-8",
+  header: "mb-8 text-center py-8 relative",
+  backLink: "absolute top-5 left-0 flex items-center fb-text-primary hover:opacity-70 cursor-pointer transition-opacity",
+  mainTitle: "text-4xl md:text-5xl font-bold fb-text mt-7",
+  titleSpan: "fb-text-primary",
+  subtitle: "fb-text-secondary mt-4 max-w-2xl mx-auto text-lg",
+  titleDivider: "mt-6 flex justify-center",
+  dividerLine: "w-24 h-1 rounded-full",
+  searchContainer: "mb-8 max-w-2xl mx-auto",
+  searchForm: "relative",
+  searchInput: "fb-input w-full py-3 px-4 pr-12 rounded-2xl shadow-inner",
+  searchButton: "absolute right-2 top-1/2 transform -translate-y-1/2 fb-text-primary hover:opacity-70 transition-opacity",
+  ordersTable: "fb-card rounded-2xl overflow-hidden",
+  tableHeader: "fb-table-header",
+  tableHeaderCell: "py-4 px-4 text-left text-sm font-semibold fb-text-secondary",
+  tableRow: "fb-table-row transition-colors",
+  tableCell: "py-4 px-4 fb-text",
+  statusBadge: "px-3 py-1 rounded-full text-xs font-medium",
+  actionButton: "text-sm fb-btn-primary py-1.5 px-4 rounded-full transition-colors shadow-md",
+  modalOverlay: "fixed inset-0 flex items-center justify-center p-4 z-50 fb-overlay",
+  modalContainer: "fb-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto",
+  modalHeader: "sticky top-0 fb-surface border-b fb-border p-6 z-10",
+  modalTitle: "text-2xl font-bold fb-text",
+  modalCloseButton: "fb-text-secondary hover:fb-text transition-colors",
+  modalBody: "p-6",
+  modalSection: "mb-8",
+  modalSectionTitle: "text-lg font-bold fb-text mb-4 flex items-center",
+  modalCard: "fb-surface-alt rounded-xl p-4 border fb-border",
+  modalFooter: "sticky bottom-0 fb-surface border-t fb-border p-6",
+  closeButton: "px-6 py-2 fb-btn-primary rounded-full transition-colors shadow-lg font-medium"
+};
 
 
 // assets/itemsHomeStyles.js
 export const itemsHomeStyles = {
-  page: "flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-gray-100",
-  sidebar: "hidden lg:flex w-64 rounded-r-3xl bg-gradient-to-b from-emerald-600 to-emerald-800 text-white p-4 shadow-2xl flex-col",
+  page: "flex flex-col min-h-screen fb-bg",
+  sidebar: "hidden lg:flex w-64 rounded-r-3xl text-white p-4 shadow-2xl flex-col",
   sidebarHeader: "text-center mb-8 mt-4",
-  sidebarTitle: "text-4xl font-bold tracking-tighter",
-  sidebarDivider: "w-32 h-1 bg-emerald-400 mx-auto mt-2 rounded-full",
-  categoryList: "flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-500 scrollbar-track-emerald-700",
+  sidebarTitle: "text-4xl font-bold tracking-tighter text-white",
+  sidebarDivider: "w-32 h-1 mx-auto mt-2 rounded-full bg-white opacity-40",
+  categoryList: "flex-1 overflow-y-auto pr-2",
   categoryItem: "w-full cursor-pointer flex items-center p-4 rounded-xl transition-transform transform hover:scale-105",
-  categoryIcon: "bg-emerald-500 p-3 rounded-full",
-  categoryName: "ml-4 text-lg",
+  categoryIcon: "p-3 rounded-full bg-white bg-opacity-20",
+  categoryName: "ml-4 text-lg text-white",
   mainContent: "flex-1 p-6 overflow-y-auto",
   mobileCategories: "lg:hidden mb-6 overflow-x-auto",
   mobileCategoryItem: "whitespace-nowrap px-4 py-2 rounded-full border-2 transition-colors",
-  searchResults: "text-center mb-6 bg-white rounded-xl p-4 shadow-sm max-w-2xl mx-auto",
-  sectionTitle: "text-3xl font-bold text-emerald-700 capitalize mb-2",
-  sectionDivider: "w-32 h-1 bg-emerald-500 mx-auto rounded-full mb-6",
+  searchResults: "text-center mb-6 fb-card rounded-xl p-4 shadow-sm max-w-2xl mx-auto",
+  sectionTitle: "text-3xl font-bold fb-text-primary capitalize mb-2",
+  sectionDivider: "w-32 h-1 mx-auto rounded-full mb-6",
   productsGrid: "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10",
-  productCard: "bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-transform duration-300 border border-gray-100 transform hover:-translate-y-1",
-  imageContainer: "w-full h-40 sm:h-52 bg-gray-100 flex items-center justify-center",
+  productCard: "fb-card rounded-2xl overflow-hidden transition-transform duration-300 transform hover:-translate-y-1",
+  imageContainer: "w-full h-40 sm:h-52 fb-surface-alt flex items-center justify-center",
   productImage: "max-h-full object-cover transition-transform duration-300",
   productContent: "p-5",
-  productTitle: "font-bold text-lg text-gray-800 text-center mb-2 line-clamp-1",
+  productTitle: "font-bold text-lg fb-text text-center mb-2 line-clamp-1",
   priceContainer: "flex justify-between items-center mt-4",
-  currentPrice: "text-emerald-600 font-bold text-xl",
-  oldPrice: "text-gray-500 text-sm line-through",
-  addButton: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white cursor-pointer px-4 py-2 rounded-full flex items-center transition-shadow shadow-md hover:shadow-lg",
+  currentPrice: "fb-text-primary font-bold text-xl",
+  oldPrice: "fb-text-muted text-sm line-through",
+  addButton: "fb-btn-primary cursor-pointer px-4 py-2 rounded-full flex items-center transition-shadow shadow-md hover:shadow-lg",
   quantityControls: "flex items-center space-x-2",
-  quantityButton: "p-2 cursor-pointer bg-emerald-100 text-emerald-700 rounded-full hover:bg-emerald-200",
+  quantityButton: "p-2 cursor-pointer fb-primary-subtle fb-text-primary rounded-full hover:opacity-80 transition-opacity",
   noProducts: "col-span-full text-center py-12",
-  noProductsText: "text-emerald-600 font-medium text-xl mb-4",
-  clearSearchButton: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white cursor-pointer px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transition-colors",
-  viewAllButton: "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white cursor-pointer px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-transform duration-300 inline-flex items-center text-lg",
-  activeCategory: "bg-white text-emerald-700 font-bold shadow-lg",
-  inactiveCategory: "bg-emerald-700 hover:bg-emerald-500",
-  activeMobileCategory: "bg-emerald-600 text-white border-emerald-600",
-  inactiveMobileCategory: "bg-white text-emerald-700 border-emerald-300"
+  noProductsText: "fb-text-primary font-medium text-xl mb-4",
+  clearSearchButton: "fb-btn-primary cursor-pointer px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transition-all",
+  viewAllButton: "fb-btn-primary cursor-pointer px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-transform duration-300 inline-flex items-center text-lg",
+  activeCategory: "bg-white bg-opacity-25 text-white font-bold shadow-lg border-l-4 border-white",
+  inactiveCategory: "opacity-70 hover:opacity-100 hover:bg-white hover:bg-opacity-10",
+  activeMobileCategory: "fb-btn-primary border-transparent",
+  inactiveMobileCategory: "fb-surface fb-text-primary fb-border"
 };
 
 // assets/loginStyles.js
 export const loginStyles = {
-  page: "relative w-full h-screen bg-black flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-4",
-  backLink: "absolute top-4 left-4 mt-19 flex items-center text-white hover:text-emerald-400 z-20",
-  toast: "fixed top-16 right-6 bg-green-600 text-black inline-flex items-center px-4 py-2 rounded-lg shadow-lg z-50",
-  loginCard: "mt-29 md:mt-24 lg:mt-0 sm:max-w-xs md:max-w-md lg:max-w-sm bg-gray-900 bg-opacity-80 backdrop-blur-sm p-6 sm:p-8 md:p-10 lg:p-6 rounded-2xl border border-green-700/30 shadow-lg flex-shrink-0",
+  page: "relative w-full min-h-screen fb-bg flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-4",
+  backLink: "absolute top-4 left-4 mt-19 flex items-center fb-text hover:fb-text-primary z-20 transition-colors",
+  toast: "fixed top-16 right-6 bg-green-600 text-white inline-flex items-center px-4 py-2 rounded-lg shadow-lg z-50",
+  loginCard: "mt-8 sm:max-w-xs md:max-w-md lg:max-w-sm fb-card p-6 sm:p-8 md:p-10 lg:p-6 rounded-2xl flex-shrink-0",
   logoContainer: "flex justify-center mb-6",
-  logoOuter: "w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg",
-  logoInner: "w-12 h-12 sm:w-16 sm:h-16 bg-emerald-800 rounded-full flex items-center justify-center",
-  logoIcon: "text-xl sm:text-3xl text-emerald-400",
-  title: "text-center text-lg sm:text-xl font-semibold text-white mb-4",
+  logoOuter: "w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg",
+  logoInner: "w-12 h-12 sm:w-16 sm:h-16 fb-surface rounded-full flex items-center justify-center",
+  logoIcon: "text-xl sm:text-3xl fb-text-primary",
+  title: "text-center text-lg sm:text-xl font-semibold fb-text mb-4",
   form: "space-y-4",
-  inputContainer: "relative",
-  inputIcon: "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400",
-  input: "w-full pl-10 pr-3 py-2.5 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500",
-  passwordInput: "w-full pl-10 pr-10 py-2.5 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500",
-  toggleButton: "absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400",
+  inputContainer: "relative flex items-center",
+  inputIcon: "absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none fb-text-muted text-base",
+  input: "fb-input w-full pl-10 pr-4 py-2.5 rounded-lg",
+  passwordInput: "fb-input w-full pl-10 pr-12 py-2.5 rounded-lg",
+  toggleButton: "absolute right-3 z-10 fb-text-muted hover:fb-text-primary transition-colors cursor-pointer",
   rememberContainer: "flex items-center justify-between text-sm",
-  rememberLabel: "flex items-center text-white",
-  rememberCheckbox: "mr-2 h-4 w-4 cursor-pointer text-green-500 bg-gray-800 border-gray-600 rounded focus:ring-green-500",
-  forgotLink: "text-green-400 hover:underline",
+  rememberLabel: "flex items-center fb-text",
+  rememberCheckbox: "mr-2 h-4 w-4 cursor-pointer accent-green-600",
+  forgotLink: "fb-text-primary hover:opacity-70 transition-opacity",
   error: "text-xs text-red-500",
-  submitButton: "w-full py-2.5 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition",
-  signupText: "text-center text-sm text-white mt-6",
-  signupLink: "text-green-400 hover:underline"
+  submitButton: "w-full py-2.5 fb-btn-primary font-medium rounded-lg transition-all",
+  signupText: "text-center text-sm fb-text-secondary mt-6",
+  signupLink: "fb-text-primary hover:opacity-70 transition-opacity"
 };
 
 // assets/navbarStyles.js
 export const navbarStyles = {
-  nav: "fixed w-full z-50 transition-all duration-500",
-  scrolledNav: "bg-black/90 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-16",
-  unscrolledNav: "bg-gradient-to-r from-black/80 via-slate-900/80 to-black/80 backdrop-blur-lg h-20",
-  borderGradient: "absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent",
+  nav: "fixed w-full z-50 transition-all duration-500 fb-navbar",
+  scrolledNav: "h-16 shadow-lg",
+  unscrolledNav: "h-20",
+  borderGradient: "absolute bottom-0 left-0 right-0 h-[1px]",
   particlesContainer: "absolute inset-0 overflow-hidden pointer-events-none",
   particle: "absolute rounded-full",
   container: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
   innerContainer: "flex justify-between items-center h-20",
   logoLink: "flex items-center space-x-3 group transition-transform duration-300 hover:scale-[1.02]",
   logoImage: "transition-all duration-500",
-  logoText: "text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300 tracking-tight",
+  logoText: "text-2xl font-bold fb-text-primary tracking-tight",
   desktopNav: "hidden lg:flex items-center space-x-8",
   navItem: "relative font-medium flex flex-col items-center py-2 transition-all duration-300 group",
-  activeNavItem: "text-green-300",
-  inactiveNavItem: "text-slate-300 hover:text-green-200",
+  activeNavItem: "fb-text-primary",
+  inactiveNavItem: "fb-text-secondary hover:fb-text-primary",
   navIcon: "mr-2 transition-transform",
   activeNavIcon: "scale-125",
   inactiveNavIcon: "group-hover:scale-110",
-  navIndicator: "absolute -bottom-1 h-0.5 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full transition-all duration-500",
+  navIndicator: "absolute -bottom-1 h-0.5 rounded-full transition-all duration-500",
   activeIndicator: "w-full opacity-100",
   inactiveIndicator: "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
   iconsContainer: "flex items-center space-x-5",
-  loginLink: "hidden lg:inline-flex p-2.5 rounded-full hover:bg-slate-700/50 transition-colors group",
-  loginIcon: "h-5 w-5 text-slate-300 group-hover:text-green-300 transition-colors",
-  cartLink: "relative p-2.5 rounded-full hover:bg-slate-700/50 transition-colors",
-  cartIcon: "h-5 w-5 text-slate-300 hover:text-green-200 transition-transform",
-  cartBadge: "absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-green-500 rounded-full transform transition-transform duration-300 hover:scale-110",
-  hamburgerButton: "lg:hidden ml-2 p-2 rounded-full text-slate-300 hover:bg-gray-700 transition-colors",
+  loginLink: "hidden lg:inline-flex p-2.5 rounded-full hover:fb-primary-subtle transition-colors group",
+  loginIcon: "h-5 w-5 fb-text-secondary group-hover:fb-text-primary transition-colors",
+  cartLink: "relative p-2.5 rounded-full hover:fb-primary-subtle transition-colors",
+  cartIcon: "h-5 w-5 fb-text-secondary hover:fb-text-primary transition-transform",
+  cartBadge: "absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white rounded-full transform transition-transform duration-300 hover:scale-110",
+  hamburgerButton: "lg:hidden ml-2 p-2 rounded-full fb-text-secondary hover:fb-surface-alt transition-colors",
   mobileOverlay: "lg:hidden fixed inset-0 z-40 transition-all duration-500",
-  mobilePanel: "absolute top-0 right-0 h-full w-4/5 max-w-xs   shadow-2xl transform transition-transform duration-500 ease-in-out",
-  mobileHeader: "flex items-center justify-between p-5 ",
+  mobilePanel: "absolute top-0 right-0 h-full w-4/5 max-w-xs shadow-2xl transform transition-transform duration-500 ease-in-out fb-surface",
+  mobileHeader: "flex items-center justify-between p-5 border-b fb-border",
   mobileLogo: "flex items-center space-x-2",
   mobileLogoImage: "h-10 w-10",
-  mobileLogoText: "text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300",
-  closeButton: "p-2 rounded-full transition-colors hover:bg-slate-800",
+  mobileLogoText: "text-xl font-bold fb-text-primary",
+  closeButton: "p-2 rounded-full transition-colors hover:fb-surface-alt",
   mobileItemsContainer: "p-4 space-y-2",
-  mobileItem: "flex items-center bg-gradient-to-r from-black/80 via-slate-900/80 to-black/80 p-4 rounded-xl transition-all duration-300 hover:bg-slate-800/60 text-slate-200 hover:text-green-300",
-  mobileItemIcon: "mr-3 text-lg",
-  mobileItemText: "text-lg",
-  mobileButtons: "pt-4 mt-4 grid grid-cols-2 gap-3 border-t border-slate-800",
-  loginButton: "col-span-2 flex items-center justify-center p-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 group",
+  mobileItem: "flex items-center fb-surface-alt p-4 rounded-xl transition-all duration-300 hover:fb-primary-subtle fb-text hover:fb-text-primary",
+  mobileItemIcon: "mr-3 text-lg fb-text-primary",
+  mobileItemText: "text-lg fb-text",
+  mobileButtons: "pt-4 mt-4 grid grid-cols-2 gap-3 border-t fb-border",
+  loginButton: "col-span-2 flex items-center justify-center p-3 fb-btn-primary rounded-xl hover:shadow-lg transition-all duration-300 group",
   loginButtonIcon: "mr-2 transform group-hover:scale-110 transition-transform",
   floatAnimation: "animate-float",
   floatSlowAnimation: "animate-float-slow",
@@ -524,72 +469,72 @@ export const navbarStyles = {
 
 // assets/signupStyles.js
 export const signupStyles = {
-  page: "relative w-full h-screen bg-black flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-4",
-  backLink: "absolute top-4 left-4 mt-19 flex items-center text-white hover:text-emerald-400 z-20",
-  toast: "fixed top-16 right-6 bg-green-600 text-black inline-flex items-center px-4 py-2 rounded-lg shadow-lg z-50",
-  signupCard: "mt-29 md:mt-24 lg:mt-10 sm:max-w-xs md:max-w-md lg:max-w-sm bg-gray-900 bg-opacity-80 backdrop-blur-sm p-6 sm:p-8 md:p-10 lg:p-6 rounded-2xl border border-green-700/30 shadow-lg flex-shrink-0",
+  page: "relative w-full min-h-screen fb-bg flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-4",
+  backLink: "absolute top-4 left-4 mt-19 flex items-center fb-text hover:fb-text-primary z-20 transition-colors",
+  toast: "fixed top-16 right-6 bg-green-600 text-white inline-flex items-center px-4 py-2 rounded-lg shadow-lg z-50",
+  signupCard: "mt-8 sm:max-w-xs md:max-w-md lg:max-w-sm fb-card p-6 sm:p-8 md:p-10 lg:p-6 rounded-2xl flex-shrink-0",
   logoContainer: "flex justify-center mb-6",
-  logoOuter: "w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg",
-  logoInner: "w-12 h-12 sm:w-16 sm:h-16 bg-emerald-800 rounded-full flex items-center justify-center",
-  logoIcon: "text-xl sm:text-3xl text-emerald-400",
-  title: "text-center text-lg sm:text-xl font-semibold text-white mb-4",
+  logoOuter: "w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg",
+  logoInner: "w-12 h-12 sm:w-16 sm:h-16 fb-surface rounded-full flex items-center justify-center",
+  logoIcon: "text-xl sm:text-3xl fb-text-primary",
+  title: "text-center text-lg sm:text-xl font-semibold fb-text mb-4",
   form: "space-y-4",
-  inputContainer: "relative",
-  inputIcon: "absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400",
-  input: "w-full pl-10 pr-3 py-2.5 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500",
-  passwordInput: "w-full pl-10 pr-10 py-2.5 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500",
-  toggleButton: "absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400",
+  inputContainer: "relative flex items-center",
+  inputIcon: "absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none fb-text-muted text-base",
+  input: "fb-input w-full pl-10 pr-4 py-2.5 rounded-lg",
+  passwordInput: "fb-input w-full pl-10 pr-12 py-2.5 rounded-lg",
+  toggleButton: "absolute right-3 top-1/2 -translate-y-1/2 z-10 fb-text-muted hover:fb-text-primary transition-colors cursor-pointer",
   error: "text-xs text-red-500 mt-1",
   termsContainer: "flex items-center text-sm",
-  termsLabel: "flex items-center text-white",
-  termsCheckbox: "mr-2 h-4 w-4 cursor-pointer text-green-500 bg-gray-800 border-gray-600 rounded focus:ring-green-500",
-  submitButton: "w-full py-2.5 bg-green-500 hover:bg-green-600 text-black font-medium rounded-lg transition",
-  signinText: "text-center text-sm text-white mt-6",
-  signinLink: "text-green-400 hover:underline"
+  termsLabel: "flex items-center fb-text",
+  termsCheckbox: "mr-2 h-4 w-4 cursor-pointer accent-green-600",
+  submitButton: "w-full py-2.5 fb-btn-primary font-medium rounded-lg transition-all",
+  signinText: "text-center text-sm fb-text-secondary mt-6",
+  signinLink: "fb-text-primary hover:opacity-70 transition-opacity"
 };
 
 
 // src/assets/dummyStyles.js
 export const userOrdersPageStyles = {
-  page: "min-h-screen bg-gradient-to-br from-emerald-950 to-emerald-900 p-4 md:p-8",
+  page: "min-h-screen fb-bg p-4 md:p-8",
   container: "max-w-6xl mx-auto",
   header: "mb-8",
-  backLink: "inline-flex items-center text-emerald-300 hover:text-emerald-100 mb-4",
-  mainTitle: "text-3xl md:text-4xl font-bold text-emerald-100 mb-2",
-  titleSpan: "text-emerald-300",
-  subtitle: "text-emerald-400",
+  backLink: "inline-flex items-center fb-text-primary hover:opacity-70 mb-4 transition-opacity",
+  mainTitle: "text-3xl md:text-4xl font-bold fb-text mb-2",
+  titleSpan: "fb-text-primary",
+  subtitle: "fb-text-secondary",
   titleDivider: "w-full flex justify-center my-6",
-  dividerLine: "w-24 h-1 bg-emerald-700 rounded-full",
+  dividerLine: "w-24 h-1 rounded-full",
   searchContainer: "mb-8",
   searchForm: "relative max-w-md mx-auto",
-  searchInput: "w-full bg-emerald-800/50 backdrop-blur-sm border border-emerald-700 rounded-full py-3 pl-5 pr-12 text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition",
-  searchButton: "absolute right-3 top-1/2 transform -translate-y-1/2 text-emerald-400 hover:text-emerald-200",
-  ordersTable: "bg-emerald-800/50 backdrop-blur-sm rounded-2xl shadow-xl shadow-emerald-950/30 p-6 border border-emerald-700/50",
-  tableHeader: "bg-emerald-900/50",
-  tableHeaderCell: "py-3 px-4 text-left text-sm font-semibold text-emerald-300",
-  tableRow: "hover:bg-emerald-700/10 transition",
-  tableCell: "py-4 px-4",
+  searchInput: "fb-input w-full rounded-full py-3 pl-5 pr-12",
+  searchButton: "absolute right-3 top-1/2 transform -translate-y-1/2 fb-text-primary hover:opacity-70 transition-opacity",
+  ordersTable: "fb-card rounded-2xl p-6",
+  tableHeader: "fb-table-header",
+  tableHeaderCell: "py-3 px-4 text-left text-sm font-semibold fb-text-secondary",
+  tableRow: "fb-table-row transition-colors",
+  tableCell: "py-4 px-4 fb-text",
   statusBadge: "inline-flex px-3 py-1 rounded-full text-xs font-medium",
-  actionButton: "px-4 py-2 bg-emerald-700/50 hover:bg-emerald-700 text-emerald-100 rounded-full transition text-sm",
+  actionButton: "px-4 py-2 fb-primary-subtle fb-text-primary hover:fb-btn-primary rounded-full transition-all text-sm",
   emptyStateCell: "py-12 text-center",
   emptyStateContainer: "flex flex-col items-center justify-center",
-  emptyStateIcon: "text-emerald-400 text-4xl mb-4",
-  emptyStateTitle: "text-lg font-medium text-emerald-100 mb-1",
-  emptyStateText: "text-emerald-300",
-  modalOverlay: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50",
-  modalContainer: "bg-emerald-900/80 backdrop-blur-lg rounded-2xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-emerald-700/50",
-  modalHeader: "sticky top-0 bg-emerald-900/80 backdrop-blur-md border-b border-emerald-700/50 p-6",
-  modalTitle: "text-xl font-bold text-emerald-100",
-  modalCloseButton: "text-emerald-400 hover:text-emerald-100 transition",
+  emptyStateIcon: "fb-text-primary text-4xl mb-4",
+  emptyStateTitle: "text-lg font-medium fb-text mb-1",
+  emptyStateText: "fb-text-secondary",
+  modalOverlay: "fixed inset-0 fb-overlay flex items-center justify-center p-4 z-50",
+  modalContainer: "fb-modal w-full max-w-4xl max-h-[90vh] overflow-y-auto",
+  modalHeader: "sticky top-0 fb-surface border-b fb-border p-6",
+  modalTitle: "text-xl font-bold fb-text",
+  modalCloseButton: "fb-text-secondary hover:fb-text transition-colors",
   modalBody: "p-6",
   modalSection: "mb-6",
-  modalSectionTitle: "flex items-center text-lg font-bold text-emerald-100 mb-4",
-  modalCard: "bg-emerald-800/50 rounded-xl p-4 border border-emerald-700/50",
-  modalNoteBox: "bg-emerald-800/50 border-l-4 border-emerald-400 p-4 rounded-lg",
-  modalOrderItem: "flex items-center p-4 bg-emerald-900/30",
+  modalSectionTitle: "flex items-center text-lg font-bold fb-text mb-4",
+  modalCard: "fb-surface-alt rounded-xl p-4 border fb-border",
+  modalNoteBox: "fb-surface-alt border-l-4 border-green-500 p-4 rounded-lg",
+  modalOrderItem: "flex items-center p-4 fb-surface-alt",
   modalOrderImage: "w-16 h-16 object-cover rounded-lg mr-4",
-  modalPlaceholderImage: "bg-emerald-800 border-2 border-dashed border-emerald-700 rounded-xl w-16 h-16 mr-4 flex items-center justify-center",
-  modalOrderTotal: "p-4 bg-emerald-800/50",
-  modalFooter: "sticky bottom-0 bg-emerald-900/80 backdrop-blur-md border-t border-emerald-700/50 p-6",
-  closeButton: "px-6 py-2 bg-emerald-700/50 hover:bg-emerald-700 text-emerald-100 rounded-full transition"
+  modalPlaceholderImage: "fb-surface border-2 border-dashed fb-border rounded-xl w-16 h-16 mr-4 flex items-center justify-center",
+  modalOrderTotal: "p-4 fb-surface-alt",
+  modalFooter: "sticky bottom-0 fb-surface border-t fb-border p-6",
+  closeButton: "px-6 py-2 fb-btn-secondary rounded-full transition-all"
 };

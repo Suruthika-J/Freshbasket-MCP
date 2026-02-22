@@ -18,26 +18,26 @@ const LogoutDialog = ({ isOpen, onConfirm, onCancel, userName }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-green-700 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 transform transition-all duration-200">
+    <div className="fixed inset-0 fb-overlay flex items-center justify-center z-50">
+      <div className="fb-card rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 transform transition-all duration-200">
         <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
           <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
         </div>
 
-        <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+        <h3 className="text-lg font-semibold fb-text text-center mb-2">
           Confirm Logout
         </h3>
 
-        <p className="text-gray-600 text-center mb-6">
+        <p className="fb-text-secondary text-center mb-6">
           Are you sure you want to logout, {userName}? You will need to sign in again to access the admin panel.
         </p>
 
         <div className="flex space-x-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200 font-medium"
+            className="flex-1 px-4 py-2 fb-text fb-surface-alt hover:fb-bg-secondary rounded-md transition-colors duration-200 font-medium border fb-border"
           >
             Cancel
           </button>
@@ -148,10 +148,10 @@ function AdminApp() {
   if (loading) {
     console.log('⏳ Showing loading screen');
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center fb-bg">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin panel...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: 'var(--color-primary)' }} />
+          <p className="fb-text-secondary">Loading admin panel...</p>
         </div>
       </div>
     );
@@ -186,7 +186,7 @@ function AdminApp() {
     <>
       <div className="min-h-screen flex flex-col">
         <AdminNavbar onLogout={handleLogoutClick} adminUser={adminUser} />
-        <main className="flex-grow bg-slate-50">
+        <main className="flex-grow" style={{ backgroundColor: '#f8fafc' }}>
           <Routes>
             <Route path="/" element={<Navigate to="/admin/add-item" replace />} />
             <Route path="/add-item" element={<AddItemPage />} />
@@ -199,9 +199,9 @@ function AdminApp() {
           </Routes>
         </main>
 
-        <footer className="bg-emerald-800 text-white py-4">
+        <footer style={{ backgroundColor: 'var(--color-primary)' }} className="text-white py-4">
           <div className="max-w-6xl mx-auto px-4 text-center text-sm">
-            <p>© {new Date().getFullYear()} RushBasket Admin Panel. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} FreshBasket Admin Panel. All rights reserved.</p>
           </div>
         </footer>
       </div>

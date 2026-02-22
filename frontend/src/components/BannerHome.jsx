@@ -32,7 +32,7 @@ const BannerHome = ({ onSearch }) => {
   // Auto-rotate carousel every 3 seconds (pauses on hover)
   useEffect(() => {
     if (!isAutoPlay) return;
-    
+
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % carouselImages.length);
     }, 3000);
@@ -66,7 +66,7 @@ const BannerHome = ({ onSearch }) => {
   };
 
   return (
-    <div className="relative overflow-hidden pt-16">
+    <div className="relative overflow-hidden">
       {/* Background gradient */}
       <div className={bannerStyles.backgroundGradient}></div>
 
@@ -80,50 +80,52 @@ const BannerHome = ({ onSearch }) => {
 
           {/* Image Carousel with Abnormal Organic Shape */}
           <div className="relative flex justify-center">
-            <div 
+            <div
               className="relative w-full max-w-md group cursor-pointer"
               onMouseEnter={() => setIsAutoPlay(false)}
               onMouseLeave={() => setIsAutoPlay(true)}
             >
               {/* Organic Blob Shape Container */}
-              <div className="relative aspect-square overflow-hidden shadow-2xl" 
-                   style={{
-                     clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                     borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
-                   }}>
+              <div className="relative aspect-square overflow-hidden shadow-2xl"
+                style={{
+                  clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
+                }}>
                 {carouselImages.map((imageSrc, index) => (
                   <img
                     key={index}
                     src={imageSrc}
                     alt={`Fresh produce ${index + 1}`}
-                    className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ease-in-out ${
-                      index === currentIndex 
-                        ? 'opacity-100 scale-100 group-hover:scale-110 group-hover:rotate-2' 
-                        : 'opacity-0 scale-95'
-                    }`}
+                    className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ease-in-out ${index === currentIndex
+                      ? 'opacity-100 scale-100 group-hover:scale-110 group-hover:rotate-2'
+                      : 'opacity-0 scale-95'
+                      }`}
                   />
                 ))}
-                
+
                 {/* Overlay gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-transparent to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: 'linear-gradient(135deg, rgba(46,125,50,0.2), transparent, rgba(46,125,50,0.2))' }} />
               </div>
 
               {/* Morphing border effect */}
-              <div 
-                className="absolute inset-0 border-4 border-emerald-400/50 group-hover:border-emerald-500 transition-all duration-700 group-hover:scale-105"
+              <div
+                className="absolute inset-0 transition-all duration-700 group-hover:scale-105"
                 style={{
                   clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
+                  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+                  border: '4px solid var(--color-primary-light)',
+                  opacity: 0.5
                 }}
-              ></div>
+              />
 
               {/* Discount Badge with organic shape */}
               <div className="absolute bottom-8 left-8 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
                 <div className="relative bg-gradient-to-br from-yellow-400 to-orange-400 text-gray-900 font-bold px-6 py-3 shadow-lg"
-                     style={{
-                       clipPath: 'polygon(10% 0%, 90% 0%, 100% 20%, 100% 80%, 90% 100%, 10% 100%, 0% 80%, 0% 20%)',
-                       borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%'
-                     }}>
+                  style={{
+                    clipPath: 'polygon(10% 0%, 90% 0%, 100% 20%, 100% 80%, 90% 100%, 10% 100%, 0% 80%, 0% 20%)',
+                    borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%'
+                  }}>
                   <span className="text-sm font-extrabold">Fresh Daily!</span>
                 </div>
               </div>
@@ -134,13 +136,12 @@ const BannerHome = ({ onSearch }) => {
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}
-                    className={`transition-all duration-300 ${
-                      index === currentIndex 
-                        ? 'bg-white w-8 h-3' 
-                        : 'bg-white/50 hover:bg-white/75 w-3 h-3'
-                    }`}
+                    className={`transition-all duration-300 ${index === currentIndex
+                      ? 'bg-white w-8 h-3'
+                      : 'bg-white/50 hover:bg-white/75 w-3 h-3'
+                      }`}
                     style={{
-                      clipPath: index === currentIndex 
+                      clipPath: index === currentIndex
                         ? 'polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%)'
                         : 'circle(50%)'
                     }}
@@ -152,18 +153,18 @@ const BannerHome = ({ onSearch }) => {
 
             {/* Decorative organic shapes */}
             <div className="hidden sm:block absolute -top-6 -right-6 w-24 h-24 bg-mint-200 opacity-30"
-                 style={{
-                   clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
-                   borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%'
-                 }}></div>
+              style={{
+                clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
+                borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%'
+              }}></div>
             <div className="hidden md:block absolute -bottom-6 -left-6 w-32 h-32 bg-teal-100 opacity-30"
-                 style={{
-                   borderRadius: '63% 37% 54% 46% / 55% 48% 52% 45%'
-                 }}></div>
+              style={{
+                borderRadius: '63% 37% 54% 46% / 55% 48% 52% 45%'
+              }}></div>
             <div className="hidden lg:block absolute top-1/4 -left-8 w-20 h-20 bg-seafoam-100 opacity-30"
-                 style={{
-                   clipPath: 'polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%)',
-                 }}></div>
+              style={{
+                clipPath: 'polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%)',
+              }}></div>
           </div>
 
           {/* Content on the Right */}
@@ -214,7 +215,8 @@ const BannerHome = ({ onSearch }) => {
                 <div className="mt-6 flex justify-center md:justify-start">
                   <button
                     onClick={() => navigate('/recipe-chatbot')}
-                    className="group relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold rounded-full shadow-lg hover:shadow-emerald-500/50 transform hover:scale-105 transition-all duration-300"
+                    className="group relative inline-flex items-center gap-2 px-6 py-3 text-white font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
+                    style={{ background: 'linear-gradient(to right, var(--color-primary-light), var(--color-primary))' }}
                   >
                     <IoSparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                     <span>{t('banner.aiRecipeButton') || 'AI Recipe Assistant'}</span>
@@ -231,7 +233,7 @@ const BannerHome = ({ onSearch }) => {
                       key={i}
                       className={bannerStyles.featureItem}
                     >
-                      <div className="text-teal-600 mb-1">{f.icon}</div>
+                      <div className="fb-text-primary mb-1">{f.icon}</div>
                       <span className={bannerStyles.featureText}>
                         {f.text}
                       </span>
@@ -246,7 +248,8 @@ const BannerHome = ({ onSearch }) => {
                   {/* Customer Login Button */}
                   <button
                     onClick={handleCustomerLogin}
-                    className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-emerald-500/50 transform hover:scale-105 transition-all duration-300"
+                    className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 text-white font-bold text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+                    style={{ background: 'linear-gradient(to right, var(--color-primary-light), var(--color-primary))' }}
                   >
                     <FiUsers className="w-6 h-6 group-hover:scale-110 transition-transform" />
                     <span>Login as Customer</span>
@@ -264,10 +267,10 @@ const BannerHome = ({ onSearch }) => {
 
                 {/* Info Text */}
                 <div className="mt-6 text-center md:text-left">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm fb-text-secondary">
                     🌾 <strong>Farmers:</strong> Sell your produce directly to customers
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm fb-text-secondary">
                     🛒 <strong>Customers:</strong> Buy fresh farm produce at the best prices
                   </p>
                 </div>
