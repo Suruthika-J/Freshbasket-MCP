@@ -264,13 +264,13 @@ const CheckoutPage = () => {
           {/* Customer Info Form */}
           <div className={checkoutStyles.card}>
             <h2 className={checkoutStyles.sectionTitle}>
-              <FiUser className="mr-2 text-emerald-300" />
+              <FiUser className="mr-2 fb-text-primary" />
               Customer Information
             </h2>
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">
+                <label className="block text-sm font-medium fb-text-secondary mb-2">
                   Full Name *
                 </label>
                 <input
@@ -283,14 +283,14 @@ const CheckoutPage = () => {
                   required
                 />
                 {errors.name && (
-                  <p className="mt-2 text-sm text-red-400">{errors.name}</p>
+                  <p className="mt-2 text-sm text-red-500">{errors.name}</p>
                 )}
               </div>
 
               {/* Email & Phone */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">
+                  <label className="block text-sm font-medium fb-text-secondary mb-2">
                     Email Address *
                   </label>
                   <input
@@ -303,11 +303,11 @@ const CheckoutPage = () => {
                     required
                   />
                   {errors.email && (
-                    <p className="mt-2 text-sm text-red-400">{errors.email}</p>
+                    <p className="mt-2 text-sm text-red-500">{errors.email}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-emerald-300 mb-2">
+                  <label className="block text-sm font-medium fb-text-secondary mb-2">
                     Phone Number *
                   </label>
                   <input
@@ -321,14 +321,14 @@ const CheckoutPage = () => {
                     required
                   />
                   {errors.phone && (
-                    <p className="mt-2 text-sm text-red-400">{errors.phone}</p>
+                    <p className="mt-2 text-sm text-red-500">{errors.phone}</p>
                   )}
                 </div>
               </div>
 
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">
+                <label className="block text-sm font-medium fb-text-secondary mb-2">
                   Delivery Address *
                 </label>
                 <textarea
@@ -341,13 +341,13 @@ const CheckoutPage = () => {
                   required
                 ></textarea>
                 {errors.address && (
-                  <p className="mt-2 text-sm text-red-400">{errors.address}</p>
+                  <p className="mt-2 text-sm text-red-500">{errors.address}</p>
                 )}
               </div>
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-emerald-300 mb-2">
+                <label className="block text-sm font-medium fb-text-secondary mb-2">
                   Delivery Notes (Optional)
                 </label>
                 <textarea
@@ -363,7 +363,7 @@ const CheckoutPage = () => {
               {/* Payment Method */}
               <div>
                 <h3 className={checkoutStyles.sectionTitle}>
-                  <FiCreditCard className="mr-2 text-emerald-300" />
+                  <FiCreditCard className="mr-2 fb-text-primary" />
                   Payment Method
                 </h3>
                 <div className="space-y-3">
@@ -377,10 +377,10 @@ const CheckoutPage = () => {
                       className="h-5 w-5 text-emerald-600 focus:ring-emerald-500"
                     />
                     <div className="ml-3">
-                      <span className="font-medium text-emerald-100">
+                      <span className="font-medium fb-text">
                         Cash on Delivery
                       </span>
-                      <span className="block text-sm text-emerald-400">
+                      <span className="block text-sm fb-text-muted">
                         Pay when you receive your order
                       </span>
                     </div>
@@ -395,10 +395,10 @@ const CheckoutPage = () => {
                       className="h-5 w-5 text-emerald-600 focus:ring-emerald-500"
                     />
                     <div className="ml-3">
-                      <span className="font-medium text-emerald-100">
+                      <span className="font-medium fb-text">
                         Online Payment
                       </span>
-                      <span className="block text-sm text-emerald-400">
+                      <span className="block text-sm fb-text-muted">
                         Pay now securely via card/UPI
                       </span>
                     </div>
@@ -557,7 +557,7 @@ const CheckoutPage = () => {
               )}
             </button>
 
-            <p className="mt-4 text-center text-sm text-emerald-400">
+            <p className="mt-4 text-center text-sm fb-text-muted">
               By placing your order you agree to our{' '}
               <a href="/terms" className={checkoutStyles.link}>
                 Terms & Conditions

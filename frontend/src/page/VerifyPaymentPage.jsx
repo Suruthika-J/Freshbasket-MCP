@@ -54,7 +54,7 @@ const VerifyPaymentPage = () => {
                     setOrderConfirmed(true);
                     setShowSuccess(true);
                     setStatusMsg('Order placed successfully!');
-                    
+
                     // Auto-download invoice after 2 seconds
                     setTimeout(() => {
                         downloadInvoice(response.data._id, response.data.orderId);
@@ -94,7 +94,7 @@ const VerifyPaymentPage = () => {
                 setOrderConfirmed(true);
                 setShowSuccess(true);
                 setStatusMsg('Order confirmed!');
-                
+
                 // Auto-download invoice after 2 seconds
                 setTimeout(() => {
                     downloadInvoice(response.data._id, response.data.orderId);
@@ -117,7 +117,7 @@ const VerifyPaymentPage = () => {
             const timer = setTimeout(() => {
                 setCountdown(countdown - 1);
             }, 1000);
-            
+
             return () => clearTimeout(timer);
         } else if (orderConfirmed && countdown === 0) {
             // Redirect to order success page as fallback
@@ -134,7 +134,7 @@ const VerifyPaymentPage = () => {
         try {
             console.log('📄 Downloading invoice for order:', orderId);
             const token = localStorage.getItem('authToken');
-            
+
             const response = await axios({
                 url: `${apiUrl}/api/orders/${orderId}/invoice`,
                 method: 'GET',
@@ -148,17 +148,17 @@ const VerifyPaymentPage = () => {
             // Create blob with explicit PDF type
             const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
-            
+
             // Create download link
             const link = document.createElement('a');
             link.style.display = 'none';
             link.href = url;
             link.download = `Invoice_${orderNumber}.pdf`;
             link.setAttribute('download', `Invoice_${orderNumber}.pdf`);
-            
+
             document.body.appendChild(link);
             link.click();
-            
+
             setTimeout(() => {
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
@@ -188,7 +188,7 @@ const VerifyPaymentPage = () => {
         setToastMessage(message);
         setIsToastError(isError);
         setShowToastMsg(true);
-        
+
         setTimeout(() => {
             setShowToastMsg(false);
         }, 3500);
@@ -196,17 +196,17 @@ const VerifyPaymentPage = () => {
 
     if (!orderConfirmed) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 flex items-center justify-center p-4">
-                <div className="bg-emerald-800/50 backdrop-blur-lg border border-emerald-700 rounded-2xl p-8 text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-400 border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-emerald-100 text-lg font-medium">{statusMsg}</p>
+            <div className="min-h-screen fb-bg flex items-center justify-center p-4">
+                <div className="fb-card backdrop-blur-lg border fb-border rounded-2xl p-8 text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-4 fb-border-primary border-t-transparent mx-auto mb-4"></div>
+                    <p className="fb-text text-lg font-medium">{statusMsg}</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 flex items-center justify-center p-4">
+        <div className="min-h-screen fb-bg flex items-center justify-center p-4">
             <style>{`
                 @keyframes rotateCheck {
                     0% { transform: rotate(0deg) scale(0); opacity: 0; }
@@ -253,11 +253,11 @@ const VerifyPaymentPage = () => {
 
             {/* Toast Notification */}
             {showToastMsg && (
-                <div 
+                <div
                     className={`fixed top-5 right-5 z-[9999] ${showToastMsg ? 'toast-show' : 'toast-hide'}`}
                     style={{
                         padding: '16px 24px',
-                        background: isToastError ? '#ef4444' : '#10b981',
+                        background: isToastError ? '#ef4444' : 'var(--color-primary)',
                         color: 'white',
                         borderRadius: '12px',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
@@ -274,12 +274,12 @@ const VerifyPaymentPage = () => {
 
             <div className="w-full max-w-md">
                 {/* Success Card */}
-                <div className="bg-emerald-800/50 backdrop-blur-lg border-2 border-emerald-600 rounded-3xl p-8 shadow-2xl fade-in-up">
+                <div className="fb-card backdrop-blur-lg border-2 fb-border-primary rounded-3xl p-8 shadow-2xl fade-in-up">
                     {/* Success Icon */}
                     <div className="flex justify-center mb-6">
                         <div className="relative w-32 h-32">
-                            <img 
-                                src="/assets/orderplaced.gif" 
+                            <img
+                                src="/assets/orderplaced.gif"
                                 alt="Order Placed Successfully"
                                 className="w-full h-full object-contain"
                                 onError={(e) => {
@@ -288,9 +288,9 @@ const VerifyPaymentPage = () => {
                                 }}
                             />
                             <div className="hidden absolute inset-0 items-center justify-center">
-                                <div className="absolute inset-0 bg-emerald-400 rounded-full opacity-20 blur-xl"></div>
-                                <FiCheckCircle 
-                                    className={`text-emerald-400 relative z-10 ${showSuccess ? 'success-check' : ''}`}
+                                <div className="absolute inset-0 fb-primary-subtle rounded-full opacity-20 blur-xl"></div>
+                                <FiCheckCircle
+                                    className={`fb-text-primary relative z-10 ${showSuccess ? 'success-check' : ''}`}
                                     size={80}
                                     strokeWidth={2}
                                 />
@@ -300,35 +300,35 @@ const VerifyPaymentPage = () => {
 
                     {/* Success Message */}
                     <div className="text-center mb-6">
-                        <h1 className="text-3xl font-bold text-emerald-100 mb-2">
+                        <h1 className="text-3xl font-bold fb-text mb-2">
                             Order Placed Successfully! 🎉
                         </h1>
-                        <p className="text-emerald-300 text-lg">
+                        <p className="fb-text-secondary text-lg">
                             Thank you for your purchase
                         </p>
                     </div>
 
                     {/* Order Details Card */}
-                    <div className="bg-emerald-900/50 border border-emerald-700 rounded-xl p-5 mb-6">
+                    <div className="fb-surface-alt border fb-border rounded-xl p-5 mb-6">
                         <div className="flex justify-between items-center mb-3">
-                            <span className="text-emerald-300 font-medium">Order ID:</span>
-                            <span className="text-emerald-100 font-bold">{confirmedOrder?.orderId}</span>
+                            <span className="fb-text-secondary font-medium">Order ID:</span>
+                            <span className="fb-text font-bold">{confirmedOrder?.orderId}</span>
                         </div>
                         <div className="flex justify-between items-center mb-3">
-                            <span className="text-emerald-300 font-medium">Total Amount:</span>
-                            <span className="text-emerald-100 font-bold text-xl">
+                            <span className="fb-text-secondary font-medium">Total Amount:</span>
+                            <span className="fb-text-primary font-bold text-xl">
                                 ₹{confirmedOrder?.total?.toFixed(2)}
                             </span>
                         </div>
                         <div className="flex justify-between items-center mb-3">
-                            <span className="text-emerald-300 font-medium">Payment Method:</span>
-                            <span className="text-emerald-100 font-medium">
+                            <span className="fb-text-secondary font-medium">Payment Method:</span>
+                            <span className="fb-text font-medium">
                                 {confirmedOrder?.paymentMethod}
                             </span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-emerald-300 font-medium">Payment:</span>
-                            <span className="px-3 py-1 bg-emerald-500/20 text-emerald-200 rounded-full text-sm font-medium">
+                            <span className="fb-text-secondary font-medium">Payment:</span>
+                            <span className="px-3 py-1 fb-primary-subtle fb-text-primary rounded-full text-sm font-medium border fb-border-primary">
                                 {confirmedOrder?.paymentStatus}
                             </span>
                         </div>
@@ -339,7 +339,7 @@ const VerifyPaymentPage = () => {
                         {/* Download Invoice */}
                         <button
                             onClick={handleDownloadInvoice}
-                            className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl flex items-center justify-center gap-3"
+                            className="w-full fb-btn-primary font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl flex items-center justify-center gap-3"
                         >
                             <FiDownload size={20} />
                             Download Invoice (PDF)
@@ -348,7 +348,7 @@ const VerifyPaymentPage = () => {
                         {/* View My Orders */}
                         <button
                             onClick={handleViewMyOrders}
-                            className="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-3"
+                            className="w-full fb-bg-surface-alt hover:opacity-80 fb-text font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-3 border fb-border"
                         >
                             <FiPackage size={20} />
                             View My Orders
@@ -357,25 +357,25 @@ const VerifyPaymentPage = () => {
                         {/* Continue Shopping */}
                         <button
                             onClick={handleContinueShopping}
-                            className="w-full bg-emerald-800/50 hover:bg-emerald-700/50 text-emerald-200 font-semibold py-4 px-6 rounded-xl transition-all duration-300 border border-emerald-600"
+                            className="w-full fb-bg-surface-alt hover:opacity-80 fb-text-secondary font-semibold py-4 px-6 rounded-xl transition-all duration-300 border fb-border"
                         >
                             Continue Shopping
                         </button>
                     </div>
 
                     {/* Auto Download Notice */}
-                    <p className="text-center text-emerald-300 text-sm mb-2">
+                    <p className="text-center fb-text-muted text-sm mb-2">
                         💾 Invoice downloaded automatically
                     </p>
 
                     {/* Countdown Timer */}
                     <div className="text-center">
-                        <p className="text-emerald-400 text-sm">
+                        <p className="fb-text-primary text-sm">
                             Redirecting to order details in {countdown} second{countdown !== 1 ? 's' : ''}...
                         </p>
-                        <div className="mt-2 w-full bg-emerald-900/50 rounded-full h-1.5">
-                            <div 
-                                className="bg-emerald-400 h-1.5 rounded-full transition-all duration-1000"
+                        <div className="mt-2 w-full fb-surface-alt rounded-full h-1.5">
+                            <div
+                                className="fb-bg-primary h-1.5 rounded-full transition-all duration-1000"
                                 style={{ width: `${((8 - countdown) / 8) * 100}%` }}
                             ></div>
                         </div>

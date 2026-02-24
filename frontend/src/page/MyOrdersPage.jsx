@@ -101,20 +101,20 @@ const MyOrdersPage = () => {
     const totalOrders = parentOrders.length + legacyOrders.length;
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="min-h-screen fb-bg py-8 px-4">
             <div className="max-w-6xl mx-auto">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">My Orders</h1>
-                    <p className="text-gray-600 mt-2">{totalOrders} order{totalOrders !== 1 ? 's' : ''} found</p>
+                    <h1 className="text-3xl font-bold fb-text">My Orders</h1>
+                    <p className="fb-text-secondary mt-2">{totalOrders} order{totalOrders !== 1 ? 's' : ''} found</p>
                 </div>
 
                 {totalOrders === 0 ? (
-                    <div className="bg-white rounded-lg shadow p-12 text-center">
-                        <FiPackage className="mx-auto text-gray-400 mb-4" size={64} />
-                        <h2 className="text-2xl font-semibold text-gray-700 mb-2">
+                    <div className="fb-card rounded-lg shadow p-12 text-center">
+                        <FiPackage className="mx-auto fb-text-muted mb-4" size={64} />
+                        <h2 className="text-2xl font-semibold fb-text mb-2">
                             No Orders Yet
                         </h2>
-                        <p className="text-gray-500">
+                        <p className="fb-text-secondary">
                             Start shopping to see your orders here!
                         </p>
                     </div>
@@ -127,7 +127,7 @@ const MyOrdersPage = () => {
                             return (
                                 <div
                                     key={parentOrder._id}
-                                    className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                                    className="fb-card rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
                                 >
                                     {/* Parent Order Header */}
                                     <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 text-white">
@@ -158,31 +158,31 @@ const MyOrdersPage = () => {
                                     </div>
 
                                     {/* Parent Order Body */}
-                                    <div className="p-6">
+                                    <div className="p-6 fb-surface">
                                         {/* Status & Payment Info */}
                                         <div className="flex gap-4 mb-4 flex-wrap">
                                             <span className={`flex items-center gap-2 px-3 py-1.5 rounded-full border font-medium ${getParentStatusColor(parentOrder.overallStatus)}`}>
                                                 <FiCheckCircle />
                                                 {formatStatus(parentOrder.overallStatus)}
                                             </span>
-                                            <span className="px-3 py-1.5 rounded-full border bg-gray-100 text-gray-800 border-gray-300 font-medium">
+                                            <span className="px-3 py-1.5 rounded-full border fb-bg fb-text fb-border font-medium">
                                                 {parentOrder.paymentMethod}
                                             </span>
                                             <span className={`px-3 py-1.5 rounded-full border font-medium ${parentOrder.paymentStatus === 'Paid'
-                                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                                                    : 'bg-orange-100 text-orange-800 border-orange-300'
+                                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                                : 'bg-orange-100 text-orange-800 border-orange-300'
                                                 }`}>
                                                 {parentOrder.paymentStatus}
                                             </span>
                                         </div>
 
                                         {/* Customer Details */}
-                                        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                                            <h3 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                        <div className="fb-surface-alt p-4 rounded-lg mb-4">
+                                            <h3 className="font-semibold fb-text mb-2 flex items-center gap-2">
                                                 <FiUser size={18} />
                                                 Delivery Address:
                                             </h3>
-                                            <p className="text-gray-600">
+                                            <p className="fb-text-secondary">
                                                 {parentOrder.customer.name}<br />
                                                 {parentOrder.customer.address}<br />
                                                 {parentOrder.customer.phone}
@@ -192,26 +192,26 @@ const MyOrdersPage = () => {
                                         {/* Toggle Sub-Orders Button */}
                                         <button
                                             onClick={() => toggleOrderExpansion(parentOrder._id)}
-                                            className="w-full flex items-center justify-between px-4 py-3 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors mb-4"
+                                            className="w-full flex items-center justify-between px-4 py-3 fb-primary-subtle hover:bg-emerald-100/10 rounded-lg transition-colors mb-4"
                                         >
-                                            <span className="font-semibold text-emerald-800 flex items-center gap-2">
+                                            <span className="font-semibold fb-text-primary flex items-center gap-2">
                                                 <FiShoppingBag />
                                                 View {parentOrder.subOrders?.length} Sub-Order{parentOrder.subOrders?.length !== 1 ? 's' : ''}
                                             </span>
-                                            {isExpanded ? <FiChevronUp className="text-emerald-800" /> : <FiChevronDown className="text-emerald-800" />}
+                                            {isExpanded ? <FiChevronUp className="fb-text-primary" /> : <FiChevronDown className="fb-text-primary" />}
                                         </button>
 
                                         {/* Sub-Orders (Expandable) */}
                                         {isExpanded && (
                                             <div className="space-y-4 mb-4">
                                                 {parentOrder.subOrders?.map((subOrder, index) => (
-                                                    <div key={subOrder._id} className="border border-emerald-200 rounded-lg p-4 bg-emerald-50/30">
+                                                    <div key={subOrder._id} className="border fb-border rounded-lg p-4 fb-surface-alt">
                                                         {/* Sub-Order Header */}
                                                         <div className="flex justify-between items-start mb-3">
                                                             <div>
-                                                                <p className="text-sm text-gray-600">Sub-Order {String.fromCharCode(65 + index)}</p>
-                                                                <p className="font-semibold text-gray-800">{subOrder.vendor?.vendorName || 'Unknown Vendor'}</p>
-                                                                <span className="text-xs bg-emerald-700/20 px-2 py-0.5 rounded text-emerald-800 mt-1 inline-block">
+                                                                <p className="text-sm fb-text-muted">Sub-Order {String.fromCharCode(65 + index)}</p>
+                                                                <p className="font-semibold fb-text">{subOrder.vendor?.vendorName || 'Unknown Vendor'}</p>
+                                                                <span className="text-xs fb-primary-subtle px-2 py-0.5 rounded fb-text-primary mt-1 inline-block border fb-border-primary">
                                                                     {subOrder.vendor?.vendorType === 'admin' ? 'Admin Store' : 'Farmer'}
                                                                 </span>
                                                             </div>
@@ -224,10 +224,10 @@ const MyOrdersPage = () => {
                                                         <div className="space-y-2 mb-3">
                                                             {subOrder.items?.map((item, idx) => (
                                                                 <div key={idx} className="flex justify-between items-center text-sm">
-                                                                    <span className="text-gray-700">
+                                                                    <span className="fb-text-secondary">
                                                                         {item.name} × {item.quantity}
                                                                     </span>
-                                                                    <span className="font-medium text-gray-800">
+                                                                    <span className="font-medium fb-text">
                                                                         ₹{(item.price * item.quantity).toFixed(2)}
                                                                     </span>
                                                                 </div>
@@ -235,14 +235,14 @@ const MyOrdersPage = () => {
                                                         </div>
 
                                                         {/* Delivery Option */}
-                                                        <div className="flex items-center justify-between pt-3 border-t border-emerald-200">
-                                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <div className="flex items-center justify-between pt-3 border-t fb-divider">
+                                                            <div className="flex items-center gap-2 text-sm fb-text-muted">
                                                                 <FiTruck />
                                                                 <span>
                                                                     {subOrder.deliveryOption === 'self-pickup' ? 'Self Pickup' : 'Delivery Agent'}
                                                                 </span>
                                                             </div>
-                                                            <span className="font-semibold text-gray-800">
+                                                            <span className="font-semibold fb-text">
                                                                 ₹{subOrder.total?.toFixed(2)}
                                                             </span>
                                                         </div>
@@ -259,7 +259,7 @@ const MyOrdersPage = () => {
                         {legacyOrders.map((order) => (
                             <div
                                 key={order._id}
-                                className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow opacity-90"
+                                className="fb-card rounded-xl overflow-hidden hover:shadow-lg transition-shadow opacity-90"
                             >
                                 {/* Legacy Order Header */}
                                 <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-4 text-white">
@@ -286,28 +286,28 @@ const MyOrdersPage = () => {
                                 </div>
 
                                 {/* Legacy Order Body */}
-                                <div className="p-6">
+                                <div className="p-6 fb-surface">
                                     <div className="flex gap-4 mb-4 flex-wrap">
-                                        <span className="px-3 py-1.5 rounded-full border bg-gray-100 text-gray-800 border-gray-300 font-medium">
+                                        <span className="px-3 py-1.5 rounded-full border fb-bg fb-text fb-border font-medium">
                                             {order.status}
                                         </span>
-                                        <span className="px-3 py-1.5 rounded-full border bg-gray-100 text-gray-800 border-gray-300 font-medium">
+                                        <span className="px-3 py-1.5 rounded-full border fb-bg fb-text fb-border font-medium">
                                             {order.paymentMethod}
                                         </span>
                                     </div>
 
                                     {/* Order Items */}
                                     <div className="space-y-3 mb-4">
-                                        <h3 className="font-semibold text-gray-700">Items:</h3>
+                                        <h3 className="font-semibold fb-text">Items:</h3>
                                         {order.items?.map((item, idx) => (
-                                            <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                                            <div key={idx} className="flex justify-between items-center fb-surface-alt p-3 rounded-lg">
                                                 <div>
-                                                    <p className="font-medium text-gray-800">{item.name}</p>
-                                                    <p className="text-sm text-gray-500">
+                                                    <p className="font-medium fb-text">{item.name}</p>
+                                                    <p className="text-sm fb-text-muted">
                                                         Qty: {item.quantity} × ₹{item.price}
                                                     </p>
                                                 </div>
-                                                <p className="font-semibold text-gray-800">
+                                                <p className="font-semibold fb-text">
                                                     ₹{(item.quantity * item.price).toFixed(2)}
                                                 </p>
                                             </div>
@@ -315,9 +315,9 @@ const MyOrdersPage = () => {
                                     </div>
 
                                     {/* Customer Details */}
-                                    <div className="bg-gray-50 p-4 rounded-lg">
-                                        <h3 className="font-semibold text-gray-700 mb-2">Delivery Address:</h3>
-                                        <p className="text-gray-600">
+                                    <div className="fb-surface-alt p-4 rounded-lg">
+                                        <h3 className="font-semibold fb-text mb-2">Delivery Address:</h3>
+                                        <p className="fb-text-secondary">
                                             {order.customer?.name}<br />
                                             {order.customer?.address}<br />
                                             {order.customer?.phone}
