@@ -50,6 +50,12 @@ const subOrderSchema = new mongoose.Schema({
             required: true
         }
     },
+    // Added as per requirement
+    farmerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+        index: true
+    },
     items: {
         type: [subOrderItemSchema],
         required: true,
@@ -64,6 +70,11 @@ const subOrderSchema = new mongoose.Schema({
         type: Number,
         required: true,
         min: 0
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['Unpaid', 'Paid', 'Failed', 'Refunded'],
+        default: 'Unpaid'
     },
     // Delivery configuration
     deliveryOption: {

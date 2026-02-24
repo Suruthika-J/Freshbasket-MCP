@@ -82,162 +82,202 @@ const FarmerSubOrders = () => {
     };
 
     const formatStatus = (status) =>
-        status.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        status ? status.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'Unknown';
 
-    const filteredOrders = filter === 'all' ? subOrders : subOrders.filter(o => o.status === filter);
+    const filteredOrders = filter === 'all' ? subOrders : subOrders.filter(o => o.orderStatus === filter);
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: 'var(--color-primary)' }}></div>
+            <div className="flex flex-col items-center justify-center py-20 bg-white/50 backdrop-blur-sm rounded-2xl border border-gray-100">
+                <div className="animate-spin rounded-full h-14 w-14 border-t-2 border-b-2 border-green-600 mb-4"></div>
+                <p className="text-gray-500 font-medium">Loading your orders...</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-            {/* Filter Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
-                {['all', 'pending', 'confirmed', 'preparing', 'ready'].map(status => (
-                    <button
-                        key={status}
-                        onClick={() => setFilter(status)}
-                        className="px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all duration-200"
-                        style={filter === status
-                            ? { backgroundColor: 'var(--color-primary)', color: '#fff' }
-                            : { backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-text-secondary)' }
-                        }
-                    >
-                        {status === 'all' ? 'All Orders' : formatStatus(status)}
-                        <span className="ml-2 text-sm opacity-80">
-                            ({status === 'all' ? subOrders.length : subOrders.filter(o => o.status === status).length})
-                        </span>
-                    </button>
-                ))}
-            </div>
+        <div className="max-w-6xl mx-auto space-y-8 animate-fadeIn">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-3xl font-extrabold text-gray-800 tracking-tight">Farmer Orders</h2>
+                    <p className="text-gray-500 mt-1">Manage and track your customer orders from FreshBasket</p>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    {['all', 'pending', 'confirmed', 'preparing', 'ready'].map(status => (
+                        <button
+                            key={status}
+                            onClick={() => setFilter(status)}
+                            className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap shadow-sm ${filter === status
+                                    ? 'bg-green-600 text-white shadow-green-200'
+                                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
+                                }`}
+                        >
+                            {status === 'all' ? 'All' : formatStatus(status)}
+                            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${filter === status ? 'bg-white/20' : 'bg-gray-100'}`}>
+                                {status === 'all' ? subOrders.length : subOrders.filter(o => o.orderStatus === status).length}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </header>
 
-            {/* Sub-Orders List */}
             {filteredOrders.length === 0 ? (
-                <div className="fb-card rounded-xl p-12 text-center">
-                    <FiPackage className="mx-auto fb-text-muted mb-4" size={48} />
-                    <h3 className="text-lg font-semibold fb-text mb-2">No Orders Found</h3>
-                    <p className="fb-text-secondary">
-                        {filter === 'all' ? 'You have no orders yet.' : `No ${formatStatus(filter).toLowerCase()} orders.`}
+                <div className="bg-white rounded-2xl p-20 text-center shadow-sm border border-gray-100">
+                    <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <FiPackage className="text-gray-300" size={40} />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">No Orders Found</h3>
+                    <p className="text-gray-500 max-w-xs mx-auto">
+                        {filter === 'all' ? 'We haven\'t received any orders for your products yet.' : `You don't have any orders currently marked as ${formatStatus(filter).toLowerCase()}.`}
                     </p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-6">
                     {filteredOrders.map((subOrder) => {
-                        const badge = getStatusBadge(subOrder.status);
+                        const badge = getStatusBadge(subOrder.orderStatus);
                         return (
-                            <div key={subOrder._id} className="fb-card rounded-xl overflow-hidden">
-                                {/* Order Header — always green gradient */}
-                                <div className="px-6 py-4 text-white" style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)' }}>
+                            <div key={subOrder._id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 group">
+                                {/* Order Header - Sophisticated Gradient */}
+                                <div className="px-8 py-5 bg-gradient-to-r from-gray-900 to-gray-800 text-white">
                                     <div className="flex justify-between items-center flex-wrap gap-4">
-                                        <div>
-                                            <p className="text-sm opacity-80">Sub-Order ID</p>
-                                            <p className="text-lg font-bold">{subOrder.subOrderId}</p>
+                                        <div className="flex items-center gap-4">
+                                            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-md">
+                                                <FiPackage size={24} className="text-green-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">Sub-Order ID</p>
+                                                <p className="text-lg font-mono font-bold text-green-400">{subOrder.subOrderId}</p>
+                                            </div>
                                         </div>
+                                        <div className="h-10 w-px bg-white/10 hidden md:block"></div>
                                         <div>
-                                            <p className="text-sm opacity-80">Parent Order</p>
-                                            <p className="font-semibold">{subOrder.parentOrder?.parentOrderId || 'N/A'}</p>
+                                            <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">Parent Order</p>
+                                            <p className="font-semibold text-gray-200">{subOrder.parentOrderId}</p>
                                         </div>
+                                        <div className="h-10 w-px bg-white/10 hidden md:block"></div>
                                         <div>
-                                            <p className="text-sm opacity-80">Order Date</p>
-                                            <p className="font-semibold">
-                                                {new Date(subOrder.createdAt).toLocaleDateString('en-IN', {
-                                                    day: 'numeric', month: 'short', year: 'numeric'
-                                                })}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm opacity-80">Total</p>
-                                            <p className="text-xl font-bold">₹{subOrder.total?.toFixed(2)}</p>
+                                            <p className="text-xs uppercase tracking-widest text-gray-400 font-bold">Total Earnt</p>
+                                            <p className="text-2xl font-black text-white">₹{subOrder.subTotal?.toFixed(2)}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Order Body */}
-                                <div className="p-6">
-                                    {/* Status Badge */}
-                                    <div className="flex items-center gap-3 mb-5">
-                                        <span
-                                            className="px-4 py-1.5 rounded-full text-sm font-bold border"
-                                            style={{ backgroundColor: badge.bg, color: badge.color, borderColor: badge.border }}
-                                        >
-                                            {formatStatus(subOrder.status)}
-                                        </span>
-                                        <span className="flex items-center gap-2 text-sm fb-text-secondary">
-                                            <FiTruck />
-                                            {subOrder.deliveryOption === 'self-pickup' ? 'Self Pickup' : 'Delivery Agent'}
-                                        </span>
-                                    </div>
-
-                                    {/* Customer Info */}
-                                    <div className="fb-surface-alt rounded-xl p-4 mb-4 border fb-border">
-                                        <h4 className="font-semibold fb-text mb-2 flex items-center gap-2">
-                                            <FiUser size={16} className="fb-text-primary" />
-                                            Customer Details
-                                        </h4>
-                                        <p className="fb-text-secondary text-sm leading-relaxed">
-                                            <span className="fb-text font-medium">{subOrder.customer?.name}</span><br />
-                                            {subOrder.customer?.phone}<br />
-                                            {subOrder.customer?.address}
-                                        </p>
-                                    </div>
-
-                                    {/* Items */}
-                                    <div className="mb-5">
-                                        <h4 className="font-semibold fb-text mb-3">Order Items</h4>
-                                        <div className="space-y-2">
-                                            {subOrder.items?.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between items-center fb-surface-alt p-3 rounded-lg border fb-border">
-                                                    <div>
-                                                        <p className="font-medium fb-text">{item.name}</p>
-                                                        <p className="text-sm fb-text-secondary">
-                                                            Qty: {item.quantity} × ₹{item.price}
-                                                        </p>
+                                <div className="p-8">
+                                    <div className="flex flex-col lg:flex-row gap-8">
+                                        {/* Left Side: Progress & Status */}
+                                        <div className="flex-1 space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <span
+                                                        className="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest border shadow-sm"
+                                                        style={{ backgroundColor: badge.bg, color: badge.color, borderColor: badge.border }}
+                                                    >
+                                                        {formatStatus(subOrder.orderStatus)}
+                                                    </span>
+                                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg text-xs font-bold text-gray-500 border border-gray-100">
+                                                        <FiTruck size={14} className="text-blue-500" />
+                                                        {subOrder.deliveryOption === 'self-pickup' ? 'Self Pickup' : 'Home Delivery'}
                                                     </div>
-                                                    <p className="font-semibold fb-text-primary">
-                                                        ₹{(item.quantity * item.price).toFixed(2)}
-                                                    </p>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                                                <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
+                                                    <FiClock size={14} />
+                                                    {new Date(subOrder.createdAt).toLocaleDateString('en-IN', {
+                                                        day: 'numeric', month: 'short', year: 'numeric'
+                                                    })}
+                                                </div>
+                                            </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="flex gap-3 flex-wrap">
-                                        {subOrder.status === 'confirmed' && (
-                                            <button
-                                                onClick={() => updateOrderStatus(subOrder._id, 'preparing')}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-opacity hover:opacity-90"
-                                                style={{ backgroundColor: 'var(--color-warning)' }}
-                                            >
-                                                <FiClock />
-                                                Mark as Preparing
-                                            </button>
-                                        )}
-                                        {subOrder.status === 'preparing' && (
-                                            <button
-                                                onClick={() => updateOrderStatus(subOrder._id, 'ready')}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-opacity hover:opacity-90"
-                                                style={{ backgroundColor: 'var(--color-info)' }}
-                                            >
-                                                <FiCheck />
-                                                Mark as Ready
-                                            </button>
-                                        )}
-                                        {subOrder.status === 'ready' && subOrder.deliveryOption === 'self-pickup' && (
-                                            <button
-                                                onClick={() => updateOrderStatus(subOrder._id, 'delivered')}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-opacity hover:opacity-90"
-                                                style={{ backgroundColor: 'var(--color-primary)' }}
-                                            >
-                                                <FiCheck />
-                                                Mark as Picked Up
-                                            </button>
-                                        )}
+                                            {/* Products Section */}
+                                            <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+                                                <h4 className="text-sm font-black text-gray-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                    <div className="w-1.5 h-4 bg-green-500 rounded-full"></div>
+                                                    Order Items ({subOrder.items?.length})
+                                                </h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {subOrder.items?.map((item, idx) => (
+                                                        <div key={idx} className="bg-white p-4 rounded-xl border border-gray-100 flex justify-between items-center group/item hover:border-green-200 transition-colors shadow-sm">
+                                                            <div>
+                                                                <p className="font-bold text-gray-800 group-hover/item:text-green-700 transition-colors">{item.name}</p>
+                                                                <p className="text-xs font-bold text-gray-400 mt-1">
+                                                                    {item.quantity} units × ₹{item.price}
+                                                                </p>
+                                                            </div>
+                                                            <p className="font-black text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">
+                                                                ₹{item.subtotal?.toFixed(2)}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Side: Customer & Actions */}
+                                        <div className="w-full lg:w-80 space-y-6">
+                                            {/* Customer Highlights */}
+                                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 relative overflow-hidden group/customer">
+                                                <div className="absolute -right-4 -top-4 text-green-100 group-hover/customer:text-green-200 transition-colors transform rotate-12">
+                                                    <FiUser size={120} />
+                                                </div>
+                                                <h4 className="text-xs font-black text-green-700 uppercase tracking-widest mb-4 flex items-center gap-2 relative z-10">
+                                                    <FiUser size={14} />
+                                                    Customer Info
+                                                </h4>
+                                                <div className="space-y-3 relative z-10">
+                                                    <div>
+                                                        <p className="text-lg font-black text-gray-800 leading-tight">{subOrder.customerName}</p>
+                                                        <p className="text-sm font-bold text-green-600">{subOrder.customerPhone}</p>
+                                                    </div>
+                                                    <div className="pt-3 border-t border-green-200/50">
+                                                        <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter mb-1">Delivery Address</p>
+                                                        <p className="text-sm text-gray-600 leading-snug">{subOrder.customerAddress}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Order Action Logic */}
+                                            <div className="pt-2">
+                                                {subOrder.orderStatus === 'confirmed' && (
+                                                    <button
+                                                        onClick={() => updateOrderStatus(subOrder._id, 'preparing')}
+                                                        className="w-full group flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-orange-500 text-white font-black uppercase tracking-widest text-sm hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 active:scale-[0.98]"
+                                                    >
+                                                        <FiClock className="group-hover:rotate-12 transition-transform" />
+                                                        Start Preparing
+                                                    </button>
+                                                )}
+                                                {subOrder.orderStatus === 'preparing' && (
+                                                    <button
+                                                        onClick={() => updateOrderStatus(subOrder._id, 'ready')}
+                                                        className="w-full group flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-blue-600 text-white font-black uppercase tracking-widest text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-[0.98]"
+                                                    >
+                                                        <FiCheck className="scale-125" />
+                                                        Mark as Ready
+                                                    </button>
+                                                )}
+                                                {subOrder.orderStatus === 'ready' && subOrder.deliveryOption === 'self-pickup' && (
+                                                    <button
+                                                        onClick={() => updateOrderStatus(subOrder._id, 'delivered')}
+                                                        className="w-full group flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-green-600 text-white font-black uppercase tracking-widest text-sm hover:bg-green-700 transition-all shadow-lg shadow-green-200 active:scale-[0.98]"
+                                                    >
+                                                        <FiCheck className="scale-125" />
+                                                        Confirm Handover
+                                                    </button>
+                                                )}
+                                                {['delivered', 'cancelled'].includes(subOrder.orderStatus) && (
+                                                    <div className={`text-center py-4 rounded-xl border-2 border-dashed font-bold uppercase tracking-widest text-xs ${subOrder.orderStatus === 'delivered' ? 'border-green-100 text-green-400' : 'border-red-100 text-red-400'
+                                                        }`}>
+                                                        {subOrder.orderStatus} Order
+                                                    </div>
+                                                )}
+                                                {subOrder.orderStatus === 'ready' && subOrder.deliveryOption === 'delivery-agent' && (
+                                                    <div className="bg-blue-50 text-blue-700 p-4 rounded-xl text-center border border-blue-100">
+                                                        <p className="text-xs font-black uppercase tracking-widest mb-1">Awaiting Agent</p>
+                                                        <p className="text-xs font-bold opacity-80 leading-tight">Waiting for delivery agent to pick up your order.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

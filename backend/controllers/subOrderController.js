@@ -74,83 +74,76 @@ export const getSubOrderById = async (req, res) => {
 
 export const getFarmerSubOrders = async (req, res) => {
     try {
-        console.log('🌾 Farmer Orders Request Received');
+        console.log('🌾 Farmer Orders API Hit');
 
-        if (!req.user || (!req.user.id && !req.user._id)) {
-            console.log('❌ Auth Error: No user ID in request');
+        // Extract farmerId from the JWT token (set by authMiddleware)
+        const farmerId = req.user.id || req.user._id;
+
+        if (!farmerId) {
             return res.status(401).json({
                 success: false,
-                message: 'Authentication failed'
+                message: 'Unauthorized: Invalid or expired token'
             });
         }
 
-        const farmerId = (req.user.id || req.user._id).toString();
-
-        console.log('🌾 Initializing sub-order search for farmer:', farmerId);
-
-        // Verify SubOrder model is ready
-        if (!SubOrder) {
-            console.error('❌ Model Error: SubOrder model is undefined');
-            throw new Error('Database model error');
-        }
-
+        // Query orders where subOrders.farmerId matches (or vendor.vendorId for legacy)
         const subOrders = await SubOrder.find({
-            'vendor.vendorId': farmerId,
-            'vendor.vendorType': 'farmer'
+            $or: [
+                { farmerId: farmerId },
+                { 'vendor.vendorId': farmerId.toString(), 'vendor.vendorType': 'farmer' }
+            ]
         })
             .populate({
                 path: 'parentOrder',
-                select: 'parentOrderId customer paymentStatus createdAt',
+                select: 'parentOrderId customer',
                 model: 'ParentOrder'
             })
-            .populate('assignedAgent', 'name phone')
             .sort({ createdAt: -1 })
-            .lean(); // Use lean for performance and easier object manipulation
+            .lean();
 
-        console.log(`✅ MongoDB Query Success: Found ${subOrders.length} sub-orders`);
+        if (subOrders.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No sub-orders found for this farmer'
+            });
+        }
 
-        // ✅ Enhance response with customer data
-        const enrichedSubOrders = subOrders.map(subOrder => {
-            // Since we use .lean(), subOrder is already a plain JS object
-            const result = { ...subOrder };
+        // Format each response object as per requirements
+        const formattedSubOrders = subOrders.map(so => ({
+            _id: so._id,
+            subOrderId: so.subOrderId, // Keep for display
+            parentOrderId: so.parentOrder?.parentOrderId || 'N/A',
+            customerName: so.parentOrder?.customer?.name || 'N/A',
+            customerPhone: so.parentOrder?.customer?.phone || 'N/A',
+            customerAddress: so.parentOrder?.customer?.address || 'N/A',
+            items: so.items.map(item => ({
+                productId: item.productId,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                subtotal: (item.price * item.quantity)
+            })),
+            subTotal: so.subtotal,
+            orderStatus: so.status,
+            paymentStatus: so.paymentStatus || (so.parentOrder?.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'),
+            deliveryOption: so.deliveryOption,
+            createdAt: so.createdAt
+        }));
 
-            // Safe extraction of customer data
-            if (subOrder.parentOrder && typeof subOrder.parentOrder === 'object') {
-                result.customer = subOrder.parentOrder.customer || {
-                    name: 'N/A',
-                    email: 'N/A',
-                    phone: 'N/A',
-                    address: 'N/A'
-                };
-            } else {
-                result.customer = {
-                    name: 'N/A',
-                    email: 'N/A',
-                    phone: 'N/A',
-                    address: 'N/A'
-                };
-            }
-
-            return result;
-        });
-
-        console.log('📤 Sending enriched sub-orders to client');
+        console.log(`✅ Successfully fetched ${formattedSubOrders.length} sub-orders for farmer`);
 
         return res.status(200).json({
             success: true,
-            count: enrichedSubOrders.length,
-            subOrders: enrichedSubOrders
+            count: formattedSubOrders.length,
+            subOrders: formattedSubOrders
         });
 
     } catch (error) {
-        console.error('❌ CRITICAL ERROR in getFarmerSubOrders:');
-        console.error('Message:', error.message);
-        console.error('Stack:', error.stack);
-
+        console.error('❌ Database Error in getFarmerSubOrders:', error);
         return res.status(500).json({
             success: false,
-            message: 'Internal server error while fetching orders',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: 'Internal server error while fetching farmer orders',
+            error: error.message
         });
     }
 };

@@ -187,7 +187,7 @@ const CheckoutPage = () => {
         toast.success(`Order placed successfully! Order ID: ${createdOrder.parentOrderId}`, {
           autoClose: 2000
         });
-        
+
         setTimeout(() => {
           navigate('/myorders');
         }, 1500);
@@ -197,9 +197,9 @@ const CheckoutPage = () => {
 
     } catch (err) {
       console.error('❌ Order creation error:', err);
-      
+
       let errorMessage = 'Failed to place order. Please try again.';
-      
+
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.message) {
@@ -411,7 +411,7 @@ const CheckoutPage = () => {
           {/* Order Summary - Multi-Vendor */}
           <div className={checkoutStyles.card}>
             <h2 className={checkoutStyles.sectionTitle}>
-              <FiPackage className="mr-2 text-emerald-300" />
+              <FiPackage className="mr-2 fb-text-primary" />
               Order Summary
             </h2>
 
@@ -422,16 +422,16 @@ const CheckoutPage = () => {
                 const deliveryCharge = calculateVendorDeliveryCharge(group.subtotal, deliveryOption);
 
                 return (
-                  <div key={group.vendorId} className="border border-emerald-700/30 rounded-lg p-4 bg-emerald-900/20">
+                  <div key={group.vendorId} className="border fb-border rounded-lg p-4 fb-surface-alt">
                     {/* Vendor Header */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center">
-                        <FiShoppingBag className="text-emerald-400 mr-2" />
-                        <span className="font-semibold text-emerald-100">
+                        <FiShoppingBag className="fb-text-primary mr-2" />
+                        <span className="font-semibold fb-text">
                           {group.vendorName}
                         </span>
                       </div>
-                      <span className="text-xs bg-emerald-700/50 px-2 py-1 rounded text-emerald-200">
+                      <span className="text-xs fb-primary-subtle px-2 py-1 rounded fb-text-primary border fb-border-primary">
                         {group.vendorType === 'admin' ? 'Admin Store' : 'Farmer'}
                       </span>
                     </div>
@@ -440,10 +440,10 @@ const CheckoutPage = () => {
                     <div className="space-y-2 mb-4">
                       {group.items.map(item => (
                         <div key={item.id || item._id} className="flex justify-between text-sm">
-                          <span className="text-emerald-300">
+                          <span className="fb-text-secondary">
                             {item.name} × {item.quantity}
                           </span>
-                          <span className="text-emerald-100">
+                          <span className="fb-text font-medium">
                             ₹{(item.price * item.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -451,32 +451,32 @@ const CheckoutPage = () => {
                     </div>
 
                     {/* Delivery Options */}
-                    <div className="border-t border-emerald-700/30 pt-3 mt-3">
-                      <label className="block text-sm font-medium text-emerald-300 mb-2">
+                    <div className="border-t fb-divider pt-3 mt-3">
+                      <label className="block text-sm font-medium fb-text-secondary mb-2">
                         <FiTruck className="inline mr-1" />
                         Delivery Option
                       </label>
                       <div className="space-y-2">
                         {/* Self-Pickup (only for farmers) */}
                         {group.vendorType === 'farmer' && (
-                          <label className="flex items-center p-2 rounded border border-emerald-700/50 cursor-pointer hover:bg-emerald-800/20 transition-colors">
+                          <label className="flex items-center p-2 rounded border fb-border cursor-pointer hover:fb-primary-subtle transition-colors">
                             <input
                               type="radio"
                               name={`delivery-${group.vendorId}`}
                               value="self-pickup"
                               checked={deliveryOption === 'self-pickup'}
                               onChange={() => handleDeliveryOptionChange(group.vendorId, 'self-pickup')}
-                              className="h-4 w-4 text-emerald-600"
+                              className="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
                             />
                             <div className="ml-2 flex-1">
-                              <span className="text-sm font-medium text-emerald-100">Self Pickup</span>
-                              <span className="block text-xs text-emerald-400">Free - Collect from farmer</span>
+                              <span className="text-sm font-medium fb-text">Self Pickup</span>
+                              <span className="block text-xs fb-text-muted">Free - Collect from farmer</span>
                             </div>
                           </label>
                         )}
 
                         {/* Delivery Agent */}
-                        <label className="flex items-center p-2 rounded border border-emerald-700/50 cursor-pointer hover:bg-emerald-800/20 transition-colors">
+                        <label className="flex items-center p-2 rounded border fb-border cursor-pointer hover:fb-primary-subtle transition-colors">
                           <input
                             type="radio"
                             name={`delivery-${group.vendorId}`}
@@ -484,13 +484,13 @@ const CheckoutPage = () => {
                             checked={deliveryOption === 'delivery-agent'}
                             onChange={() => handleDeliveryOptionChange(group.vendorId, 'delivery-agent')}
                             disabled={group.vendorType === 'admin'}
-                            className="h-4 w-4 text-emerald-600"
+                            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
                           />
                           <div className="ml-2 flex-1">
-                            <span className="text-sm font-medium text-emerald-100">Delivery Agent</span>
-                            <span className="block text-xs text-emerald-400">
-                              {deliveryCharge === 0 
-                                ? 'Free delivery (order above ₹500)' 
+                            <span className="text-sm font-medium fb-text">Delivery Agent</span>
+                            <span className="block text-xs fb-text-muted">
+                              {deliveryCharge === 0
+                                ? 'Free delivery (order above ₹500)'
                                 : `₹${deliveryCharge} delivery charge`}
                               {group.vendorType === 'admin' && ' (Required for admin products)'}
                             </span>
@@ -500,9 +500,9 @@ const CheckoutPage = () => {
                     </div>
 
                     {/* Vendor Subtotal */}
-                    <div className="border-t border-emerald-700/30 pt-3 mt-3 flex justify-between items-center">
-                      <span className="text-sm text-emerald-300">Vendor Total</span>
-                      <span className="font-medium text-emerald-100">
+                    <div className="border-t fb-divider pt-3 mt-3 flex justify-between items-center">
+                      <span className="text-sm fb-text-secondary">Vendor Total</span>
+                      <span className="font-bold fb-text">
                         ₹{(group.subtotal + deliveryCharge).toFixed(2)}
                       </span>
                     </div>
@@ -512,24 +512,24 @@ const CheckoutPage = () => {
             </div>
 
             {/* Grand Total Section */}
-            <div className="border-t border-emerald-700/50 pt-4 space-y-3">
+            <div className="border-t fb-divider pt-4 space-y-3">
               <div className="flex justify-between">
-                <span className="text-emerald-300">Items Subtotal</span>
-                <span className="font-medium text-emerald-100">
+                <span className="fb-text-secondary">Items Subtotal</span>
+                <span className="font-medium fb-text">
                   ₹{subtotal.toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-emerald-300">Total Delivery Charges</span>
-                <span className="font-medium text-emerald-100">
+                <span className="fb-text-secondary">Total Delivery Charges</span>
+                <span className="font-medium fb-text">
                   ₹{(totalWithDelivery - subtotal).toFixed(2)}
                 </span>
               </div>
-              <div className="flex justify-between pt-3 mt-3 border-t border-emerald-700/50">
-                <span className="text-lg font-bold text-emerald-100">
+              <div className="flex justify-between pt-3 mt-3 border-t fb-divider">
+                <span className="text-lg font-bold fb-text">
                   Grand Total
                 </span>
-                <span className="text-lg font-bold text-emerald-300">
+                <span className="text-2xl font-bold fb-text-primary">
                   ₹{totalWithDelivery.toFixed(2)}
                 </span>
               </div>

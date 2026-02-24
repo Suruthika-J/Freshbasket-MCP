@@ -251,12 +251,14 @@ export const createParentOrder = async (req, res) => {
             const subOrder = new SubOrder({
                 subOrderId,
                 parentOrder: parentOrder._id,
+                farmerId: subOrderData.vendor.vendorType === 'farmer' ? subOrderData.vendor.vendorId : null,
                 vendor: subOrderData.vendor,
                 items: subOrderData.items,
                 subtotal: subOrderData.subtotal,
                 deliveryOption: subOrderData.deliveryOption,
                 deliveryCharge: subOrderData.deliveryCharge,
                 total: subOrderData.total,
+                paymentStatus: paymentMethod === 'Cash on Delivery' ? 'Unpaid' : 'Unpaid', // Matches parent order initial state
                 status: paymentMethod === 'Cash on Delivery' ? 'confirmed' : 'pending',
                 deliveryLocation,
                 trackingEnabled: subOrderData.deliveryOption === 'delivery-agent'
