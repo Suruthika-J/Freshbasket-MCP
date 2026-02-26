@@ -1,0 +1,88 @@
+{
+  "navbar": {
+    "dashboard": "Dashboard",
+    "myProducts": "My Products",
+    "cropListings": "Crop Listings",
+    "addUpdateProducts": "Add/Update Products",
+    "customerOrders": "Customer Orders",
+    "dailyMarketPrice": "Market Prices",
+    "earningsWallet": "Earnings / Wallet",
+    "notifications": "Notifications",
+    "profileSettings": "Profile Settings",
+    "logout": "Logout",
+    "farmer": "Farmer",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode",
+    "selectLanguage": "Select Language"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}!",
+    "tabs": {
+      "analytics": "Analytics",
+      "myProducts": "My Products",
+      "myOrders": "My Orders"
+    },
+    "stats": {
+      "totalProducts": "Total Products",
+      "activeProducts": "Active Products",
+      "lowStock": "Low Stock",
+      "outOfStock": "Out of Stock",
+      "district": "District"
+    },
+    "profile": {
+      "editTitle": "Farmer Profile",
+      "certification": "Certification",
+      "experience": "Experience (Years)",
+      "district": "District",
+      "save": "Save Profile",
+      "saving": "Saving..."
+    }
+  },
+  "analytics": {
+    "title": "Performance Overview",
+    "revenueTrend": "Revenue & Order Trends",
+    "statusBreakdown": "Order Status Breakdown",
+    "topSelling": "Top Selling Products",
+    "inventoryAlerts": "Inventory Alerts (Low Stock)",
+    "revenue": "Total Revenue",
+    "orders": "Total Orders",
+    "completed": "Completed Orders",
+    "listed": "Products Listed",
+    "unitSold": "Units Sold",
+    "currentStock": "Current Stock",
+    "status": "Status",
+    "noSales": "No sales data yet",
+    "filters": {
+      "today": "Today",
+      "week": "This Week",
+      "month": "This Month"
+    }
+  },
+  "orders": {
+    "title": "Customer Orders",
+    "subtitle": "Manage and track your customer orders",
+    "noOrders": "No orders found",
+    "noOrdersDetail": "We haven't received any orders for your products yet.",
+    "subOrderId": "Sub-Order ID",
+    "parentOrder": "Parent Order",
+    "totalEarnt": "Total Earnt",
+    "items": "Order Items",
+    "customerInfo": "Customer Info",
+    "address": "Delivery Address",
+    "startPreparing": "Start Preparing",
+    "markAsReady": "Mark as Ready",
+    "confirmHandover": "Confirm Handover",
+    "order": "Order",
+    "awaitingAgent": "Awaiting Agent",
+    "waitingRef": "Waiting for delivery agent to pick up your order.",
+    "statuses": {
+      "all": "All",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  }
+}

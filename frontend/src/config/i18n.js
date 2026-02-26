@@ -7,6 +7,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from '../locales/en/translation.json';
 import taTranslation from '../locales/ta/translation.json';
 import hiTranslation from '../locales/hi/translation.json';
+import enFarmer from '../locales/en/farmer.json';
+import taFarmer from '../locales/ta/farmer.json';
 
 // Configure i18next
 i18n
@@ -18,10 +20,12 @@ i18n
   .init({
     resources: {
       en: {
-        translation: enTranslation
+        translation: enTranslation,
+        farmer: enFarmer
       },
       ta: {
-        translation: taTranslation
+        translation: taTranslation,
+        farmer: taFarmer
       },
       hi: {
         translation: hiTranslation

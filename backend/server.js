@@ -32,6 +32,9 @@ import reviewRouter from './routes/reviewRoute.js';
 import parentOrderRouter from './routes/parentOrderRoute.js';
 import subOrderRouter from './routes/subOrderRoute.js';
 
+// Farmer specific routes
+import farmerRouter from './routes/farmerRouter.js';
+
 // Voice transcription route
 import voiceRouter from './routes/voiceRoute.js';
 
@@ -147,6 +150,9 @@ app.use('/api/sub-orders', subOrderRouter);
 
 // Legacy order routes (maintained for backward compatibility)
 app.use('/api/orders', orderRouter);
+
+// Farmer analytics and dashboard routes
+app.use('/api/farmer', farmerRouter);
 
 // Chatbot routes (legacy)
 app.use('/api/chatbot', chatbotRouter);

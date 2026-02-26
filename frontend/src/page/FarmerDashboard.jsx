@@ -2,18 +2,27 @@
 // Path: frontend/src/page/FarmerDashboard.jsx
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FiPackage, FiPlus, FiEdit, FiTrash2, FiEye, FiUser, FiSave, FiLogOut, FiAlertTriangle, FiXCircle, FiMessageCircle } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import {
+  FiPackage, FiPlus, FiEdit, FiTrash2, FiEye,
+  FiUser, FiSave, FiAlertTriangle, FiXCircle,
+  FiClipboard, FiBarChart2, FiMapPin
+} from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import Modal from '../components/Modal';
 import StockAdjuster from '../components/StockAdjuster';
 import FarmerSubOrders from '../components/FarmerSubOrders';
+import FarmerAnalytics from '../components/FarmerAnalytics';
+import FarmerNavbar from '../components/FarmerNavbar';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const FarmerDashboard = () => {
+  const { t } = useTranslation('farmer');
   const navigate = useNavigate();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [farmerInfo, setFarmerInfo] = useState(null);
@@ -26,12 +35,32 @@ const FarmerDashboard = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [showLowStockModal, setShowLowStockModal] = useState(false);
   const [showOutOfStockModal, setShowOutOfStockModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('products'); // products, orders
+  const [activeTab, setActiveTab] = useState('products'); // products, orders, analytics
 
   useEffect(() => {
     fetchFarmerProducts();
     fetchFarmerInfo();
-  }, []);
+
+    // Handle initial state from navigation
+    if (location.state?.tab) setActiveTab(location.state.tab);
+    if (location.state?.openProfile) setShowProfileEdit(true);
+
+    // Listen for tab switch events from profile dropdown
+    const handleTabSwitch = (e) => {
+      if (e.detail === 'profile') {
+        setShowProfileEdit(true);
+        // If profile edit is opened, scroll to it smoothly
+        setTimeout(() => {
+          document.getElementById('profile-edit-section')?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else if (e.detail) {
+        setActiveTab(e.detail);
+        setShowProfileEdit(false);
+      }
+    };
+    window.addEventListener('switchFarmerTab', handleTabSwitch);
+    return () => window.removeEventListener('switchFarmerTab', handleTabSwitch);
+  }, [location]);
 
   const fetchFarmerInfo = async () => {
     try {
@@ -51,8 +80,6 @@ const FarmerDashboard = () => {
       if (response.data.success) {
         const user = response.data.data;
         setFarmerInfo(user);
-
-        // Pre-fill profile form with existing data
         setProfileForm({
           certification: user.certification || 'None',
           experience: user.experience || '',
@@ -62,7 +89,6 @@ const FarmerDashboard = () => {
     } catch (error) {
       console.error('Error fetching farmer info:', error);
       if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Session expired. Please login again.');
         handleLogout();
       }
     }
@@ -72,11 +98,6 @@ const FarmerDashboard = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('authToken');
-      if (!token) {
-        handleLogout();
-        return;
-      }
-
       const response = await axios.get(`${API_BASE_URL}/api/products/farmer-products`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -89,12 +110,6 @@ const FarmerDashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching products:', error);
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        toast.error('Session expired. Please login again.');
-        handleLogout();
-      } else {
-        toast.error('Failed to load products');
-      }
     } finally {
       setLoading(false);
     }
@@ -103,10 +118,8 @@ const FarmerDashboard = () => {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileLoading(true);
-
     try {
       const token = localStorage.getItem('authToken');
-
       const response = await axios.put(
         `${API_BASE_URL}/api/user/farmer/profile`,
         {
@@ -114,557 +127,389 @@ const FarmerDashboard = () => {
           experience: Number(profileForm.experience),
           district: profileForm.district
         },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
         toast.success('Profile updated successfully!');
         setFarmerInfo(response.data.user);
         setShowProfileEdit(false);
-
-        // Update localStorage with new user data
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-        const updatedUser = { ...userData, ...response.data.user };
-        localStorage.setItem('userData', JSON.stringify(updatedUser));
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
       toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setProfileLoading(false);
     }
   };
 
-  const handleAddProduct = () => {
-    navigate('/farmer/add-product');
-  };
-
-  const handleEditProduct = (productId) => {
-    navigate(`/farmer/edit-product/${productId}`);
-  };
-
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
-
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.delete(`${API_BASE_URL}/api/products/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
       if (response.data.success) {
         toast.success('Product deleted successfully');
         fetchFarmerProducts();
       }
     } catch (error) {
-      console.error('Error deleting product:', error);
       toast.error('Failed to delete product');
     }
   };
 
-  const handleLowStockClick = () => {
-    setShowLowStockModal(true);
-  };
-
-  const handleOutOfStockClick = () => {
-    setShowOutOfStockModal(true);
-  };
-
   const handleStockUpdate = (productId, newStock) => {
-    // Update the local state to reflect the stock change immediately
     setProducts(prevProducts =>
       prevProducts.map(product =>
-        product._id === productId
-          ? { ...product, stock: newStock }
-          : product
+        product._id === productId ? { ...product, stock: newStock } : product
       )
     );
   };
 
   const handleLogout = () => {
-    toast.info('Logging out...', {
-      position: 'top-center',
-      autoClose: 1200,
-    });
-
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
     localStorage.removeItem('userRole');
-
     window.dispatchEvent(new Event('authStateChanged'));
-
-    setTimeout(() => {
-      navigate('/', { replace: true });
-    }, 400);
+    navigate('/', { replace: true });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen fb-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: 'var(--color-primary)' }}></div>
-          <p className="mt-4 fb-text-secondary">Loading dashboard...</p>
+      <div className="min-h-screen bg-gray-50">
+        <FarmerNavbar farmerInfo={farmerInfo} />
+        <div className="flex items-center justify-center p-20 text-center">
+          <div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <p className="mt-4 text-gray-500 font-medium">{t('common.loading') || 'Loading Farmer Portal...'}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen fb-bg">
-      {/* Header */}
-      <div className="fb-surface shadow-sm border-b fb-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold fb-text">Farmer Dashboard</h1>
-              {farmerInfo && (
-                <p className="fb-text-secondary mt-1">Welcome back, {farmerInfo.name}!</p>
-              )}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowProfileEdit(!showProfileEdit)}
-                className="fb-btn-secondary px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <FiUser className="w-5 h-5" />
-                {showProfileEdit ? 'Hide Profile' : 'Edit Profile'}
-              </button>
-              <button
-                onClick={handleAddProduct}
-                className="fb-btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
-              >
-                <FiPlus className="w-5 h-5" />
-                Add Product
-              </button>
-              <button
-                onClick={() => navigate('/farmer/market-prices')}
-                className="px-4 py-2 rounded-lg flex items-center gap-2 text-white transition-colors"
-                style={{ background: 'linear-gradient(135deg, #E65100, #EF6C00)' }}
-              >
-                <FiMessageCircle className="w-5 h-5" />
-                Market Prices
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-white"
-                style={{ backgroundColor: 'var(--color-error)' }}
-              >
-                <FiLogOut className="w-5 h-5" />
-                Logout
-              </button>
-            </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <FarmerNavbar farmerInfo={farmerInfo} />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+              {t('dashboard.welcome', { name: farmerInfo?.name || 'Farmer' })}
+            </h1>
+            <p className="text-gray-500 font-medium mt-1">Manage your harvests and track your growth.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowProfileEdit(!showProfileEdit)}
+              className="bg-white px-5 py-2.5 rounded-xl font-bold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
+            >
+              <FiUser className="text-green-600" />
+              {showProfileEdit ? 'Hide Details' : 'View Profile'}
+            </button>
+            <button
+              onClick={() => navigate('/farmer/add-product')}
+              className="bg-green-600 px-6 py-2.5 rounded-xl font-bold text-white hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-100"
+            >
+              <FiPlus className="w-5 h-5" />
+              {t('navbar.addUpdateProducts')}
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Profile Edit Section */}
-      {showProfileEdit && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="fb-card rounded-xl p-6">
-            <h2 className="text-xl font-semibold fb-text mb-4">Farmer Profile</h2>
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Profile Edit Modal-like Section */}
+        {showProfileEdit && (
+          <div id="profile-edit-section" className="mb-8 animate-in slide-in-from-top-4 duration-300">
+            <div className="bg-white rounded-3xl p-8 shadow-xl border border-green-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <FiUser className="w-32 h-32" />
+              </div>
+              <h2 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                <span className="bg-green-100 p-2 rounded-lg"><FiUser className="text-green-600" /></span>
+                {t('dashboard.profile.editTitle')}
+              </h2>
+              <form onSubmit={handleProfileSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium fb-text-secondary mb-2">
-                    Certification *
+                  <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    {t('dashboard.profile.certification')}
                   </label>
                   <select
                     value={profileForm.certification}
                     onChange={(e) => setProfileForm({ ...profileForm, certification: e.target.value })}
-                    className="fb-input w-full px-3 py-2 rounded-lg"
+                    className="w-full px-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-green-500 transition-all font-semibold"
                     required
                   >
-                    <option value="">Select Certification</option>
                     <option value="Organic">Organic</option>
                     <option value="FSSAI">FSSAI</option>
                     <option value="None">None</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium fb-text-secondary mb-2">
-                    Experience (Years) *
+                  <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    {t('dashboard.profile.experience')}
                   </label>
                   <input
                     type="number"
-                    min="0"
                     value={profileForm.experience}
                     onChange={(e) => setProfileForm({ ...profileForm, experience: e.target.value })}
-                    className="fb-input w-full px-3 py-2 rounded-lg"
-                    placeholder="Enter years of experience"
+                    className="w-full px-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-green-500 transition-all font-semibold"
                     required
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium fb-text-secondary mb-2">
-                    District *
+                  <label className="block text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+                    {t('dashboard.profile.district')}
                   </label>
                   <input
                     type="text"
                     value={profileForm.district}
                     onChange={(e) => setProfileForm({ ...profileForm, district: e.target.value })}
-                    className="fb-input w-full px-3 py-2 rounded-lg"
-                    placeholder="Enter your district"
+                    className="w-full px-4 py-3 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-green-500 transition-all font-semibold"
                     required
                   />
                 </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={profileLoading}
-                  className="fb-btn-primary px-6 py-2 rounded-lg flex items-center gap-2 disabled:opacity-50"
-                >
-                  {profileLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <FiSave className="w-5 h-5" />
-                      Save Profile
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="fb-card rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="fb-primary-subtle rounded-full p-3">
-                <FiPackage className="w-6 h-6 fb-text-primary" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium fb-text-secondary">Total Products</p>
-                <p className="text-2xl font-bold fb-text">{products.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="fb-card rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="rounded-full p-3" style={{ backgroundColor: 'rgba(2, 119, 189, 0.12)' }}>
-                <FiEye className="w-6 h-6" style={{ color: 'var(--color-info)' }} />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium fb-text-secondary">Active Products</p>
-                <p className="text-2xl font-bold fb-text">
-                  {products.filter(p => p.stock > 0).length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="fb-card rounded-xl p-6 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={handleLowStockClick}
-          >
-            <div className="flex items-center">
-              <div className="rounded-full p-3" style={{ backgroundColor: 'rgba(245, 127, 23, 0.12)' }}>
-                <FiAlertTriangle className="w-6 h-6" style={{ color: 'var(--color-warning)' }} />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium fb-text-secondary">Low Stock</p>
-                <p className="text-2xl font-bold fb-text">
-                  {products.filter(p => p.stock > 0 && p.stock < 10).length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="fb-card rounded-xl p-6 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={handleOutOfStockClick}
-          >
-            <div className="flex items-center">
-              <div className="rounded-full p-3" style={{ backgroundColor: 'rgba(198, 40, 40, 0.12)' }}>
-                <FiXCircle className="w-6 h-6" style={{ color: 'var(--color-error)' }} />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium fb-text-secondary">Out of Stock</p>
-                <p className="text-2xl font-bold fb-text">
-                  {products.filter(p => p.stock === 0).length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="fb-card rounded-xl p-6">
-            <div className="flex items-center">
-              <div className="rounded-full p-3" style={{ backgroundColor: 'rgba(123, 31, 162, 0.12)' }}>
-                <FiUser className="w-6 h-6" style={{ color: '#7B1FA2' }} />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium fb-text-secondary">District</p>
-                <p className="text-lg font-bold fb-text">
-                  {farmerInfo?.district || 'Not Set'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="fb-card rounded-xl mb-6">
-          <div className="border-b fb-border">
-            <nav className="flex -mb-px">
-              <button
-                onClick={() => setActiveTab('products')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'products'
-                  ? 'fb-text-primary'
-                  : 'border-transparent fb-text-muted hover:fb-text-secondary'
-                  }`}
-                style={activeTab === 'products' ? { borderBottomColor: 'var(--color-primary)' } : {}}
-              >
-                <div className="flex items-center gap-2">
-                  <FiPackage />
-                  My Products
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('orders')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'orders'
-                  ? 'fb-text-primary'
-                  : 'border-transparent fb-text-muted hover:fb-text-secondary'
-                  }`}
-                style={activeTab === 'orders' ? { borderBottomColor: 'var(--color-primary)' } : {}}
-              >
-                <div className="flex items-center gap-2">
-                  <FiPackage />
-                  My Orders
-                </div>
-              </button>
-            </nav>
-          </div>
-        </div>
-
-        {/* Products Table */}
-        {activeTab === 'products' && (
-          <div className="fb-card rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b fb-border">
-              <h2 className="text-lg font-semibold fb-text">Your Products</h2>
-            </div>
-            <div className="overflow-x-auto">
-              {products.length === 0 ? (
-                <div className="text-center py-12">
-                  <FiPackage className="w-12 h-12 fb-text-muted mx-auto mb-4" />
-                  <h3 className="text-lg font-medium fb-text mb-2">No products yet</h3>
-                  <p className="fb-text-secondary mb-4">Start by adding your first product</p>
+                <div className="md:col-span-3 flex justify-end gap-3 mt-4">
                   <button
-                    onClick={handleAddProduct}
-                    className="fb-btn-primary px-4 py-2 rounded-lg inline-flex items-center gap-2"
+                    type="submit"
+                    disabled={profileLoading}
+                    className="bg-green-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-green-100 hover:bg-green-700 transition-all disabled:opacity-50"
                   >
-                    <FiPlus className="w-5 h-5" />
-                    Add Your First Product
+                    {profileLoading ? t('dashboard.profile.saving') : t('dashboard.profile.save')}
                   </button>
                 </div>
-              ) : (
-                <table className="min-w-full divide-y fb-border">
-                  <thead className="fb-table-header">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium fb-text-muted uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium fb-text-muted uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium fb-text-muted uppercase tracking-wider">Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium fb-text-muted uppercase tracking-wider">Stock</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium fb-text-muted uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium fb-text-muted uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="fb-surface divide-y fb-border">
-                    {products.map((product) => (
-                      <tr key={product._id} className="fb-table-row">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <img
-                                className="h-10 w-10 rounded-lg object-cover"
-                                src={`${API_BASE_URL}${product.imageUrl}`}
-                                alt={product.name}
-                                onError={(e) => { e.target.src = '/placeholder-product.png'; }}
-                              />
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium fb-text">{product.name}</div>
-                              <div className="text-sm fb-text-muted truncate max-w-xs">{product.description}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm fb-text">{product.category}</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm fb-text">₹{product.price}</span>
-                          {product.oldPrice && product.oldPrice > product.price && (
-                            <span className="text-sm fb-text-muted line-through ml-2">₹{product.oldPrice}</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <StockAdjuster
-                            productId={product._id}
-                            initialStock={product.stock}
-                            onStockUpdate={handleStockUpdate}
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.stock > 0 ? 'fb-badge-success' : 'fb-badge-error'
-                            }`}>
-                            {product.stock > 0 ? 'Active' : 'Out of Stock'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleEditProduct(product._id)}
-                            className="fb-text-primary hover:opacity-70 mr-4 transition-opacity"
-                          >
-                            <FiEdit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(product._id)}
-                            className="transition-opacity hover:opacity-70"
-                            style={{ color: 'var(--color-error)' }}
-                          >
-                            <FiTrash2 className="w-5 h-5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+              </form>
             </div>
           </div>
         )}
 
-        {/* Orders Tab */}
-        {activeTab === 'orders' && (
-          <div className="fb-card rounded-xl p-6">
-            <FarmerSubOrders />
-          </div>
-        )}
-      </div>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          <StatCard
+            icon={FiPackage}
+            label={t('dashboard.stats.totalProducts')}
+            value={products.length}
+            color="green"
+          />
+          <StatCard
+            icon={FiEye}
+            label={t('dashboard.stats.activeProducts')}
+            value={products.filter(p => p.stock > 0).length}
+            color="blue"
+          />
+          <StatCard
+            icon={FiAlertTriangle}
+            label={t('dashboard.stats.lowStock')}
+            value={products.filter(p => p.stock > 0 && p.stock < 10).length}
+            color="orange"
+            onClick={() => setShowLowStockModal(true)}
+          />
+          <StatCard
+            icon={FiXCircle}
+            label={t('dashboard.stats.outOfStock')}
+            value={products.filter(p => p.stock === 0).length}
+            color="red"
+            onClick={() => setShowOutOfStockModal(true)}
+          />
+          <StatCard
+            icon={FiMapPin}
+            label={t('dashboard.stats.district')}
+            value={farmerInfo?.district || '-'}
+            color="purple"
+          />
+        </div>
 
-      {/* Low Stock Modal */}
+        {/* Main Content Tabs */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex border-b border-gray-100 p-2 gap-2 bg-gray-50/50">
+            <TabButton
+              active={activeTab === 'products'}
+              onClick={() => setActiveTab('products')}
+              icon={FiPackage}
+              label={t('dashboard.tabs.myProducts')}
+            />
+            <TabButton
+              active={activeTab === 'orders'}
+              onClick={() => setActiveTab('orders')}
+              icon={FiClipboard}
+              label={t('dashboard.tabs.myOrders')}
+            />
+            <TabButton
+              active={activeTab === 'analytics'}
+              onClick={() => setActiveTab('analytics')}
+              icon={FiBarChart2}
+              label={t('dashboard.tabs.analytics')}
+            />
+          </div>
+
+          <div className="p-6">
+            {activeTab === 'products' && (
+              <div className="animate-in fade-in duration-500">
+                {products.length === 0 ? (
+                  <div className="text-center py-20">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FiPackage className="w-10 h-10 text-gray-300" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">No products listed</h3>
+                    <p className="text-gray-500 mt-2">Start your digital farm by adding your first crop.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="text-gray-400 text-[10px] font-black uppercase tracking-widest border-b border-gray-50">
+                          <th className="pb-4 pt-2">Product Details</th>
+                          <th className="pb-4 pt-2">Category</th>
+                          <th className="pb-4 pt-2">Price</th>
+                          <th className="pb-4 pt-2">Inventory</th>
+                          <th className="pb-4 pt-2 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {products.map(product => (
+                          <tr key={product._id} className="group hover:bg-gray-50/50 transition-colors">
+                            <td className="py-5">
+                              <div className="flex items-center gap-4">
+                                <img
+                                  src={`${API_BASE_URL}${product.imageUrl}`}
+                                  className="w-12 h-12 rounded-xl object-cover shadow-sm bg-gray-100"
+                                  alt={product.name}
+                                />
+                                <div>
+                                  <p className="font-bold text-gray-900">{product.name}</p>
+                                  <p className="text-xs text-gray-500 truncate max-w-[200px]">{product.description}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-5">
+                              <span className="px-3 py-1 bg-gray-100 rounded-lg text-[10px] font-black text-gray-600 uppercase">
+                                {product.category}
+                              </span>
+                            </td>
+                            <td className="py-5">
+                              <p className="font-bold text-gray-900">₹{product.price}</p>
+                            </td>
+                            <td className="py-5">
+                              <StockAdjuster
+                                productId={product._id}
+                                initialStock={product.stock}
+                                onStockUpdate={handleStockUpdate}
+                              />
+                            </td>
+                            <td className="py-5 text-right">
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => navigate(`/farmer/edit-product/${product._id}`)}
+                                  className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm"
+                                >
+                                  <FiEdit />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(product._id)}
+                                  className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                                >
+                                  <FiTrash2 />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'orders' && <FarmerSubOrders />}
+            {activeTab === 'analytics' && <FarmerAnalytics />}
+          </div>
+        </div>
+      </main>
+
+      {/* Modals */}
       <Modal
         isOpen={showLowStockModal}
         onClose={() => setShowLowStockModal(false)}
-        title="Low Stock Products"
+        title="Low Stock Warning"
         size="lg"
       >
-        <div className="p-6">
-          {products.filter(p => p.stock > 0 && p.stock < 10).length === 0 ? (
-            <div className="text-center py-8">
-              <FiAlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Low Stock Products</h3>
-              <p className="text-gray-600">All your products have sufficient stock levels.</p>
+        <div className="p-6 space-y-4">
+          {products.filter(p => p.stock > 0 && p.stock < 10).map(product => (
+            <div key={product._id} className="flex items-center justify-between p-4 bg-orange-50 rounded-2xl border border-orange-100">
+              <div className="flex items-center gap-4">
+                <img src={`${API_BASE_URL}${product.imageUrl}`} className="w-12 h-12 rounded-xl object-cover" />
+                <div>
+                  <p className="font-bold text-gray-900">{product.name}</p>
+                  <p className="text-xs text-orange-600 font-bold uppercase">Stock: {product.stock}</p>
+                </div>
+              </div>
+              <button onClick={() => { setShowLowStockModal(false); navigate(`/farmer/edit-product/${product._id}`); }} className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-orange-700">Update</button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {products
-                .filter(p => p.stock > 0 && p.stock < 10)
-                .map((product) => (
-                  <div key={product._id} className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={`${API_BASE_URL}${product.imageUrl}`}
-                        alt={product.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                        onError={(e) => {
-                          e.target.src = '/placeholder-product.png';
-                        }}
-                      />
-                      <div>
-                        <h4 className="font-medium text-gray-900">{product.name}</h4>
-                        <p className="text-sm text-gray-600">{product.category}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">₹{product.price}</p>
-                      <p className="text-sm text-yellow-600 font-medium">
-                        Stock: {product.stock} {product.unit}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowLowStockModal(false);
-                        handleEditProduct(product._id);
-                      }}
-                      className="ml-4 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded text-sm transition-colors"
-                    >
-                      Update Stock
-                    </button>
-                  </div>
-                ))}
-            </div>
-          )}
+          ))}
         </div>
       </Modal>
 
-      {/* Out of Stock Modal */}
       <Modal
         isOpen={showOutOfStockModal}
         onClose={() => setShowOutOfStockModal(false)}
-        title="Out of Stock Products"
+        title="Out of Stock Items"
         size="lg"
       >
-        <div className="p-6">
-          {products.filter(p => p.stock === 0).length === 0 ? (
-            <div className="text-center py-8">
-              <FiXCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Out of Stock Products</h3>
-              <p className="text-gray-600">All your products are in stock!</p>
+        <div className="p-6 space-y-4">
+          {products.filter(p => p.stock === 0).map(product => (
+            <div key={product._id} className="flex items-center justify-between p-4 bg-red-50 rounded-2xl border border-red-100">
+              <div className="flex items-center gap-4">
+                <img src={`${API_BASE_URL}${product.imageUrl}`} className="w-12 h-12 rounded-xl object-cover" />
+                <div>
+                  <p className="font-bold text-gray-900">{product.name}</p>
+                  <p className="text-xs text-red-600 font-bold uppercase tracking-tight">Requires Immediate Restock</p>
+                </div>
+              </div>
+              <button onClick={() => { setShowOutOfStockModal(false); navigate(`/farmer/edit-product/${product._id}`); }} className="bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-red-700 transition-all">Restock</button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {products
-                .filter(p => p.stock === 0)
-                .map((product) => (
-                  <div key={product._id} className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={`${API_BASE_URL}${product.imageUrl}`}
-                        alt={product.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                        onError={(e) => {
-                          e.target.src = '/placeholder-product.png';
-                        }}
-                      />
-                      <div>
-                        <h4 className="font-medium text-gray-900">{product.name}</h4>
-                        <p className="text-sm text-gray-600">{product.category}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">₹{product.price}</p>
-                      <p className="text-sm text-red-600 font-medium">Out of Stock</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowOutOfStockModal(false);
-                        handleEditProduct(product._id);
-                      }}
-                      className="ml-4 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
-                    >
-                      Restock
-                    </button>
-                  </div>
-                ))}
-            </div>
-          )}
+          ))}
         </div>
       </Modal>
     </div>
   );
 };
+
+// Internal Components for cleaner code
+const StatCard = ({ icon: Icon, label, value, color, onClick }) => {
+  const colors = {
+    green: 'bg-green-50 text-green-600 shadow-green-100',
+    blue: 'bg-blue-50 text-blue-600 shadow-blue-100',
+    orange: 'bg-orange-50 text-orange-600 shadow-orange-100',
+    red: 'bg-red-50 text-red-600 shadow-red-100',
+    purple: 'bg-purple-50 text-purple-600 shadow-purple-100'
+  };
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all hover:scale-[1.02] ${onClick ? 'cursor-pointer hover:shadow-md' : ''}`}
+    >
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${colors[color]}`}>
+        <Icon className="w-6 h-6" />
+      </div>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</p>
+      <p className="text-2xl font-black text-gray-900 mt-1">{value}</p>
+    </div>
+  );
+};
+
+const TabButton = ({ active, onClick, icon: Icon, label }) => (
+  <button
+    onClick={onClick}
+    className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl text-sm font-bold transition-all ${active
+      ? 'bg-white text-green-600 shadow-xl shadow-green-50 z-10 scale-105'
+      : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
+      }`}
+  >
+    <Icon className={`w-4 h-4 ${active ? 'text-green-600' : 'text-gray-300'}`} />
+    {label}
+  </button>
+);
 
 export default FarmerDashboard;
