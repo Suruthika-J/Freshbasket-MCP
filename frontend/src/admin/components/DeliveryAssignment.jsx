@@ -26,7 +26,8 @@ const DeliveryAssignment = () => {
             });
 
             if (response.data.success) {
-                setPendingDeliveries(response.data.subOrders || []);
+                // Backend returns { success: true, count: X, pendingDeliveries: [...] }
+                setPendingDeliveries(response.data.pendingDeliveries || []);
             }
         } catch (error) {
             console.error('Error fetching pending deliveries:', error);
@@ -54,9 +55,10 @@ const DeliveryAssignment = () => {
     const assignAgent = async (subOrderId, agentId) => {
         try {
             const token = localStorage.getItem('authToken');
-            const response = await axios.post(
-                `${API_BASE_URL}/api/sub-orders/admin/assign-agent`,
-                { subOrderId, agentId },
+            // Updated to PATCH /api/sub-orders/:id/assign-delivery-agent
+            const response = await axios.patch(
+                `${API_BASE_URL}/api/sub-orders/${subOrderId}/assign-delivery-agent`,
+                { agentId },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -121,11 +123,11 @@ const DeliveryAssignment = () => {
                                             Customer
                                         </h4>
                                         <p className="text-sm text-gray-600">
-                                            {subOrder.customer?.name}<br />
-                                            {subOrder.customer?.phone}<br />
+                                            {subOrder.parentOrder?.customer?.name || 'N/A'}<br />
+                                            {subOrder.parentOrder?.customer?.phone || 'N/A'}<br />
                                             <span className="flex items-center gap-1 mt-1">
                                                 <FiMapPin size={14} />
-                                                {subOrder.customer?.address}
+                                                {subOrder.parentOrder?.customer?.address || 'N/A'}
                                             </span>
                                         </p>
                                     </div>

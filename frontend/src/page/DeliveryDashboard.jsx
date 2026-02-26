@@ -44,7 +44,7 @@ const DeliveryDashboard = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
-    
+
     // NEW: Location tracking state - PERSISTENT ACROSS REFRESHES
     const [isSharing, setIsSharing] = useState(() => {
         // Check localStorage for persistent sharing state
@@ -82,7 +82,7 @@ const DeliveryDashboard = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('authToken');
-            
+
             if (!token) {
                 toast.error('Please login again');
                 navigate('/login');
@@ -90,12 +90,13 @@ const DeliveryDashboard = () => {
             }
 
             const response = await axios.get(
-                'http://localhost:4000/api/agent/orders',
+                `${API_BASE_URL}/api/sub-orders/delivery-agent`,
                 { headers: getAuthHeaders() }
             );
 
             if (response.data.success) {
-                setOrders(response.data.orders);
+                // Backend returns { success: true, count: X, subOrders: [...] }
+                setOrders(response.data.subOrders);
             }
         } catch (error) {
             console.error('Fetch orders error:', error);
@@ -121,7 +122,7 @@ const DeliveryDashboard = () => {
         if (isSharing && activeOrderId) {
             // Find the active order and resume sharing
             const activeOrder = orders.find(order => order._id === activeOrderId);
-            if (activeOrder && (activeOrder.status === 'Shipped' || activeOrder.status === 'Processing' || activeOrder.status === 'Delivered')) {
+            if (activeOrder && (activeOrder.deliveryStatus === 'PICKED_UP' || activeOrder.deliveryStatus === 'ASSIGNED')) {
                 console.log('Resuming location sharing for order:', activeOrderId);
                 startLocationSharing(activeOrder);
             } else {
@@ -145,14 +146,15 @@ const DeliveryDashboard = () => {
     const updateOrderStatus = async (orderId, newStatus) => {
         setActionLoading(true);
         try {
+            // Updated to PATCH /api/sub-orders/:id/status
             const response = await axios.patch(
-                `http://localhost:4000/api/agent/orders/${orderId}/status`,
-                { status: newStatus },
+                `${API_BASE_URL}/api/sub-orders/${orderId}/status`,
+                { deliveryStatus: newStatus },
                 { headers: getAuthHeaders() }
             );
 
             if (response.data.success) {
-                toast.success(response.data.message);
+                toast.success(`Order marked as ${newStatus}`);
                 fetchOrders();
                 setIsModalOpen(false);
             }
@@ -290,12 +292,12 @@ const DeliveryDashboard = () => {
         toast.info('Location sharing stopped');
     };
 
-    const updateAgentLocation = async (orderId, latitude, longitude) => {
+    const updateAgentLocation = async (subOrderId, latitude, longitude) => {
         try {
             await axios.post(
-                'http://localhost:4000/api/orders/agent/location',
+                `${API_BASE_URL}/api/sub-orders/agent/update-location`,
                 {
-                    orderId,
+                    subOrderId,
                     latitude,
                     longitude
                 },
@@ -363,15 +365,15 @@ const DeliveryDashboard = () => {
     // Build route line
     const getRouteLine = () => {
         const points = [];
-        
+
         // Store location
         points.push([9.1700, 77.8700]);
-        
+
         // Current location
         if (currentLocation) {
             points.push([currentLocation.latitude, currentLocation.longitude]);
         }
-        
+
         // Delivery location (if geocoded)
         if (selectedOrder?.deliveryLocation) {
             points.push([
@@ -379,7 +381,7 @@ const DeliveryDashboard = () => {
                 selectedOrder.deliveryLocation.longitude
             ]);
         }
-        
+
         return points;
     };
 
@@ -543,25 +545,28 @@ const DeliveryDashboard = () => {
                                     {orders.map((order) => (
                                         <tr key={order._id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 text-sm font-medium text-blue-600">
-                                                {order.orderId}
+                                                {order.subOrderId}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-medium text-gray-900">
-                                                    {order.customer?.name || 'N/A'}
+                                                    {order.parentOrder?.customer?.name || 'N/A'}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                                    {order.customer?.phone || 'N/A'}
+                                                    {order.parentOrder?.customer?.phone || 'N/A'}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-500">
-                                                {order.date || new Date(order.createdAt).toLocaleDateString()}
+                                                {new Date(order.createdAt).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                                 ₹{order.total?.toFixed(2) || '0.00'}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                                    {order.status}
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.deliveryStatus === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                                    order.deliveryStatus === 'PICKED_UP' ? 'bg-blue-100 text-blue-800' :
+                                                        'bg-yellow-100 text-yellow-800'
+                                                    }`}>
+                                                    {order.deliveryStatus || 'ASSIGNED'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
@@ -619,11 +624,10 @@ const DeliveryDashboard = () => {
                                 <button
                                     onClick={isSharing ? stopLocationSharing : () => startLocationSharing(selectedOrder)}
                                     disabled={false}
-                                    className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                                        isSharing
-                                            ? 'bg-red-600 hover:bg-red-700 text-white'
-                                            : 'bg-green-600 hover:bg-green-700 text-white'
-                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${isSharing
+                                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                                        : 'bg-green-600 hover:bg-green-700 text-white'
+                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                                 >
                                     {isSharing ? (
                                         <>
@@ -726,10 +730,10 @@ const DeliveryDashboard = () => {
                                 Customer Information
                             </h3>
                             <div className="space-y-2">
-                                <p><strong>Name:</strong> {selectedOrder.customer?.name || 'N/A'}</p>
-                                <p><strong>Phone:</strong> {selectedOrder.customer?.phone || 'N/A'}</p>
-                                <p><strong>Email:</strong> {selectedOrder.customer?.email || 'N/A'}</p>
-                                <p><strong>Address:</strong> {selectedOrder.customer?.address || 'N/A'}</p>
+                                <p><strong>Name:</strong> {selectedOrder.parentOrder?.customer?.name || 'N/A'}</p>
+                                <p><strong>Phone:</strong> {selectedOrder.parentOrder?.customer?.phone || 'N/A'}</p>
+                                <p><strong>Email:</strong> {selectedOrder.parentOrder?.customer?.email || 'N/A'}</p>
+                                <p><strong>Address:</strong> {selectedOrder.parentOrder?.customer?.address || 'N/A'}</p>
                             </div>
                         </div>
 
@@ -787,30 +791,23 @@ const DeliveryDashboard = () => {
                         </div>
 
                         {/* Status Update Buttons */}
-                        {selectedOrder.status !== 'Delivered' && selectedOrder.status !== 'Cancelled' && (
+                        {selectedOrder.deliveryStatus !== 'DELIVERED' && selectedOrder.status !== 'cancelled' && (
                             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                                {selectedOrder.status === 'Pending' && (
+                                {/* Only allow PICKED_UP if currently ASSIGNED */}
+                                {selectedOrder.deliveryStatus === 'ASSIGNED' && (
                                     <button
-                                        onClick={() => updateOrderStatus(selectedOrder._id, 'Processing')}
+                                        onClick={() => updateOrderStatus(selectedOrder._id, 'PICKED_UP')}
                                         disabled={actionLoading}
                                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                                     >
-                                        {actionLoading ? 'Updating...' : 'Mark as Processing'}
+                                        {actionLoading ? 'Updating...' : 'Mark as Picked Up'}
                                     </button>
                                 )}
-                                {selectedOrder.status === 'Processing' && (
+
+                                {/* Only allow DELIVERED if currently PICKED_UP */}
+                                {selectedOrder.deliveryStatus === 'PICKED_UP' && (
                                     <button
-                                        onClick={() => updateOrderStatus(selectedOrder._id, 'Shipped')}
-                                        disabled={actionLoading}
-                                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center"
-                                    >
-                                        <FiTruck className="mr-2" />
-                                        {actionLoading ? 'Updating...' : 'Mark as Shipped'}
-                                    </button>
-                                )}
-                                {selectedOrder.status === 'Shipped' && (
-                                    <button
-                                        onClick={() => updateOrderStatus(selectedOrder._id, 'Delivered')}
+                                        onClick={() => updateOrderStatus(selectedOrder._id, 'DELIVERED')}
                                         disabled={actionLoading}
                                         className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center"
                                     >

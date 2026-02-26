@@ -56,6 +56,15 @@ const parentOrderSchema = new mongoose.Schema({
         enum: ['pending', 'processing', 'partially-delivered', 'completed', 'cancelled'],
         default: 'pending'
     },
+    deliveryType: {
+        type: String,
+        enum: ['self_pickup', 'delivery_agent', 'mixed'],
+        default: 'delivery_agent'
+    },
+    deliveryRequired: {
+        type: Boolean,
+        default: true
+    },
     date: {
         type: Date,
         default: Date.now,
@@ -68,22 +77,22 @@ const parentOrderSchema = new mongoose.Schema({
 });
 
 // Virtual to get sub-order count
-parentOrderSchema.virtual('subOrderCount').get(function() {
+parentOrderSchema.virtual('subOrderCount').get(function () {
     return this.subOrders ? this.subOrders.length : 0;
 });
 
 // Method to update overall status based on sub-orders
-parentOrderSchema.methods.updateOverallStatus = async function() {
+parentOrderSchema.methods.updateOverallStatus = async function () {
     const SubOrder = mongoose.model('SubOrder');
     const subOrders = await SubOrder.find({ parentOrder: this._id });
-    
+
     if (subOrders.length === 0) {
         this.overallStatus = 'pending';
         return;
     }
-    
+
     const statuses = subOrders.map(so => so.status);
-    
+
     // All cancelled
     if (statuses.every(s => s === 'cancelled')) {
         this.overallStatus = 'cancelled';
@@ -104,12 +113,12 @@ parentOrderSchema.methods.updateOverallStatus = async function() {
     else {
         this.overallStatus = 'pending';
     }
-    
+
     await this.save();
 };
 
 // Static method to generate unique parent order ID
-parentOrderSchema.statics.generateParentOrderId = async function() {
+parentOrderSchema.statics.generateParentOrderId = async function () {
     const year = new Date().getFullYear();
     const count = await this.countDocuments({
         parentOrderId: new RegExp(`^PO-${year}-`)

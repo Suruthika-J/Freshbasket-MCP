@@ -102,54 +102,54 @@ const UserOrderTracking = ({ isOpen, onClose, order }) => {
     // Build route line
     const getRouteLine = () => {
         const points = [];
-        
+
         if (trackingData?.storeLocation) {
             points.push([
                 trackingData.storeLocation.latitude,
                 trackingData.storeLocation.longitude
             ]);
         }
-        
+
         if (trackingData?.agentLocation) {
             points.push([
                 trackingData.agentLocation.latitude,
                 trackingData.agentLocation.longitude
             ]);
         }
-        
+
         if (trackingData?.deliveryLocation) {
             points.push([
                 trackingData.deliveryLocation.latitude,
                 trackingData.deliveryLocation.longitude
             ]);
         }
-        
+
         return points;
     };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="fb-surface rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border fb-border">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 flex justify-between items-center">
+                <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
                     <div>
-                        <h2 className="text-xl font-semibold">Track Order</h2>
-                        <p className="text-sm text-green-100">Order ID: {order?.orderId}</p>
+                        <h2 className="text-xl font-bold">Track Order</h2>
+                        <p className="text-sm opacity-90">Order ID: {order?.orderId}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
                             onClick={fetchTracking}
                             disabled={loading}
-                            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors backdrop-blur-sm"
                             title="Refresh tracking"
                         >
                             <FiRefreshCw className={loading ? 'animate-spin' : ''} />
                         </button>
                         <button
                             onClick={onClose}
-                            className="text-white hover:text-gray-200 text-2xl"
+                            className="text-white hover:opacity-70 transition-opacity"
                         >
-                            <FiX />
+                            <FiX size={24} />
                         </button>
                     </div>
                 </div>
@@ -173,37 +173,37 @@ const UserOrderTracking = ({ isOpen, onClose, order }) => {
                     ) : trackingData ? (
                         <div className="space-y-6">
                             {/* Status Info */}
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="fb-primary-subtle border fb-border-primary rounded-xl p-5 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h3 className="font-semibold text-lg text-gray-900">
-                                            Order Status: {trackingData.status}
+                                        <h3 className="font-bold text-lg fb-text">
+                                            Order Status: <span className="fb-text-primary">{trackingData.status}</span>
                                         </h3>
                                         {trackingData.assignedAgent && (
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                Delivery Agent: {trackingData.assignedAgent.name}
+                                            <p className="text-sm fb-text-secondary mt-1 flex items-center gap-2">
+                                                <FiUser className="fb-text-primary" />
+                                                Delivery Agent: <span className="font-semibold">{trackingData.assignedAgent.name}</span>
                                             </p>
                                         )}
                                     </div>
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex items-center space-x-3">
                                         {trackingData.trackingEnabled && (
-                                            <div className="flex items-center text-green-600">
-                                                <div className="w-3 h-3 bg-green-600 rounded-full animate-pulse mr-2"></div>
-                                                <span className="text-sm font-medium">Live Tracking</span>
+                                            <div className="flex items-center fb-text-success font-bold text-sm">
+                                                <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse mr-2 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                                                Live Tracking
                                             </div>
                                         )}
                                         {/* Auto-refresh toggle */}
                                         {(order.status === 'Shipped' || order.status === 'Processing') && (
                                             <button
                                                 onClick={() => setAutoRefresh(!autoRefresh)}
-                                                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                                    autoRefresh
-                                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                }`}
+                                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${autoRefresh
+                                                    ? 'bg-blue-600 text-white shadow-blue-200'
+                                                    : 'fb-surface fb-text-secondary border fb-border'
+                                                    }`}
                                                 title={autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'}
                                             >
-                                                {autoRefresh ? '🔄 Auto' : '⏸️ Manual'}
+                                                {autoRefresh ? '🔄 Auto Refresh' : '⏸️ Manual'}
                                             </button>
                                         )}
                                     </div>
@@ -337,10 +337,10 @@ const UserOrderTracking = ({ isOpen, onClose, order }) => {
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
+                <div className="fb-bg-secondary px-6 py-4 border-t fb-divider flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                        className="fb-btn-secondary px-6"
                     >
                         Close
                     </button>

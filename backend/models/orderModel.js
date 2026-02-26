@@ -63,6 +63,15 @@ const orderSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    deliveryType: {
+        type: String,
+        enum: ['self_pickup', 'delivery_agent'],
+        default: 'delivery_agent'
+    },
+    deliveryRequired: {
+        type: Boolean,
+        default: true
+    },
     // ========== NEW: TRACKING FIELDS ==========
     storeLocation: {
         type: locationSchema,

@@ -73,9 +73,10 @@ const normalizeItems = (rawItems = []) => {
       // ============================================
       // MULTI-VENDOR: Extract vendor information
       // ============================================
-      const uploaderRole = item.product?.uploaderRole || item.uploaderRole || 'admin';
-      const uploaderId = item.product?.uploaderId || item.uploaderId || 'admin';
-      const uploaderName = item.product?.uploaderName || item.uploaderName || 'FreshBasket Admin';
+      const isFarmerProduct = (item.product?.uploaderRole === 'farmer') || (!!item.product?.farmerId);
+      const uploaderRole = isFarmerProduct ? 'farmer' : 'admin';
+      const uploaderId = item.product?.uploaderId || item.product?.farmerId || 'admin';
+      const uploaderName = item.product?.uploaderName || (isFarmerProduct ? 'Farmer' : 'FreshBasket Admin');
 
       return {
         ...item,
@@ -107,7 +108,7 @@ export const CartProvider = ({ children }) => {
   // MULTI-VENDOR: Delivery options per vendor
   // ============================================
   const [deliveryOptions, setDeliveryOptions] = useState({});
-  // Format: { vendorId: 'self-pickup' | 'delivery-agent' }
+  // Format: { vendorId: 'SELF_PICKUP' | 'DELIVERY_AGENT' }
 
   useEffect(() => {
     // Check if user is authenticated and not a delivery agent
@@ -549,9 +550,9 @@ export const CartProvider = ({ children }) => {
         errors.push(`Please select delivery option for ${group.vendorName}`);
       }
 
-      // Admin products must use delivery-agent
-      if (group.vendorType === 'admin' && option !== 'delivery-agent') {
-        errors.push(`${group.vendorName} products must use delivery agent`);
+      // Admin products must use DELIVERY_AGENT
+      if (group.vendorType === 'admin' && option !== 'DELIVERY_AGENT') {
+        errors.push(`${group.vendorName} products must use DELIVERY_AGENT`);
       }
     });
 
@@ -564,8 +565,9 @@ export const CartProvider = ({ children }) => {
   /**
    * Calculates delivery charge for a vendor
    */
-  const calculateVendorDeliveryCharge = (subtotal, deliveryOption) => {
-    if (deliveryOption === 'self-pickup') {
+  const calculateVendorDeliveryCharge = (subtotal, deliveryOption, vendorType) => {
+    // Admin products are free delivery. Self-pickup is free.
+    if (vendorType === 'admin' || deliveryOption === 'SELF_PICKUP') {
       return 0;
     }
     // Delivery agent charge
@@ -581,7 +583,7 @@ export const CartProvider = ({ children }) => {
 
     vendorGroups.forEach(group => {
       const deliveryOption = deliveryOptions[group.vendorId];
-      const deliveryCharge = calculateVendorDeliveryCharge(group.subtotal, deliveryOption);
+      const deliveryCharge = calculateVendorDeliveryCharge(group.subtotal, deliveryOption, group.vendorType);
       total += group.subtotal + deliveryCharge;
     });
 
@@ -596,12 +598,12 @@ export const CartProvider = ({ children }) => {
     const newOptions = {};
 
     vendorGroups.forEach(group => {
-      // Admin products default to delivery-agent
+      // Admin products default to DELIVERY_AGENT
       if (group.vendorType === 'admin') {
-        newOptions[group.vendorId] = 'delivery-agent';
+        newOptions[group.vendorId] = 'DELIVERY_AGENT';
       } else {
-        // Farmer products default to delivery-agent (user can change)
-        newOptions[group.vendorId] = deliveryOptions[group.vendorId] || 'delivery-agent';
+        // Farmer products: Don't set a default if not already selected, forcing explicit choice
+        newOptions[group.vendorId] = deliveryOptions[group.vendorId] || null;
       }
     });
 

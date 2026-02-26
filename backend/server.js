@@ -41,7 +41,7 @@ import voiceRouter from './routes/voiceRoute.js';
 console.log('\n🔍 Environment Check:');
 console.log('  - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? '✅ Found' : '❌ Missing');
 console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? '✅ Found' : '❌ Missing');
-console.log('  - MONGODB_URI:', process.env.MONGODB_URI ? '✅ Found' : '❌ Missing');
+console.log('  - MONGODB_URI:', (process.env.MONGODB_URI || process.env.MONGO_USER) ? '✅ Found' : '❌ Missing');
 console.log('  - PORT:', process.env.PORT || 4000);
 console.log('  - NODE_ENV:', process.env.NODE_ENV || 'development');
 console.log('');
@@ -122,10 +122,8 @@ app.use((req, res, next) => {
 });
 
 // ============================================
-// DATABASE CONNECTION (CRITICAL - BEFORE ROUTES)
+// DATABASE CONNECTION (Handled in startServer)
 // ============================================
-console.log('🔄 Connecting to MongoDB...');
-connectDB();
 
 // ============================================
 // STATIC FILE SERVING
@@ -227,16 +225,27 @@ app.use((err, req, res, next) => {
 // ============================================
 // START SERVER
 // ============================================
-app.listen(port, '0.0.0.0', () => {
-    console.log('\n🚀 ========================================');
-    console.log(`✅ Server running on http://localhost:${port}`);
-    console.log(`🌐 Also accessible on http://0.0.0.0:${port} (for mobile testing)`);
-    console.log(`📍 API Base: http://localhost:${port}/api`);
-    console.log(`📦 Products: http://localhost:${port}/api/items`);
-    console.log(`🛒 Cart: http://localhost:${port}/api/cart`);
-    console.log(`📋 Orders: http://localhost:${port}/api/orders`);
-    console.log(`🚚 Agents: http://localhost:${port}/api/agents`);
-    console.log('========================================\n');
-});
+const startServer = async () => {
+    try {
+        await connectDB();
+
+        app.listen(port, '0.0.0.0', () => {
+            console.log('\n🚀 ========================================');
+            console.log(`✅ Server running on http://localhost:${port}`);
+            console.log(`🌐 Also accessible on http://0.0.0.0:${port} (for mobile testing)`);
+            console.log(`📍 API Base: http://localhost:${port}/api`);
+            console.log(`📦 Products: http://localhost:${port}/api/items`);
+            console.log(`🛒 Cart: http://localhost:${port}/api/cart`);
+            console.log(`📋 Orders: http://localhost:${port}/api/orders`);
+            console.log(`🚚 Agents: http://localhost:${port}/api/agents`);
+            console.log('========================================\n');
+        });
+    } catch (error) {
+        console.error('❌ Failed to start server:', error.message);
+        process.exit(1);
+    }
+};
+
+startServer();
 
 export default app;

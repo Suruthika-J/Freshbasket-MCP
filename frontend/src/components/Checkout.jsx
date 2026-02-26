@@ -140,12 +140,15 @@ const CheckoutPage = () => {
         },
         paymentMethod: formData.paymentMethod,
         // ✅ Flat items array with delivery options
-        items: cart.map(item => ({
-          productId: item.productId || item.product?._id || item._id,
-          quantity: item.quantity,
-          // Include delivery option from cart context
-          deliveryOption: deliveryOptions[item.vendorId] || 'delivery-agent'
-        }))
+        items: cart.map(item => {
+          const option = deliveryOptions[item.vendorId] || 'DELIVERY_AGENT';
+          return {
+            productId: item.productId || item.product?._id || item._id,
+            quantity: item.quantity,
+            deliveryOption: option, // Uppercase for compatibility
+            deliveryType: option.toLowerCase() // Lowercase as per requirement
+          };
+        })
       };
 
       console.log('📦 Creating multi-vendor parent order...');
@@ -418,8 +421,8 @@ const CheckoutPage = () => {
             {/* Vendor Groups Display */}
             <div className="mb-6 space-y-6">
               {vendorGroups.map((group, index) => {
-                const deliveryOption = deliveryOptions[group.vendorId] || 'delivery-agent';
-                const deliveryCharge = calculateVendorDeliveryCharge(group.subtotal, deliveryOption);
+                const deliveryOption = deliveryOptions[group.vendorId] || 'DELIVERY_AGENT';
+                const deliveryCharge = calculateVendorDeliveryCharge(group.subtotal, deliveryOption, group.vendorType);
 
                 return (
                   <div key={group.vendorId} className="border fb-border rounded-lg p-4 fb-surface-alt">
@@ -450,22 +453,22 @@ const CheckoutPage = () => {
                       ))}
                     </div>
 
-                    {/* Delivery Options */}
-                    <div className="border-t fb-divider pt-3 mt-3">
-                      <label className="block text-sm font-medium fb-text-secondary mb-2">
-                        <FiTruck className="inline mr-1" />
-                        Delivery Option
-                      </label>
-                      <div className="space-y-2">
-                        {/* Self-Pickup (only for farmers) */}
-                        {group.vendorType === 'farmer' && (
+                    {/* Delivery Options - ONLY for farmers */}
+                    {group.vendorType === 'farmer' && (
+                      <div className="border-t fb-divider pt-3 mt-3">
+                        <label className="block text-sm font-medium fb-text-secondary mb-2">
+                          <FiTruck className="inline mr-1" />
+                          Delivery Option
+                        </label>
+                        <div className="space-y-2">
+                          {/* Self-Pickup */}
                           <label className="flex items-center p-2 rounded border fb-border cursor-pointer hover:fb-primary-subtle transition-colors">
                             <input
                               type="radio"
                               name={`delivery-${group.vendorId}`}
-                              value="self-pickup"
-                              checked={deliveryOption === 'self-pickup'}
-                              onChange={() => handleDeliveryOptionChange(group.vendorId, 'self-pickup')}
+                              value="SELF_PICKUP"
+                              checked={deliveryOption === 'SELF_PICKUP'}
+                              onChange={() => handleDeliveryOptionChange(group.vendorId, 'SELF_PICKUP')}
                               className="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
                             />
                             <div className="ml-2 flex-1">
@@ -473,31 +476,29 @@ const CheckoutPage = () => {
                               <span className="block text-xs fb-text-muted">Free - Collect from farmer</span>
                             </div>
                           </label>
-                        )}
 
-                        {/* Delivery Agent */}
-                        <label className="flex items-center p-2 rounded border fb-border cursor-pointer hover:fb-primary-subtle transition-colors">
-                          <input
-                            type="radio"
-                            name={`delivery-${group.vendorId}`}
-                            value="delivery-agent"
-                            checked={deliveryOption === 'delivery-agent'}
-                            onChange={() => handleDeliveryOptionChange(group.vendorId, 'delivery-agent')}
-                            disabled={group.vendorType === 'admin'}
-                            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
-                          />
-                          <div className="ml-2 flex-1">
-                            <span className="text-sm font-medium fb-text">Delivery Agent</span>
-                            <span className="block text-xs fb-text-muted">
-                              {deliveryCharge === 0
-                                ? 'Free delivery (order above ₹500)'
-                                : `₹${deliveryCharge} delivery charge`}
-                              {group.vendorType === 'admin' && ' (Required for admin products)'}
-                            </span>
-                          </div>
-                        </label>
+                          {/* Delivery Agent */}
+                          <label className="flex items-center p-2 rounded border fb-border cursor-pointer hover:fb-primary-subtle transition-colors">
+                            <input
+                              type="radio"
+                              name={`delivery-${group.vendorId}`}
+                              value="DELIVERY_AGENT"
+                              checked={deliveryOption === 'DELIVERY_AGENT'}
+                              onChange={() => handleDeliveryOptionChange(group.vendorId, 'DELIVERY_AGENT')}
+                              className="h-4 w-4 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <div className="ml-2 flex-1">
+                              <span className="text-sm font-medium fb-text">Delivery Agent</span>
+                              <span className="block text-xs fb-text-muted">
+                                {deliveryCharge === 0
+                                  ? 'Free delivery (order above ₹500)'
+                                  : `₹${deliveryCharge} delivery charge`}
+                              </span>
+                            </div>
+                          </label>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Vendor Subtotal */}
                     <div className="border-t fb-divider pt-3 mt-3 flex justify-between items-center">

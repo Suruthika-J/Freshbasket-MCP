@@ -92,8 +92,8 @@ const AgentSubOrders = () => {
                         key={status}
                         onClick={() => setFilter(status)}
                         className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${filter === status
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                     >
                         {status === 'all' ? 'All Deliveries' : formatStatus(status)}
@@ -149,7 +149,7 @@ const AgentSubOrders = () => {
                                         {formatStatus(subOrder.status)}
                                     </span>
                                     <span className="text-sm text-gray-600">
-                                        Delivery Option: {subOrder.deliveryOption === 'self-pickup' ? 'Self Pickup' : 'Delivery Agent'}
+                                        Delivery Option: {subOrder.deliveryOption === 'SELF_PICKUP' ? 'Self Pickup' : 'Delivery Agent'}
                                     </span>
                                 </div>
 

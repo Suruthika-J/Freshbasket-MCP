@@ -29,21 +29,21 @@ const Modal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/20"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 fb-overlay"
       onClick={handleBackdropClick}
     >
       <div
-        className={`bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden ${className}`}
+        className={`fb-modal overflow-hidden w-full ${sizeClasses[size]} max-h-[90vh] ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <div className="flex items-center justify-between p-6 border-b fb-divider">
+            <h2 className="text-xl font-bold fb-text">{title}</h2>
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="fb-text-muted hover:fb-text transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <FiX size={24} />
               </button>

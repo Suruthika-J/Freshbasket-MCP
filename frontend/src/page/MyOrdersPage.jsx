@@ -239,7 +239,7 @@ const MyOrdersPage = () => {
                                                             <div className="flex items-center gap-2 text-sm fb-text-muted">
                                                                 <FiTruck />
                                                                 <span>
-                                                                    {subOrder.deliveryOption === 'self-pickup' ? 'Self Pickup' : 'Delivery Agent'}
+                                                                    {subOrder.deliveryOption === 'SELF_PICKUP' ? 'Self Pickup' : 'Delivery Agent'}
                                                                 </span>
                                                             </div>
                                                             <span className="font-semibold fb-text">

@@ -13,26 +13,22 @@ import ReturnModal from './ReturnModal';
 import Modal from './Modal';
 
 // ── Vivid, theme-aware status badge helper ──────────────────────────────────
-const getStatusBadgeStyle = (status) => {
-  const map = {
-    'Delivered': { bg: '#E8F5E9', color: '#1B5E20', border: '#2E7D32' },
-    'Processing': { bg: '#FFF8E1', color: '#E65100', border: '#F57C00' },
-    'Shipped': { bg: '#E3F2FD', color: '#0D47A1', border: '#1565C0' },
-    'Cancelled': { bg: '#FFEBEE', color: '#B71C1C', border: '#C62828' },
-    'Pending': { bg: '#FFF3E0', color: '#BF360C', border: '#E64A19' },
-    'Paid': { bg: '#E8F5E9', color: '#1B5E20', border: '#2E7D32' },
-    'Unpaid': { bg: '#FFEBEE', color: '#B71C1C', border: '#C62828' },
-  };
-  return map[status] || { bg: '#F5F5F5', color: '#424242', border: '#9E9E9E' };
-};
-
 const StatusBadge = ({ status, size = 'sm' }) => {
-  const style = getStatusBadgeStyle(status);
+  const getBadgeClass = (status) => {
+    const map = {
+      'Delivered': 'fb-badge-success',
+      'Processing': 'fb-badge-warning',
+      'Shipped': 'fb-badge-info',
+      'Cancelled': 'fb-badge-error',
+      'Pending': 'fb-badge-warning',
+      'Paid': 'fb-badge-success',
+      'Unpaid': 'fb-badge-error',
+    };
+    return map[status] || 'bg-gray-100 text-gray-800';
+  };
+
   return (
-    <span
-      className={`inline-flex items-center font-semibold rounded-full border ${size === 'sm' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'}`}
-      style={{ backgroundColor: style.bg, color: style.color, borderColor: style.border }}
-    >
+    <span className={`inline-flex items-center font-bold rounded-full border border-current bg-opacity-10 ${size === 'sm' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'} ${getBadgeClass(status)}`}>
       {status}
     </span>
   );
@@ -244,10 +240,9 @@ const UserOrdersPage = () => {
                           {canReviewOrder(order) && (
                             <button
                               onClick={() => openRatingModal(order)}
-                              className="px-3 py-1.5 rounded-full text-white text-sm font-medium transition-opacity hover:opacity-90 flex items-center gap-1"
-                              style={{ backgroundColor: '#F59E0B' }}
+                              className="px-4 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-all hover:shadow-md flex items-center gap-1.5"
                             >
-                              <FiStar size={13} />
+                              <FiStar size={14} />
                               Rate Order
                             </button>
                           )}
@@ -466,8 +461,7 @@ const UserOrdersPage = () => {
               {canReviewOrder(selectedOrder) && (
                 <button
                   onClick={() => { closeModal(); openRatingModal(selectedOrder); }}
-                  className="px-4 py-2 rounded-full text-white font-medium transition-opacity hover:opacity-90 flex items-center gap-2 text-sm"
-                  style={{ backgroundColor: '#F59E0B' }}
+                  className="px-5 py-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all hover:shadow-md flex items-center gap-2 text-sm"
                 >
                   <FiStar size={15} /> Rate This Order
                 </button>

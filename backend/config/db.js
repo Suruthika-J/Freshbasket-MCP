@@ -5,23 +5,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const { MONGO_USER, MONGO_PASS, MONGO_CLUSTER, MONGO_DB } = process.env;
-
-const uri = `mongodb+srv://${MONGO_USER}:${MONGO_PASS}@${MONGO_CLUSTER}/${MONGO_DB}?retryWrites=true&w=majority`;
+const MONGO_URI = process.env.MONGODB_URI || `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@${process.env.MONGO_CLUSTER}/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
 
 export const connectDB = async () => {
   try {
-    // Add connection timeout and options
-    await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      bufferCommands: false, // Disable mongoose buffering
+    console.log('⏳ Connecting to MongoDB...');
+    const conn = await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      bufferCommands: false, // User requested this to be false, so we must ensure connection is awaited
     });
-    console.log(' DB CONNECTED');
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (err) {
-    console.error(' DB CONNECTION ERROR:', err.message);
-    // Don't throw error to prevent app crash, but log it
-    throw err; // Re-throw to let the app handle it
+    console.error('❌ MongoDB Connection Error:', err.message);
+    process.exit(1); // Exit process with failure
   }
 };
 

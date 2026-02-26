@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { FiX, FiRotateCcw, FiAlertTriangle } from 'react-icons/fi';
+import { FiRotateCcw, FiAlertTriangle, FiPackage } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import Modal from './Modal';
 
 const ReturnModal = ({ isOpen, onClose, order, onReturnSubmitted }) => {
@@ -9,11 +10,14 @@ const ReturnModal = ({ isOpen, onClose, order, onReturnSubmitted }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!reason.trim()) {
       setError('Please select a reason for return');
+      toast.error('Please select a reason for return');
       return;
     }
 
@@ -21,23 +25,14 @@ const ReturnModal = ({ isOpen, onClose, order, onReturnSubmitted }) => {
     setError('');
 
     try {
-      const returnRequest = {
-        orderId: order._id,
-        reason: reason,
-        additionalNotes: additionalNotes.trim(),
-        customerEmail: order.customer.email,
-        customerName: order.customer.name,
-        items: order.items,
-        totalAmount: order.total
-      };
-
       const token = localStorage.getItem('authToken');
 
       const response = await axios.post(
-        'http://localhost:4000/api/returns',
+        `${apiUrl}/api/returns`,
         {
           orderId: order._id,
-          reason: reason
+          reason: reason,
+          additionalNotes: additionalNotes.trim()
         },
         {
           headers: {
@@ -48,15 +43,18 @@ const ReturnModal = ({ isOpen, onClose, order, onReturnSubmitted }) => {
       );
 
       if (response.data.success) {
+        toast.success('Return request submitted successfully');
         onReturnSubmitted && onReturnSubmitted();
         onClose();
       } else {
         setError('Failed to submit return request. Please try again.');
+        toast.error('Failed to submit return request');
       }
     } catch (err) {
       console.error('Error submitting return request:', err);
       const errorMessage = err.response?.data?.message || 'Failed to submit return request. Please try again.';
       setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,93 +63,109 @@ const ReturnModal = ({ isOpen, onClose, order, onReturnSubmitted }) => {
   if (!isOpen || !order) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-emerald-900 border border-emerald-700 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-emerald-100 flex items-center gap-2">
-              <FiRotateCcw className="text-orange-400" />
-              Return Order
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-emerald-400 hover:text-emerald-200 transition-colors"
-            >
-              <FiX size={24} />
-            </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Return Order"
+      size="sm"
+    >
+      <form onSubmit={handleSubmit}>
+        {/* Order Details Summary */}
+        <div className="mb-6 p-4 fb-primary-subtle rounded-xl border fb-border">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 fb-surface rounded-lg">
+              <FiPackage className="fb-text-primary" />
+            </div>
+            <h3 className="font-bold fb-text">Order Details</h3>
           </div>
-
-          <div className="mb-6">
-            <div className="bg-emerald-800/50 border border-emerald-600/50 rounded-lg p-4">
-              <h3 className="font-medium text-emerald-100 mb-2">Order Details</h3>
-              <p className="text-emerald-300 text-sm">Order ID: {order.orderId}</p>
-              <p className="text-emerald-300 text-sm">Total: ₹{order.total.toFixed(2)}</p>
-              <p className="text-emerald-300 text-sm">Items: {order.items.length}</p>
-            </div>
+          <div className="space-y-1">
+            <p className="fb-text-secondary text-sm flex justify-between">
+              <span>Order ID:</span>
+              <span className="font-mono font-medium">{order.orderId}</span>
+            </p>
+            <p className="fb-text-secondary text-sm flex justify-between">
+              <span>Total Amount:</span>
+              <span className="font-semibold fb-text-primary">₹{order.total.toFixed(2)}</span>
+            </p>
+            <p className="fb-text-secondary text-sm flex justify-between">
+              <span>Items count:</span>
+              <span>{order.items.length} units</span>
+            </p>
           </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-emerald-100 font-medium mb-2">
-                Reason for Return *
-              </label>
-              <select
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="w-full bg-emerald-800 border border-emerald-600 rounded-lg px-3 py-2 text-emerald-100 focus:outline-none focus:border-emerald-400"
-                required
-              >
-                <option value="">Select a reason</option>
-                <option value="Defective product">Defective product</option>
-                <option value="Wrong item received">Wrong item received</option>
-                <option value="Not as described">Not as described</option>
-                <option value="Changed mind">Changed mind</option>
-                <option value="Damaged packaging">Damaged packaging</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-emerald-100 font-medium mb-2">
-                Additional Notes (Optional)
-              </label>
-              <textarea
-                value={additionalNotes}
-                onChange={(e) => setAdditionalNotes(e.target.value)}
-                placeholder="Please provide any additional details..."
-                className="w-full bg-emerald-800 border border-emerald-600 rounded-lg px-3 py-2 text-emerald-100 focus:outline-none focus:border-emerald-400 resize-none"
-                rows={3}
-              />
-            </div>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg flex items-center gap-2">
-                <FiAlertTriangle className="text-red-400 flex-shrink-0" size={16} />
-                <p className="text-red-200 text-sm">{error}</p>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-emerald-100 rounded-lg font-medium transition-colors"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Return Request'}
-              </button>
-            </div>
-          </form>
         </div>
-      </div>
-    </div>
+
+        {/* Reason Selection */}
+        <div className="mb-4">
+          <label className="block fb-text-secondary font-semibold mb-2">
+            Reason for Return <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="fb-input"
+            required
+          >
+            <option value="">Select a reason</option>
+            <option value="Defective product">Defective product</option>
+            <option value="Wrong item received">Wrong item received</option>
+            <option value="Not as described">Not as described</option>
+            <option value="Changed mind">Changed mind</option>
+            <option value="Damaged packaging">Damaged packaging</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        {/* Notes */}
+        <div className="mb-6">
+          <label className="block fb-text-secondary font-semibold mb-2">
+            Additional Notes (Optional)
+          </label>
+          <textarea
+            value={additionalNotes}
+            onChange={(e) => setAdditionalNotes(e.target.value)}
+            placeholder="Please provide any additional details that might help us..."
+            className="fb-input resize-none h-24"
+          />
+        </div>
+
+        {/* Inline Error */}
+        {error && (
+          <div className="mb-4 p-3 fb-badge-error rounded-lg flex items-center gap-2 border border-red-200">
+            <FiAlertTriangle className="flex-shrink-0" size={16} />
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 fb-btn-secondary py-2.5 text-sm"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="flex-1 fb-btn-primary py-2.5 text-sm shadow-lg overflow-hidden relative"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Processing...
+              </div>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <FiRotateCcw />
+                Submit Request
+              </span>
+            )}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

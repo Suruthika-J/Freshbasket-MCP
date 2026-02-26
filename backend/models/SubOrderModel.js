@@ -79,8 +79,8 @@ const subOrderSchema = new mongoose.Schema({
     // Delivery configuration
     deliveryOption: {
         type: String,
-        enum: ['self-pickup', 'delivery-agent'],
-        required: true
+        enum: ['SELF_PICKUP', 'DELIVERY_AGENT'],
+        required: function () { return this.vendor.vendorType === 'farmer'; }
     },
     deliveryCharge: {
         type: Number,
@@ -100,17 +100,33 @@ const subOrderSchema = new mongoose.Schema({
             'confirmed',     // Payment confirmed or agent assigned
             'preparing',     // Vendor is preparing order
             'ready',         // Ready for pickup/delivery
-            'out-for-delivery', // Agent picked up (only for delivery-agent)
+            'out-for-delivery', // Agent picked up (legacy, using deliveryStatus instead)
             'delivered',     // Completed
             'cancelled'      // Cancelled
         ],
         default: 'pending',
         index: true
     },
+    // NEW: Delivery Preferences (As per requirement)
+    deliveryType: {
+        type: String,
+        enum: ['self_pickup', 'delivery_agent'],
+        required: function () { return this.vendor.vendorType === 'farmer'; }
+    },
+    deliveryRequired: {
+        type: Boolean,
+        default: false
+    },
+    // NEW: Delivery Status (As per requirement)
+    deliveryStatus: {
+        type: String,
+        enum: ['NOT_REQUIRED', 'PENDING_ASSIGNMENT', 'ASSIGNED', 'PICKED_UP', 'DELIVERED'],
+        default: 'NOT_REQUIRED'
+    },
     // Delivery agent assignment (only for delivery-agent option)
     assignedAgent: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'DeliveryAgent',
+        ref: 'DeliveryAgent', // Note: Check if the model name is 'deliveryAgent' or 'DeliveryAgent'
         default: null,
         index: true
     },
@@ -157,9 +173,34 @@ const subOrderSchema = new mongoose.Schema({
 
 // Validate delivery option based on vendor type
 subOrderSchema.pre('validate', function (next) {
-    // Admin products MUST use delivery-agent
-    if (this.vendor.vendorType === 'admin' && this.deliveryOption !== 'delivery-agent') {
-        return next(new Error('Admin products must use delivery-agent option'));
+    // Admin products default to platform delivery (normal flow)
+    if (this.vendor.vendorType === 'admin') {
+        this.deliveryOption = 'DELIVERY_AGENT'; // Maintain for compatibility
+        this.deliveryType = 'delivery_agent';
+        this.deliveryRequired = true; // Admin products always need delivery in this app
+        this.assignedAgent = null;
+        this.deliveryStatus = 'PENDING_ASSIGNMENT';
+    }
+    // Farmer products use the selected choice
+    else if (this.vendor.vendorType === 'farmer') {
+        // Map deliveryOption to deliveryType if only one is provided
+        if (this.deliveryOption === 'SELF_PICKUP') this.deliveryType = 'self_pickup';
+        if (this.deliveryOption === 'DELIVERY_AGENT') this.deliveryType = 'delivery_agent';
+        if (this.deliveryType === 'self_pickup') this.deliveryOption = 'SELF_PICKUP';
+        if (this.deliveryType === 'delivery_agent') this.deliveryOption = 'DELIVERY_AGENT';
+
+        // Set deliveryRequired flag
+        this.deliveryRequired = this.deliveryType === 'delivery_agent';
+
+        // Initialize deliveryStatus
+        if (this.deliveryRequired) {
+            if (!this.assignedAgent) {
+                this.deliveryStatus = 'PENDING_ASSIGNMENT';
+            }
+        } else {
+            this.deliveryStatus = 'NOT_REQUIRED';
+            this.assignedAgent = null;
+        }
     }
     next();
 });
@@ -195,7 +236,7 @@ subOrderSchema.statics.generateSubOrderId = async function (parentOrderId) {
 
 // Method to check if agent assignment is required
 subOrderSchema.methods.requiresAgentAssignment = function () {
-    return this.deliveryOption === 'delivery-agent' && !this.assignedAgent;
+    return this.deliveryOption === 'DELIVERY_AGENT' && !this.assignedAgent;
 };
 
 // Method to check if vendor can update status
@@ -206,7 +247,7 @@ subOrderSchema.methods.canVendorUpdateStatus = function (newStatus) {
 
 // Method to check if agent can update status
 subOrderSchema.methods.canAgentUpdateStatus = function (newStatus) {
-    const allowedStatuses = ['out-for-delivery', 'delivered'];
+    const allowedStatuses = ['PICKED_UP', 'DELIVERED'];
     return allowedStatuses.includes(newStatus);
 };
 

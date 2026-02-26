@@ -11,10 +11,12 @@ import { geocodeAddress } from '../utils/geocoding.js';
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Helper: Calculate delivery charge per vendor
-const calculateDeliveryCharge = (subtotal, deliveryOption) => {
-    if (deliveryOption === 'self-pickup') {
+const calculateDeliveryCharge = (subtotal, deliveryOption, vendorType) => {
+    // Admin products are free delivery. Self-pickup is free.
+    if (vendorType === 'admin' || deliveryOption === 'SELF_PICKUP') {
         return 0;
     }
+    // Delivery agent charge
     return subtotal >= 500 ? 0 : 40;
 };
 
@@ -129,13 +131,15 @@ export const createParentOrder = async (req, res) => {
 
             // ✅ Group by vendor
             if (!vendorGroups[vendorId]) {
+                const vendorDeliveryType = vendorType === 'admin' ? 'delivery_agent' : (item.deliveryType || item.deliveryOption?.toLowerCase() || 'delivery_agent');
+
                 vendorGroups[vendorId] = {
                     vendorId,
                     vendorType,
                     vendorName,
                     items: [],
-                    // ✅ Admin products must use delivery-agent
-                    deliveryOption: vendorType === 'admin' ? 'delivery-agent' : (item.deliveryOption || 'delivery-agent')
+                    deliveryType: vendorDeliveryType,
+                    deliveryOption: vendorDeliveryType === 'self_pickup' ? 'SELF_PICKUP' : 'DELIVERY_AGENT'
                 };
             }
 
@@ -159,7 +163,7 @@ export const createParentOrder = async (req, res) => {
         const allStockUpdates = [];
 
         for (const vendorGroup of Object.values(vendorGroups)) {
-            const { vendorId, vendorType, vendorName, deliveryOption, items: vendorItems } = vendorGroup;
+            const { vendorId, vendorType, vendorName, deliveryOption, deliveryType, items: vendorItems } = vendorGroup;
 
             // Calculate subtotal
             let subtotal = 0;
@@ -172,7 +176,7 @@ export const createParentOrder = async (req, res) => {
             }
 
             // Calculate delivery charge
-            const deliveryCharge = calculateDeliveryCharge(subtotal, deliveryOption);
+            const deliveryCharge = calculateDeliveryCharge(subtotal, deliveryOption, vendorType);
             const vendorTotal = subtotal + deliveryCharge;
 
             // ✅ Clean items (remove product reference)
@@ -191,8 +195,10 @@ export const createParentOrder = async (req, res) => {
                     vendorName
                 },
                 items: cleanItems,
-                subtotal,
                 deliveryOption,
+                deliveryType,
+                deliveryRequired: deliveryType === 'delivery_agent',
+                subtotal,
                 deliveryCharge,
                 total: vendorTotal
             });
@@ -219,7 +225,9 @@ export const createParentOrder = async (req, res) => {
             totalAmount,
             paymentMethod,
             paymentStatus: paymentMethod === 'Cash on Delivery' ? 'Unpaid' : 'Unpaid',
-            overallStatus: 'pending'
+            overallStatus: 'pending',
+            deliveryType: subOrdersData.length === 1 ? subOrdersData[0].deliveryType : 'mixed',
+            deliveryRequired: subOrdersData.some(so => so.deliveryRequired)
         });
 
         await parentOrder.save({ session });
@@ -256,12 +264,14 @@ export const createParentOrder = async (req, res) => {
                 items: subOrderData.items,
                 subtotal: subOrderData.subtotal,
                 deliveryOption: subOrderData.deliveryOption,
+                deliveryType: subOrderData.deliveryType,
+                deliveryRequired: subOrderData.deliveryRequired,
                 deliveryCharge: subOrderData.deliveryCharge,
                 total: subOrderData.total,
                 paymentStatus: paymentMethod === 'Cash on Delivery' ? 'Unpaid' : 'Unpaid', // Matches parent order initial state
                 status: paymentMethod === 'Cash on Delivery' ? 'confirmed' : 'pending',
                 deliveryLocation,
-                trackingEnabled: subOrderData.deliveryOption === 'delivery-agent'
+                trackingEnabled: subOrderData.deliveryOption === 'DELIVERY_AGENT'
             });
 
             await subOrder.save({ session });

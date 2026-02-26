@@ -28,7 +28,10 @@ router.get('/farmer/my-orders', authMiddleware, requireFarmer, getFarmerSubOrder
 // DELIVERY AGENT ROUTES
 // ============================================
 
-// Get agent's assigned sub-orders
+// Requested API: Fetch assigned sub-orders for delivery agent
+router.get('/delivery-agent', authMiddleware, requireAgent, getAgentSubOrders);
+
+// Legacy: Get agent's assigned sub-orders
 router.get('/agent/my-deliveries', authMiddleware, requireAgent, getAgentSubOrders);
 
 // Update agent location for tracking
@@ -38,13 +41,16 @@ router.post('/agent/update-location', authMiddleware, requireAgent, updateAgentL
 // ADMIN ROUTES
 // ============================================
 
+// Requested API: Assign delivery agent to farmer sub-order
+router.patch('/:subOrderId/assign-delivery-agent', authMiddleware, requireAdmin, assignDeliveryAgent);
+
 // Get all sub-orders with optional filters
 router.get('/admin/all', authMiddleware, requireAdmin, getAllSubOrders);
 
 // Get pending delivery requests (unassigned)
 router.get('/admin/pending-deliveries', authMiddleware, requireAdmin, getPendingDeliveryRequests);
 
-// Assign delivery agent to sub-order
+// Legacy: Assign delivery agent to sub-order
 router.post('/admin/assign-agent', authMiddleware, requireAdmin, assignDeliveryAgent);
 
 // Unassign delivery agent from sub-order

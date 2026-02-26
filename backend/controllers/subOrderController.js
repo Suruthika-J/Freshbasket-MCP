@@ -148,14 +148,15 @@ export const getFarmerSubOrders = async (req, res) => {
     }
 };
 // ============================================
-// GET AGENT'S ASSIGNED SUB-ORDERS
+// GET SUB-ORDERS FOR DELIVERY AGENT
 // ============================================
 export const getAgentSubOrders = async (req, res) => {
     try {
-        const agentId = req.user.id;
+        const agentId = req.user.id || req.user._id;
 
         const subOrders = await SubOrder.find({
-            assignedAgent: agentId
+            assignedAgent: agentId,
+            deliveryRequired: true
         })
             .populate('parentOrder', 'parentOrderId customer')
             .sort({ createdAt: -1 });
@@ -181,16 +182,9 @@ export const getAgentSubOrders = async (req, res) => {
 export const updateSubOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, deliveryStatus } = req.body; // Can accept both for compatibility
         const userId = req.user.id;
         const userRole = req.user.role;
-
-        if (!status) {
-            return res.status(400).json({
-                success: false,
-                message: 'Status is required'
-            });
-        }
 
         const subOrder = await SubOrder.findById(id);
 
@@ -201,9 +195,36 @@ export const updateSubOrderStatus = async (req, res) => {
             });
         }
 
-        // Role-based validation
-        if (userRole === 'farmer') {
-            // Farmer can only update their own sub-orders
+        // Handle Delivery Agent specific status updates
+        if (userRole === 'agent') {
+            const targetStatus = deliveryStatus || status;
+
+            if (!subOrder.assignedAgent || subOrder.assignedAgent.toString() !== userId.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Access denied: You are not assigned to this sub-order'
+                });
+            }
+
+            if (!['PICKED_UP', 'DELIVERED'].includes(targetStatus)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Agents can only update status to: PICKED_UP, DELIVERED'
+                });
+            }
+
+            subOrder.deliveryStatus = targetStatus;
+
+            // Sync legacy status field for compatibility
+            if (targetStatus === 'DELIVERED') {
+                subOrder.status = 'delivered';
+                subOrder.deliveryDate = new Date();
+            } else if (targetStatus === 'PICKED_UP') {
+                subOrder.status = 'out-for-delivery';
+            }
+        }
+        // Handle Farmer status updates
+        else if (userRole === 'farmer') {
             if (subOrder.vendor.vendorId.toString() !== userId.toString()) {
                 return res.status(403).json({
                     success: false,
@@ -211,52 +232,26 @@ export const updateSubOrderStatus = async (req, res) => {
                 });
             }
 
-            // Farmer can only set specific statuses
             if (!subOrder.canVendorUpdateStatus(status)) {
                 return res.status(400).json({
                     success: false,
                     message: 'Farmers can only update status to: preparing, ready'
                 });
             }
-        } else if (userRole === 'agent') {
-            // Agent can only update assigned sub-orders
-            if (!subOrder.assignedAgent || subOrder.assignedAgent.toString() !== userId) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Access denied'
-                });
-            }
-
-            // Agent can only set specific statuses
-            if (!subOrder.canAgentUpdateStatus(status)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Agents can only update status to: out-for-delivery, delivered'
-                });
-            }
-        } else if (userRole !== 'admin') {
+            subOrder.status = status;
+        }
+        // Admin can do anything
+        else if (userRole === 'admin') {
+            if (status) subOrder.status = status;
+            if (deliveryStatus) subOrder.deliveryStatus = deliveryStatus;
+        } else {
             return res.status(403).json({
                 success: false,
                 message: 'Access denied'
             });
         }
-        // Admin can set any status
-
-        // Update status
-        const oldStatus = subOrder.status;
-        subOrder.status = status;
-
-        // Set delivery date when delivered
-        if (status === 'delivered' && !subOrder.deliveryDate) {
-            subOrder.deliveryDate = new Date();
-        }
 
         await subOrder.save();
-
-        console.log(`✅ Sub-order ${subOrder.subOrderId} status updated: ${oldStatus} → ${status}`);
-
-        // Parent order status will be updated automatically via post-save hook
-
         return res.status(200).json({
             success: true,
             message: 'Status updated successfully',
@@ -264,7 +259,7 @@ export const updateSubOrderStatus = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Error updating sub-order status:', error);
+        console.error('❌ Error updating order status:', error);
         return res.status(500).json({
             success: false,
             message: error.message || 'Failed to update status'
@@ -320,7 +315,8 @@ export const getPendingDeliveryRequests = async (req, res) => {
     try {
         // Sub-orders that need delivery agent but don't have one assigned
         const pendingDeliveries = await SubOrder.find({
-            deliveryOption: 'delivery-agent',
+            deliveryRequired: true,
+            deliveryStatus: 'PENDING_ASSIGNMENT',
             assignedAgent: null,
             status: { $nin: ['cancelled', 'delivered'] }
         })
@@ -347,12 +343,13 @@ export const getPendingDeliveryRequests = async (req, res) => {
 // ============================================
 export const assignDeliveryAgent = async (req, res) => {
     try {
-        const { subOrderId, agentId } = req.body;
+        const { subOrderId } = req.params;
+        const { agentId } = req.body;
 
-        if (!subOrderId || !agentId) {
+        if (!agentId) {
             return res.status(400).json({
                 success: false,
-                message: 'Sub-order ID and agent ID are required'
+                message: 'Agent ID is required'
             });
         }
 
@@ -365,10 +362,19 @@ export const assignDeliveryAgent = async (req, res) => {
             });
         }
 
-        if (subOrder.deliveryOption !== 'delivery-agent') {
+        // Prevent assignment if subOrder belongs to Admin
+        if (subOrder.vendor.vendorType === 'admin') {
             return res.status(400).json({
                 success: false,
-                message: 'This sub-order does not require delivery agent'
+                message: 'Cannot assign delivery agent to Admin products'
+            });
+        }
+
+        // Prevent assignment if deliveryMode is SELF_PICKUP or deliveryRequired is false
+        if (subOrder.deliveryOption === 'SELF_PICKUP' || subOrder.deliveryType === 'self_pickup' || !subOrder.deliveryRequired) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot assign delivery agent for Self-Pickup orders'
             });
         }
 
@@ -382,7 +388,8 @@ export const assignDeliveryAgent = async (req, res) => {
         // Assign agent
         subOrder.assignedAgent = agentId;
         subOrder.assignedAt = new Date();
-        subOrder.status = 'confirmed';
+        subOrder.deliveryStatus = 'ASSIGNED';
+        subOrder.status = 'confirmed'; // Sync legacy status
         subOrder.trackingEnabled = true;
 
         await subOrder.save();

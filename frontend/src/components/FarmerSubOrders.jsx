@@ -108,8 +108,8 @@ const FarmerSubOrders = () => {
                             key={status}
                             onClick={() => setFilter(status)}
                             className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap shadow-sm ${filter === status
-                                    ? 'bg-green-600 text-white shadow-green-200'
-                                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
+                                ? 'bg-green-600 text-white shadow-green-200'
+                                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
                                 }`}
                         >
                             {status === 'all' ? 'All' : formatStatus(status)}
@@ -175,9 +175,16 @@ const FarmerSubOrders = () => {
                                                     >
                                                         {formatStatus(subOrder.orderStatus)}
                                                     </span>
-                                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg text-xs font-bold text-gray-500 border border-gray-100">
-                                                        <FiTruck size={14} className="text-blue-500" />
-                                                        {subOrder.deliveryOption === 'self-pickup' ? 'Self Pickup' : 'Home Delivery'}
+                                                    <div className="flex flex-col gap-1 items-start">
+                                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg text-xs font-bold text-gray-500 border border-gray-100">
+                                                            <FiTruck size={14} className="text-blue-500" />
+                                                            {subOrder.deliveryOption === 'SELF_PICKUP' ? 'Self Pickup' : 'Home Delivery'}
+                                                        </div>
+                                                        {subOrder.deliveryOption === 'DELIVERY_AGENT' && (
+                                                            <div className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-indigo-100">
+                                                                Status: {subOrder.deliveryStatus || 'PENDING_ASSIGNMENT'}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
@@ -255,7 +262,7 @@ const FarmerSubOrders = () => {
                                                         Mark as Ready
                                                     </button>
                                                 )}
-                                                {subOrder.orderStatus === 'ready' && subOrder.deliveryOption === 'self-pickup' && (
+                                                {subOrder.orderStatus === 'ready' && subOrder.deliveryOption === 'SELF_PICKUP' && (
                                                     <button
                                                         onClick={() => updateOrderStatus(subOrder._id, 'delivered')}
                                                         className="w-full group flex items-center justify-center gap-3 px-6 py-4 rounded-xl bg-green-600 text-white font-black uppercase tracking-widest text-sm hover:bg-green-700 transition-all shadow-lg shadow-green-200 active:scale-[0.98]"
@@ -270,7 +277,7 @@ const FarmerSubOrders = () => {
                                                         {subOrder.orderStatus} Order
                                                     </div>
                                                 )}
-                                                {subOrder.orderStatus === 'ready' && subOrder.deliveryOption === 'delivery-agent' && (
+                                                {subOrder.orderStatus === 'ready' && subOrder.deliveryOption === 'DELIVERY_AGENT' && (
                                                     <div className="bg-blue-50 text-blue-700 p-4 rounded-xl text-center border border-blue-100">
                                                         <p className="text-xs font-black uppercase tracking-widest mb-1">Awaiting Agent</p>
                                                         <p className="text-xs font-bold opacity-80 leading-tight">Waiting for delivery agent to pick up your order.</p>

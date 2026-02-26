@@ -34,7 +34,7 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
 
     try {
       const token = localStorage.getItem('authToken');
-      
+
       const response = await axios.post(
         'http://localhost:4000/api/reviews',
         {
@@ -54,7 +54,7 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
         // Reset form
         setRating(0);
         setComment('');
-        
+
         // Show success toast
         toast.success('Review submitted successfully! Thank you for your feedback.', {
           position: "bottom-right",
@@ -64,12 +64,12 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
           pauseOnHover: true,
           draggable: true,
         });
-        
+
         // Notify parent component
         if (onReviewSubmitted) {
           onReviewSubmitted(response.data.review);
         }
-        
+
         // Close modal
         onClose();
       }
@@ -77,7 +77,7 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
       console.error('Submit review error:', err);
       const errorMessage = err.response?.data?.message || 'Failed to submit review. Please try again.';
       setError(errorMessage);
-      
+
       // Show error toast
       toast.error(errorMessage, {
         position: "bottom-right",
@@ -104,11 +104,10 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
       >
         <FiStar
           size={40}
-          className={`transition-colors ${
-            star <= (hoveredRating || rating)
+          className={`transition-colors ${star <= (hoveredRating || rating)
               ? 'fill-yellow-400 text-yellow-400'
               : 'text-gray-400'
-          }`}
+            }`}
         />
       </button>
     ));
@@ -123,20 +122,20 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
     >
       <form onSubmit={handleSubmit}>
         {/* Order Info */}
-        <div className="mb-6 p-4 bg-emerald-800/50 rounded-lg border border-emerald-700/50">
-          <p className="text-emerald-200 text-sm mb-1">Order ID</p>
-          <p className="text-emerald-100 font-medium">{order.orderId}</p>
+        <div className="mb-6 p-4 fb-primary-subtle rounded-lg border fb-border">
+          <p className="fb-text-secondary text-sm mb-1">Order ID</p>
+          <p className="fb-text font-semibold break-all">{order.orderId}</p>
         </div>
 
         {/* Star Rating */}
         <div className="mb-6">
-          <label className="block text-emerald-200 font-medium mb-3">
+          <label className="block fb-text-secondary font-semibold mb-3">
             How would you rate this order?
           </label>
           <div className="flex justify-center gap-2 mb-2">
             {renderStars()}
           </div>
-          <p className="text-center text-emerald-300 text-sm">
+          <p className="text-center fb-text-muted text-sm font-medium">
             {rating === 0 && 'Select a rating'}
             {rating === 1 && 'Poor'}
             {rating === 2 && 'Fair'}
@@ -148,19 +147,18 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
 
         {/* Comment */}
         <div className="mb-6">
-          <label className="block text-emerald-200 font-medium mb-2">
+          <label className="block fb-text-secondary font-semibold mb-2">
             Share your experience
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Tell us about your experience with this order..."
-            className="w-full px-4 py-3 bg-emerald-800/50 border border-emerald-600/50 rounded-lg text-emerald-100 placeholder-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
-            rows="4"
+            className="fb-input resize-none h-32"
             maxLength="1000"
             disabled={isSubmitting}
           />
-          <p className="text-emerald-400 text-xs mt-1 text-right">
+          <p className="fb-text-muted text-xs mt-1 text-right">
             {comment.length}/1000 characters
           </p>
         </div>
@@ -176,9 +174,14 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-700 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-emerald-500/50"
+          className="fb-btn-primary w-full py-3 shadow-lg"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Review'}
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Submitting...
+            </div>
+          ) : 'Submit Review'}
         </button>
       </form>
     </Modal>
