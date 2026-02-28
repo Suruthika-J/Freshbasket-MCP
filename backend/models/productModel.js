@@ -79,6 +79,13 @@ const productSchema = new mongoose.Schema(
     visibleDistricts: {
       type: [String],
       default: []
+    },
+    // ============================================
+    // NEW: RETURN POLICY FIELDS
+    // ============================================
+    isPerishable: {
+      type: Boolean,
+      default: false
     }
   },
   {
@@ -87,35 +94,35 @@ const productSchema = new mongoose.Schema(
 );
 
 // Virtual field to check if product is on sale
-productSchema.virtual('isOnSale').get(function() {
+productSchema.virtual('isOnSale').get(function () {
   return this.oldPrice && this.oldPrice > this.price;
 });
 
 // Virtual field to calculate discount percentage
-productSchema.virtual('discountPercentage').get(function() {
+productSchema.virtual('discountPercentage').get(function () {
   if (!this.oldPrice || this.oldPrice <= this.price) return 0;
   return Math.round(((this.oldPrice - this.price) / this.oldPrice) * 100);
 });
 
 // Virtual field to check stock availability
-productSchema.virtual('inStock').get(function() {
+productSchema.virtual('inStock').get(function () {
   return this.stock > 0;
 });
 
 // Method to check if requested quantity is available
-productSchema.methods.hasStock = function(quantity) {
+productSchema.methods.hasStock = function (quantity) {
   return this.stock >= quantity;
 };
 
 // Method to reduce stock (with automatic notification)
-productSchema.methods.reduceStock = async function(quantity) {
+productSchema.methods.reduceStock = async function (quantity) {
   if (this.stock < quantity) {
     throw new Error(`Insufficient stock. Only ${this.stock} items available`);
   }
   const previousStock = this.stock;
   this.stock -= quantity;
   const result = await this.save();
-  
+
   // Trigger notification check after stock reduction
   try {
     const { checkAndNotifyStockLevel } = await import('../services/twilioService.js');
@@ -127,7 +134,7 @@ productSchema.methods.reduceStock = async function(quantity) {
 };
 
 // Method to increase stock (for returns/restocking)
-productSchema.methods.increaseStock = async function(quantity) {
+productSchema.methods.increaseStock = async function (quantity) {
   this.stock += quantity;
   return await this.save();
 };

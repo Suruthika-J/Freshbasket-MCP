@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
     validate: {
-      validator: function(phone) {
+      validator: function (phone) {
         return !phone || /^\d{10}$/.test(phone.replace(/\D/g, ''));
       },
       message: 'Phone number must be 10 digits'
@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema({
     default: null,
     trim: true,
     validate: {
-      validator: function(pincode) {
+      validator: function (pincode) {
         return !pincode || /^\d{6}$/.test(pincode);
       },
       message: 'Pincode must be 6 digits'
@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
   // ============================================
   isApproved: {
     type: Boolean,
-    default: function() {
+    default: function () {
       // Only farmers need approval, everyone else is auto-approved
       return this.role !== 'farmer';
     }
@@ -115,13 +115,17 @@ const userSchema = new mongoose.Schema({
   profileUpdatedAt: {
     type: Date,
     default: Date.now
+  },
+  walletBalance: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -138,12 +142,12 @@ userSchema.pre('save', async function(next) {
 });
 
 // Virtual for full location
-userSchema.virtual('fullLocation').get(function() {
+userSchema.virtual('fullLocation').get(function () {
   return `${this.location.city}, ${this.location.state}, ${this.location.country}`;
 });
 
 // Virtual for full address including pincode
-userSchema.virtual('fullAddress').get(function() {
+userSchema.virtual('fullAddress').get(function () {
   if (this.pincode && this.district) {
     return `${this.location.city}, ${this.district}, ${this.location.state} - ${this.pincode}`;
   }
@@ -153,7 +157,7 @@ userSchema.virtual('fullAddress').get(function() {
 // Ensure virtual fields are serialized
 userSchema.set('toJSON', {
   virtuals: true,
-  transform: function(doc, ret) {
+  transform: function (doc, ret) {
     delete ret.password;
     delete ret.otp;
     delete ret.__v;

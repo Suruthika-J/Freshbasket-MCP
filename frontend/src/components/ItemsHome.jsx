@@ -13,7 +13,7 @@ import { itemsHomeStyles } from "../assets/dummyStyles.js";
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 // Stock Status Badge Component
 const StockBadge = ({ stock }) => {

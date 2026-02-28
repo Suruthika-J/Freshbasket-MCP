@@ -11,7 +11,8 @@ const AssignAgentModal = ({ isOpen, onClose, order, onAgentAssigned }) => {
     const [loading, setLoading] = useState(false);
     const [fetchingAgents, setFetchingAgents] = useState(true);
 
-    const API_URL = 'http://localhost:4000/api';
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    const API_URL = `${API_BASE}/api`;
 
     useEffect(() => {
         if (isOpen) {
@@ -64,14 +65,23 @@ const AssignAgentModal = ({ isOpen, onClose, order, onAgentAssigned }) => {
         setLoading(true);
 
         try {
-            const assignUrl = `${API_URL}/orders/admin/${order._id}/assign`;
-            console.log('📡 Assigning agent to:', assignUrl);
-            console.log('   Order ID:', order._id);
-            console.log('   Agent ID:', selectedAgentId);
+            // Check if it's a SubOrder (has subOrderId) or legacy Order
+            let assignUrl;
+            let method = 'PUT';
 
-            const response = await axios.put(assignUrl, {
-                agentId: selectedAgentId
-            }, {
+            if (order.subOrderId) {
+                assignUrl = `${API_URL}/sub-orders/${order._id}/assign-delivery-agent`;
+                method = 'PATCH';
+            } else {
+                assignUrl = `${API_URL}/orders/admin/${order._id}/assign`;
+            }
+
+            console.log(`📡 Assigning agent using ${method} to: ${assignUrl}`);
+
+            const response = await axios({
+                method,
+                url: assignUrl,
+                data: { agentId: selectedAgentId },
                 headers: getAuthHeaders()
             });
 
@@ -125,8 +135,8 @@ const AssignAgentModal = ({ isOpen, onClose, order, onAgentAssigned }) => {
                         <h3 className="text-sm font-medium text-gray-700 mb-2">Order Details</h3>
                         <div className="space-y-1 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Order ID:</span>
-                                <span className="font-medium text-gray-900">{order.orderId}</span>
+                                <span className="text-gray-600">{order.subOrderId ? 'Sub-Order ID:' : 'Order ID:'}</span>
+                                <span className="font-medium text-gray-900">{order.subOrderId || order.orderId}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">Customer:</span>
@@ -134,12 +144,11 @@ const AssignAgentModal = ({ isOpen, onClose, order, onAgentAssigned }) => {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">Status:</span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
                                     order.status === 'Shipped' ? 'bg-purple-100 text-purple-800' :
-                                    order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-yellow-100 text-yellow-800'
-                                }`}>
+                                        order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
+                                            'bg-yellow-100 text-yellow-800'
+                                    }`}>
                                     {order.status}
                                 </span>
                             </div>
@@ -157,7 +166,7 @@ const AssignAgentModal = ({ isOpen, onClose, order, onAgentAssigned }) => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Select Delivery Agent
                         </label>
-                        
+
                         {fetchingAgents ? (
                             <div className="flex items-center justify-center py-8">
                                 <i className="fas fa-spinner fa-spin text-2xl text-blue-600"></i>

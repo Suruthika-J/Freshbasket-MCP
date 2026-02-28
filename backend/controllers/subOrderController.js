@@ -12,12 +12,19 @@ import { Product } from '../models/productModel.js';
 export const getSubOrderById = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user.id;
+        const userId = req.user.id || req.user._id;
         const userRole = req.user.role;
 
-        const subOrder = await SubOrder.findById(id)
+        // Try to find by _id first, then by subOrderId
+        let subOrder = await SubOrder.findById(id)
             .populate('parentOrder', 'parentOrderId customer')
             .populate('assignedAgent', 'name phone email');
+
+        if (!subOrder) {
+            subOrder = await SubOrder.findOne({ subOrderId: id })
+                .populate('parentOrder', 'parentOrderId customer')
+                .populate('assignedAgent', 'name phone email');
+        }
 
         if (!subOrder) {
             return res.status(404).json({
@@ -27,12 +34,14 @@ export const getSubOrderById = async (req, res) => {
         }
 
         // Role-based access control
+        const vendorId = subOrder.vendor?.vendorId || subOrder.farmerId;
+
         if (userRole === 'farmer') {
             // Farmer can only see sub-orders with their products
-            if (subOrder.vendor.vendorId.toString() !== userId.toString()) {
+            if (vendorId?.toString() !== userId.toString()) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Access denied'
+                    message: 'Access denied: You can only view your own sub-orders'
                 });
             }
         } else if (userRole === 'agent') {
@@ -40,16 +49,16 @@ export const getSubOrderById = async (req, res) => {
             if (!subOrder.assignedAgent || subOrder.assignedAgent._id.toString() !== userId.toString()) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Access denied'
+                    message: 'Access denied: This order is not assigned to you'
                 });
             }
         } else if (userRole === 'user') {
             // Customer can see their own sub-orders
             const parentOrder = await ParentOrder.findById(subOrder.parentOrder);
-            if (!parentOrder || parentOrder.user.toString() !== userId) {
+            if (!parentOrder || parentOrder.user.toString() !== userId.toString()) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Access denied'
+                    message: 'Access denied: This order does not belong to you'
                 });
             }
         }
@@ -64,7 +73,8 @@ export const getSubOrderById = async (req, res) => {
         console.error('❌ Error fetching sub-order:', error);
         return res.status(500).json({
             success: false,
-            message: 'Failed to fetch sub-order'
+            message: 'Failed to fetch sub-order',
+            error: error.message
         });
     }
 };
@@ -76,61 +86,72 @@ export const getFarmerSubOrders = async (req, res) => {
     try {
         console.log('🌾 Farmer Orders API Hit');
 
-        // Extract farmerId from the JWT token (set by authMiddleware)
+        // Extract farmerId from the JWT token
         const farmerId = req.user.id || req.user._id;
 
         if (!farmerId) {
             return res.status(401).json({
                 success: false,
-                message: 'Unauthorized: Invalid or expired token'
+                message: 'Unauthorized: No user session found'
             });
         }
 
-        // Query orders where subOrders.farmerId matches (or vendor.vendorId for legacy)
+        console.log('🔍 Searching orders for farmer:', farmerId);
+
+        // Query orders where subOrders.farmerId matches or vendor.vendorId matches
         const subOrders = await SubOrder.find({
             $or: [
                 { farmerId: farmerId },
-                { 'vendor.vendorId': farmerId.toString(), 'vendor.vendorType': 'farmer' }
+                { 'vendor.vendorId': farmerId.toString() }
             ]
         })
             .populate({
                 path: 'parentOrder',
-                select: 'parentOrderId customer',
+                select: 'parentOrderId customer paymentStatus',
                 model: 'ParentOrder'
             })
             .sort({ createdAt: -1 })
             .lean();
 
+        console.log(`📊 Found ${subOrders.length} raw sub-orders`);
+
         if (subOrders.length === 0) {
-            return res.status(404).json({
-                success: false,
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                subOrders: [],
                 message: 'No sub-orders found for this farmer'
             });
         }
 
-        // Format each response object as per requirements
-        const formattedSubOrders = subOrders.map(so => ({
-            _id: so._id,
-            subOrderId: so.subOrderId, // Keep for display
-            parentOrderId: so.parentOrder?.parentOrderId || 'N/A',
-            customerName: so.parentOrder?.customer?.name || 'N/A',
-            customerPhone: so.parentOrder?.customer?.phone || 'N/A',
-            customerAddress: so.parentOrder?.customer?.address || 'N/A',
-            items: so.items.map(item => ({
-                productId: item.productId,
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price,
-                subtotal: (item.price * item.quantity)
-            })),
-            subTotal: so.subtotal,
-            orderStatus: so.status,
-            paymentStatus: so.paymentStatus || (so.parentOrder?.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'),
-            deliveryOption: so.deliveryOption,
-            createdAt: so.createdAt
-        }));
+        // Format each response object
+        const formattedSubOrders = subOrders.map(so => {
+            // Safe access to items
+            const items = Array.isArray(so.items) ? so.items : [];
 
-        console.log(`✅ Successfully fetched ${formattedSubOrders.length} sub-orders for farmer`);
+            return {
+                _id: so._id,
+                subOrderId: so.subOrderId || 'N/A',
+                parentOrderId: so.parentOrder?.parentOrderId || 'N/A',
+                customerName: so.parentOrder?.customer?.name || 'N/A',
+                customerPhone: so.parentOrder?.customer?.phone || 'N/A',
+                customerAddress: so.parentOrder?.customer?.address || 'N/A',
+                items: items.map(item => ({
+                    productId: item.productId,
+                    name: item.name || 'Unknown Item',
+                    quantity: item.quantity || 0,
+                    price: item.price || 0,
+                    subtotal: (item.price || 0) * (item.quantity || 0)
+                })),
+                subTotal: so.subtotal || 0,
+                orderStatus: so.status || 'pending',
+                paymentStatus: so.paymentStatus || (so.parentOrder?.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'),
+                deliveryOption: so.deliveryOption || 'N/A',
+                createdAt: so.createdAt || new Date()
+            };
+        });
+
+        console.log(`✅ Successfully formatted ${formattedSubOrders.length} sub-orders`);
 
         return res.status(200).json({
             success: true,
@@ -182,13 +203,20 @@ export const getAgentSubOrders = async (req, res) => {
 export const updateSubOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, deliveryStatus } = req.body; // Can accept both for compatibility
-        const userId = req.user.id;
+        const { status, deliveryStatus } = req.body;
+        const userId = req.user.id || req.user._id;
         const userRole = req.user.role;
 
-        const subOrder = await SubOrder.findById(id);
+        console.log(`📦 Status Update Attempt: id=${id}, role=${userRole}, status=${status}, deliveryStatus=${deliveryStatus}`);
+
+        // Find by _id or subOrderId
+        let subOrder = await SubOrder.findById(id);
+        if (!subOrder) {
+            subOrder = await SubOrder.findOne({ subOrderId: id });
+        }
 
         if (!subOrder) {
+            console.warn(`⚠️ Sub-order not found: ${id}`);
             return res.status(404).json({
                 success: false,
                 message: 'Sub-order not found'
@@ -225,17 +253,25 @@ export const updateSubOrderStatus = async (req, res) => {
         }
         // Handle Farmer status updates
         else if (userRole === 'farmer') {
-            if (subOrder.vendor.vendorId.toString() !== userId.toString()) {
+            const vendorId = subOrder.vendor?.vendorId || subOrder.farmerId;
+
+            if (vendorId?.toString() !== userId.toString()) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Access denied'
+                    message: 'Access denied: You do not own this sub-order'
                 });
             }
 
-            if (!subOrder.canVendorUpdateStatus(status)) {
+            // Allowed farmer statuses: preparing, ready, and delivered (for self-pickup)
+            const allowedFarmerStatuses = ['preparing', 'ready'];
+            if (subOrder.deliveryOption === 'SELF_PICKUP') {
+                allowedFarmerStatuses.push('delivered');
+            }
+
+            if (!allowedFarmerStatuses.includes(status)) {
                 return res.status(400).json({
                     success: false,
-                    message: 'Farmers can only update status to: preparing, ready'
+                    message: `Farmers can only update status to: ${allowedFarmerStatuses.join(', ')}`
                 });
             }
             subOrder.status = status;
@@ -247,11 +283,13 @@ export const updateSubOrderStatus = async (req, res) => {
         } else {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied'
+                message: 'Access denied: Invalid role for status update'
             });
         }
 
         await subOrder.save();
+        console.log(`✅ Status updated successfully for ${subOrder.subOrderId}`);
+
         return res.status(200).json({
             success: true,
             message: 'Status updated successfully',
@@ -262,7 +300,8 @@ export const updateSubOrderStatus = async (req, res) => {
         console.error('❌ Error updating order status:', error);
         return res.status(500).json({
             success: false,
-            message: error.message || 'Failed to update status'
+            message: error.name === 'ValidationError' ? 'Validation failed' : 'Failed to update status',
+            error: error.message
         });
     }
 };
@@ -362,16 +401,8 @@ export const assignDeliveryAgent = async (req, res) => {
             });
         }
 
-        // Prevent assignment if subOrder belongs to Admin
-        if (subOrder.vendor.vendorType === 'admin') {
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot assign delivery agent to Admin products'
-            });
-        }
-
         // Prevent assignment if deliveryMode is SELF_PICKUP or deliveryRequired is false
-        if (subOrder.deliveryOption === 'SELF_PICKUP' || subOrder.deliveryType === 'self_pickup' || !subOrder.deliveryRequired) {
+        if (subOrder.deliveryOption === 'SELF_PICKUP' || subOrder.deliveryType === 'self_pickup' || subOrder.deliveryType === 'selfPickup' || !subOrder.deliveryRequired) {
             return res.status(400).json({
                 success: false,
                 message: 'Cannot assign delivery agent for Self-Pickup orders'
@@ -393,6 +424,13 @@ export const assignDeliveryAgent = async (req, res) => {
         subOrder.trackingEnabled = true;
 
         await subOrder.save();
+
+        // ============================================
+        // 🔔 NOTIFICATION (As per requirement)
+        // ============================================
+        console.log(`🔔 NOTIFY: Farmer ${subOrder.vendor.vendorName} that their order ${subOrder.subOrderId} has been assigned to agent.`);
+        console.log(`🔔 NOTIFY: Delivery Agent ${agentId} that a new order ${subOrder.subOrderId} is assigned to them.`);
+        // ============================================
 
         console.log(`✅ Agent ${agentId} assigned to sub-order ${subOrder.subOrderId}`);
 

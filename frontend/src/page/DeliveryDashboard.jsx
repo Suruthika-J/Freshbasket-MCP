@@ -9,6 +9,9 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import 'leaflet/dist/leaflet.css';
 
+// ✅ Get API URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 // Fix Leaflet default icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -737,7 +740,6 @@ const DeliveryDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Order Items */}
                         <div className="mb-6">
                             <h3 className="font-semibold text-lg mb-3 flex items-center">
                                 <FiPackage className="mr-2 text-blue-600" />
@@ -749,7 +751,7 @@ const DeliveryDashboard = () => {
                                         <div className="flex items-center space-x-3">
                                             {item.imageUrl && (
                                                 <img
-                                                    src={`http://localhost:4000${item.imageUrl}`}
+                                                    src={`${API_BASE_URL}${item.imageUrl}`}
                                                     alt={item.name}
                                                     className="w-12 h-12 object-cover rounded"
                                                 />
@@ -757,7 +759,7 @@ const DeliveryDashboard = () => {
                                             <div>
                                                 <p className="font-medium">{item.name}</p>
                                                 <p className="text-sm text-gray-600">
-                                                    ₹{item.price} × {item.quantity}
+                                                    ₹{item.price.toFixed(2)} × {item.quantity}
                                                 </p>
                                             </div>
                                         </div>
@@ -791,36 +793,38 @@ const DeliveryDashboard = () => {
                         </div>
 
                         {/* Status Update Buttons */}
-                        {selectedOrder.deliveryStatus !== 'DELIVERED' && selectedOrder.status !== 'cancelled' && (
-                            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                                {/* Only allow PICKED_UP if currently ASSIGNED */}
-                                {selectedOrder.deliveryStatus === 'ASSIGNED' && (
-                                    <button
-                                        onClick={() => updateOrderStatus(selectedOrder._id, 'PICKED_UP')}
-                                        disabled={actionLoading}
-                                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                                    >
-                                        {actionLoading ? 'Updating...' : 'Mark as Picked Up'}
-                                    </button>
-                                )}
+                        {
+                            selectedOrder.deliveryStatus !== 'DELIVERED' && selectedOrder.status !== 'cancelled' && (
+                                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                                    {/* Only allow PICKED_UP if currently ASSIGNED */}
+                                    {selectedOrder.deliveryStatus === 'ASSIGNED' && (
+                                        <button
+                                            onClick={() => updateOrderStatus(selectedOrder._id, 'PICKED_UP')}
+                                            disabled={actionLoading}
+                                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                        >
+                                            {actionLoading ? 'Updating...' : 'Mark as Picked Up'}
+                                        </button>
+                                    )}
 
-                                {/* Only allow DELIVERED if currently PICKED_UP */}
-                                {selectedOrder.deliveryStatus === 'PICKED_UP' && (
-                                    <button
-                                        onClick={() => updateOrderStatus(selectedOrder._id, 'DELIVERED')}
-                                        disabled={actionLoading}
-                                        className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center"
-                                    >
-                                        <FiCheckCircle className="mr-2" />
-                                        {actionLoading ? 'Updating...' : 'Mark as Delivered'}
-                                    </button>
-                                )}
-                            </div>
-                        )}
+                                    {/* Only allow DELIVERED if currently PICKED_UP */}
+                                    {selectedOrder.deliveryStatus === 'PICKED_UP' && (
+                                        <button
+                                            onClick={() => updateOrderStatus(selectedOrder._id, 'DELIVERED')}
+                                            disabled={actionLoading}
+                                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center"
+                                        >
+                                            <FiCheckCircle className="mr-2" />
+                                            {actionLoading ? 'Updating...' : 'Mark as Delivered'}
+                                        </button>
+                                    )}
+                                </div>
+                            )
+                        }
                     </>
                 )}
-            </Modal>
-        </div>
+            </Modal >
+        </div >
     );
 };
 

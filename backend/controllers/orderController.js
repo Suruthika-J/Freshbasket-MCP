@@ -437,17 +437,21 @@ export const getOrderStats = async (req, res, next) => {
             console.log('ℹ️ No date filter - showing all orders');
         }
 
-        const allOrders = await Order.find(dateFilter).lean();
-        console.log(`\n📦 Found ${allOrders.length} orders matching filter\n`);
+        const SubOrder = mongoose.model('SubOrder');
+        const allOrders = await SubOrder.find(dateFilter)
+            .populate('parentOrder', 'paymentMethod totalAmount')
+            .lean();
+        console.log(`\n📦 Found ${allOrders.length} sub-orders matching filter\n`);
 
-        // ✅ HELPER FUNCTION - Same logic as frontend
-        const getDisplayPaymentStatus = (order) => {
-            if (order.paymentMethod === 'Cash on Delivery') {
-                return order.status === 'Delivered' ? 'Paid' : 'Unpaid';
-            } else if (order.paymentMethod === 'Online Payment') {
+        // ✅ HELPER FUNCTION - Updated for SubOrder architecture
+        const getDisplayPaymentStatus = (so) => {
+            const payMethod = so.parentOrder?.paymentMethod || 'Cash on Delivery';
+            if (payMethod === 'Cash on Delivery') {
+                return so.status === 'delivered' ? 'Paid' : 'Unpaid';
+            } else if (payMethod === 'Online Payment') {
                 return 'Paid';
             }
-            return order.paymentStatus || 'Unpaid';
+            return so.paymentStatus || 'Unpaid';
         };
 
         // Initialize stats
@@ -464,27 +468,29 @@ export const getOrderStats = async (req, res, next) => {
         let totalDeliveredOrders = 0;
 
         // Count orders with corrected logic
-        allOrders.forEach(order => {
-            // Count by status
-            if (order.status && stats.hasOwnProperty(order.status)) {
-                stats[order.status]++;
+        allOrders.forEach(so => {
+            // Count by status (Title case keys)
+            const statusName = so.status || 'pending';
+            const statusKey = statusName.charAt(0).toUpperCase() + statusName.slice(1);
+
+            if (stats.hasOwnProperty(statusKey)) {
+                stats[statusKey]++;
             }
 
             // ✅ FIX: Use display payment status logic
-            const displayPaymentStatus = getDisplayPaymentStatus(order);
+            const displayPaymentStatus = getDisplayPaymentStatus(so);
             if (displayPaymentStatus === 'Unpaid') {
                 stats.Unpaid++;
-                console.log(`📝 Counted as Unpaid: ${order.orderId} (${order.paymentMethod}, Status: ${order.status})`);
             }
 
             // Calculate revenue from paid orders
             if (displayPaymentStatus === 'Paid') {
-                const orderTotal = order.total || 0;
+                const orderTotal = so.total || 0;
                 totalRevenue += orderTotal;
             }
 
             // Count delivered orders
-            if (order.status === 'Delivered') {
+            if (so.status === 'delivered') {
                 totalDeliveredOrders++;
             }
         });

@@ -16,6 +16,8 @@ import StockAdjuster from '../components/StockAdjuster';
 import FarmerSubOrders from '../components/FarmerSubOrders';
 import FarmerAnalytics from '../components/FarmerAnalytics';
 import FarmerNavbar from '../components/FarmerNavbar';
+import FarmerReturnManagement from '../components/FarmerReturnManagement';
+import { FiRefreshCw } from 'react-icons/fi';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -336,6 +338,12 @@ const FarmerDashboard = () => {
               label={t('dashboard.tabs.myOrders')}
             />
             <TabButton
+              active={activeTab === 'returns'}
+              onClick={() => setActiveTab('returns')}
+              icon={FiRefreshCw}
+              label="Returns"
+            />
+            <TabButton
               active={activeTab === 'analytics'}
               onClick={() => setActiveTab('analytics')}
               icon={FiBarChart2}
@@ -423,6 +431,7 @@ const FarmerDashboard = () => {
             )}
 
             {activeTab === 'orders' && <FarmerSubOrders />}
+            {activeTab === 'returns' && <FarmerReturnManagement />}
             {activeTab === 'analytics' && <FarmerAnalytics />}
           </div>
         </div>

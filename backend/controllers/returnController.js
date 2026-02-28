@@ -1,390 +1,218 @@
-// ============================================
-// FILE: backend/controllers/returnController.js
-// Path: backend/controllers/returnController.js
-// ============================================
-import ReturnRequest from '../models/returnRequestModel.js';
-import Order from '../models/orderModel.js';
+// backend/controllers/returnController.js
+import mongoose from 'mongoose';
+import Return from '../models/ReturnModel.js';
+import SubOrder from '../models/SubOrderModel.js';
+import ParentOrder from '../models/ParentOrderModel.js';
 import { Product } from '../models/productModel.js';
-import DeliveryAgent from '../models/deliveryAgentModel.js';
+import { differenceInDays, isSameDay } from 'date-fns';
+
 // ============================================
-// CREATE RETURN REQUEST (User)
+// CUSTOMER: REQUEST RETURN
 // ============================================
-export const createReturnRequest = async (req, res) => {
+export const requestReturn = async (req, res) => {
     try {
-        const { orderId, reason } = req.body;
-        const userId = req.user._id;
+        const { subOrderId, items, overallReason, description, images, refundMethod } = req.body;
+        const userId = req.user.id || req.user._id;
 
-        console.log('📦 Creating return request:', { orderId, userId });
+        // 1. Find the sub-order
+        const subOrder = await SubOrder.findById(subOrderId).populate('parentOrder');
+        if (!subOrder) {
+            return res.status(404).json({ success: false, message: 'Sub-order not found' });
+        }
 
-        // Validate input
-        if (!orderId || !reason) {
+        // 2. Validate user owner
+        if (subOrder.parentOrder.user.toString() !== userId.toString()) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+
+        // 3. Check delivery status (must be delivered)
+        if (subOrder.status !== 'delivered' && subOrder.deliveryStatus !== 'DELIVERED') {
+            return res.status(400).json({ success: false, message: 'Returns can only be requested for delivered orders.' });
+        }
+
+        // 4. Validate return policy (Time based)
+        const deliveryDate = subOrder.deliveryDate || subOrder.updatedAt;
+        const today = new Date();
+
+        // Check if any items are perishable
+        const hasPerishable = items.some(item => item.isPerishable);
+
+        if (hasPerishable && !isSameDay(new Date(deliveryDate), today)) {
             return res.status(400).json({
                 success: false,
-                message: 'Order ID and reason are required'
+                message: 'Perishable items can only be returned on the same day of delivery.'
             });
         }
 
-        if (reason.length < 3 || reason.length > 500) {
+        if (differenceInDays(today, new Date(deliveryDate)) > 2) {
             return res.status(400).json({
                 success: false,
-                message: 'Reason must be between 3 and 500 characters'
+                message: 'Return window (2 days) has expired for this order.'
             });
         }
 
-        // Find the order
-        const order = await Order.findById(orderId);
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: 'Order not found'
-            });
-        }
+        // 5. Calculate refund amount for selected items
+        const refundAmount = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
-        // Verify order belongs to user
-        if (order.user.toString() !== userId.toString()) {
-            return res.status(403).json({
-                success: false,
-                message: 'You can only request returns for your own orders'
-            });
-        }
-
-        // Check if order is delivered
-        if (order.status !== 'Delivered') {
-            return res.status(400).json({
-                success: false,
-                message: 'Only delivered orders can be returned'
-            });
-        }
-
-        // Check if return window is still open (e.g., 7 days)
-        const deliveryDate = new Date(order.updatedAt);
-        const daysSinceDelivery = Math.floor((Date.now() - deliveryDate) / (1000 * 60 * 60 * 24));
-        
-        if (daysSinceDelivery > 7) {
-            return res.status(400).json({
-                success: false,
-                message: 'Return window has expired. Returns are only accepted within 7 days of delivery.'
-            });
-        }
-
-        // Check if return request already exists
-        const existingRequest = await ReturnRequest.findOne({
-            orderId,
-            status: { $in: ['Pending', 'Approved', 'Collected'] }
+        // 6. Create Return Request
+        const returnId = await Return.generateReturnId();
+        const newReturn = new Return({
+            returnId,
+            parentOrder: subOrder.parentOrder._id,
+            subOrder: subOrder._id,
+            user: userId,
+            farmerId: subOrder.farmerId,
+            items,
+            images,
+            overallReason,
+            description,
+            refundDetails: {
+                amount: refundAmount,
+                method: refundMethod || 'original'
+            }
         });
 
-        if (existingRequest) {
-            return res.status(400).json({
-                success: false,
-                message: 'A return request for this order is already in progress'
-            });
+        await newReturn.save();
+
+        // Update sub-order state to indicate return is pending
+        subOrder.status = 'returning';
+        await subOrder.save();
+
+        // Update parent order overall status
+        const parentOrder = await ParentOrder.findById(subOrder.parentOrder._id);
+        if (parentOrder && typeof parentOrder.updateOverallStatus === 'function') {
+            await parentOrder.updateOverallStatus();
         }
 
-        // Create return request
-        const returnRequest = new ReturnRequest({
-            orderId,
-            userId,
-            reason,
-            refundAmount: order.total,
-            collectionAddress: order.customer.address
-        });
-
-        await returnRequest.save();
-
-        // Populate order details for response
-        await returnRequest.populate('orderId', 'orderId customer.name total');
-
-        console.log('✅ Return request created:', returnRequest._id);
-
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: 'Return request submitted successfully',
-            returnRequest
+            returnRequest: newReturn
         });
 
     } catch (error) {
-        console.error('❌ Create return request error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create return request',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'
-        });
+        console.error('❌ Error requesting return:', error);
+        return res.status(500).json({ success: false, message: 'Failed to submit return request', error: error.message });
     }
 };
 
 // ============================================
-// GET USER'S RETURN REQUESTS
+// ADMIN/FARMER: GET RETURN REQUESTS
 // ============================================
-export const getUserReturnRequests = async (req, res) => {
+export const getReturnRequests = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user.id || req.user._id;
+        const userRole = req.user.role;
 
-        const returnRequests = await ReturnRequest.find({ userId })
-            .populate('orderId', 'orderId customer.name total items paymentMethod')
-            .populate('assignedAgent', 'name phone email')
-            .sort({ createdAt: -1 })
-            .lean();
+        let query = {};
+        if (userRole === 'farmer') {
+            query.farmerId = userId;
+        }
 
-        res.status(200).json({
+        const returns = await Return.find(query)
+            .populate('user', 'name email phone')
+            .populate('subOrder', 'subOrderId')
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
             success: true,
-            count: returnRequests.length,
-            returnRequests
+            count: returns.length,
+            returns
         });
-
     } catch (error) {
-        console.error('❌ Get user return requests error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch return requests',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'
-        });
+        console.error('❌ Error fetching returns:', error);
+        return res.status(500).json({ success: false, message: 'Failed to fetch returns' });
     }
 };
 
 // ============================================
-// GET RETURN REQUEST BY ORDER ID (User)
+// ADMIN/FARMER: UPDATE RETURN STATUS (Approve/Reject)
 // ============================================
-export const getReturnRequestByOrderId = async (req, res) => {
+export const updateReturnStatus = async (req, res) => {
     try {
-        const { orderId } = req.params;
-        const userId = req.user._id;
+        const { returnId } = req.params;
+        const { status, adminRemarks, reusable } = req.body;
+        const userRole = req.user.role;
 
-        const returnRequest = await ReturnRequest.findOne({ 
-            orderId,
-            userId 
-        })
-            .populate('orderId', 'orderId customer.name total items')
-            .populate('assignedAgent', 'name phone email')
-            .lean();
-
+        const returnRequest = await Return.findById(returnId);
         if (!returnRequest) {
-            return res.status(404).json({
-                success: false,
-                message: 'No return request found for this order'
-            });
+            return res.status(404).json({ success: false, message: 'Return request not found' });
         }
 
-        res.status(200).json({
-            success: true,
-            returnRequest
-        });
-
-    } catch (error) {
-        console.error('❌ Get return request by order error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch return request',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'
-        });
-    }
-};
-
-// ============================================
-// GET ALL RETURN REQUESTS (Admin)
-// ============================================
-export const getAllReturnRequests = async (req, res) => {
-    try {
-        const { status, startDate, endDate } = req.query;
-
-        let filter = {};
-
-        // Filter by status if provided
-        if (status && status !== 'All') {
-            filter.status = status;
-        }
-
-        // Filter by date range if provided
-        if (startDate || endDate) {
-            filter.requestedAt = {};
-            if (startDate) {
-                filter.requestedAt.$gte = new Date(startDate);
-            }
-            if (endDate) {
-                const end = new Date(endDate);
-                end.setHours(23, 59, 59, 999);
-                filter.requestedAt.$lte = end;
-            }
-        }
-
-        const returnRequests = await ReturnRequest.find(filter)
-            .populate('orderId', 'orderId customer.name customer.phone customer.email total items paymentMethod')
-            .populate('userId', 'name email')
-            .populate('assignedAgent', 'name phone email')
-            .populate('handledBy', 'name email')
-            .sort({ createdAt: -1 })
-            .lean();
-
-        // Calculate statistics
-        const stats = {
-            total: returnRequests.length,
-            pending: returnRequests.filter(r => r.status === 'Pending').length,
-            approved: returnRequests.filter(r => r.status === 'Approved').length,
-            rejected: returnRequests.filter(r => r.status === 'Rejected').length,
-            collected: returnRequests.filter(r => r.status === 'Collected').length,
-            returned: returnRequests.filter(r => r.status === 'Returned').length
-        };
-
-        res.status(200).json({
-            success: true,
-            count: returnRequests.length,
-            stats,
-            returnRequests
-        });
-
-    } catch (error) {
-        console.error('❌ Get all return requests error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to fetch return requests',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'
-        });
-    }
-};
-
-// ============================================
-// UPDATE RETURN REQUEST STATUS (Admin)
-// ============================================
-export const updateReturnRequestStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status, adminResponse, refundAmount, assignedAgent } = req.body;
-        const adminId = req.user._id;
-
-        console.log('🔄 Updating return request:', { id, status });
-
-        const returnRequest = await ReturnRequest.findById(id);
-        if (!returnRequest) {
-            return res.status(404).json({
-                success: false,
-                message: 'Return request not found'
-            });
-        }
-
-        // Validate status transition
-        const validTransitions = {
-            'Pending': ['Approved', 'Rejected'],
-            'Approved': ['Collected'],
-            'Collected': ['Returned'],
-            'Rejected': [],
-            'Returned': []
-        };
-
-        if (!validTransitions[returnRequest.status].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: `Cannot change status from ${returnRequest.status} to ${status}`
-            });
-        }
-
-        // Update fields
         returnRequest.status = status;
-        returnRequest.handledBy = adminId;
-        
-        if (adminResponse) {
-            returnRequest.adminResponse = adminResponse;
-        }
+        if (adminRemarks) returnRequest.adminRemarks = adminRemarks;
+        if (reusable !== undefined) returnRequest.reusable = reusable;
 
-        if (refundAmount !== undefined) {
-            returnRequest.refundAmount = refundAmount;
-        }
-
-        if (assignedAgent) {
-            returnRequest.assignedAgent = assignedAgent;
-        }
-
-        // Update timestamps based on status
-        switch (status) {
-            case 'Approved':
-                returnRequest.approvedAt = new Date();
-                break;
-            case 'Collected':
-                returnRequest.collectedAt = new Date();
-                break;
-            case 'Returned':
-                returnRequest.completedAt = new Date();
-                returnRequest.refundStatus = 'Processed';
-                
-                // Restore stock when return is completed
-                const order = await Order.findById(returnRequest.orderId);
-                if (order) {
-                    for (const item of order.items) {
-                        const product = await Product.findById(item.id);
-                        if (product) {
-                            product.stock += item.quantity;
-                            await product.save();
-                            console.log(`✅ Restored ${item.quantity} units of ${item.name}`);
-                        }
+        // Logic for specific status transitions
+        if (status === 'received') {
+            // Logic for stock management
+            if (reusable) {
+                for (const item of returnRequest.items) {
+                    const product = await Product.findById(item.productId);
+                    if (product) {
+                        product.stock += item.quantity;
+                        await product.save();
                     }
                 }
-                break;
+            }
+        }
+
+        if (status === 'refunded') {
+            returnRequest.refundDetails.processedAt = new Date();
+
+            // 1. Process Wallet Refund if method is wallet
+            if (returnRequest.refundDetails.method === 'wallet') {
+                const User = mongoose.model('user');
+                const user = await User.findById(returnRequest.user);
+                if (user) {
+                    user.walletBalance = (user.walletBalance || 0) + returnRequest.refundDetails.amount;
+                    await user.save();
+                }
+            } else {
+                // Here you'd normally integrate with Stripe refund API for 'original' method
+                console.log(`Refund of ₹${returnRequest.refundDetails.amount} processed to original payment method.`);
+            }
+
+            // 2. Mark sub-order as refunded
+            const subOrder = await SubOrder.findById(returnRequest.subOrder).populate('parentOrder');
+            if (subOrder) {
+                subOrder.status = 'refunded';
+                await subOrder.save();
+
+                // Update parent order overall status
+                const parentOrder = await ParentOrder.findById(subOrder.parentOrder._id);
+                if (parentOrder && typeof parentOrder.updateOverallStatus === 'function') {
+                    await parentOrder.updateOverallStatus();
+                }
+            }
         }
 
         await returnRequest.save();
 
-        // Populate for response
-        await returnRequest.populate([
-            { path: 'orderId', select: 'orderId customer.name total' },
-            { path: 'userId', select: 'name email' },
-            { path: 'assignedAgent', select: 'name phone email' },
-            { path: 'handledBy', select: 'name email' }
-        ]);
-
-        console.log('✅ Return request updated:', returnRequest._id);
-
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            message: `Return request ${status.toLowerCase()} successfully`,
+            message: `Return status updated to ${status}`,
             returnRequest
         });
 
     } catch (error) {
-        console.error('❌ Update return request error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to update return request',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'
-        });
+        console.error('❌ Error updating return status:', error);
+        return res.status(500).json({ success: false, message: 'Failed to update return status' });
     }
 };
 
 // ============================================
-// DELETE RETURN REQUEST (Admin)
+// CUSTOMER: GET MY RETURNS
 // ============================================
-export const deleteReturnRequest = async (req, res) => {
+export const getMyReturns = async (req, res) => {
     try {
-        const { id } = req.params;
+        const userId = req.user.id || req.user._id;
+        const returns = await Return.find({ user: userId })
+            .populate('subOrder', 'subOrderId')
+            .sort({ createdAt: -1 });
 
-        const returnRequest = await ReturnRequest.findById(id);
-        if (!returnRequest) {
-            return res.status(404).json({
-                success: false,
-                message: 'Return request not found'
-            });
-        }
-
-        // Only allow deletion of rejected requests
-        if (!['Rejected', 'Returned'].includes(returnRequest.status)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Can only delete rejected or completed return requests'
-            });
-        }
-
-        await ReturnRequest.findByIdAndDelete(id);
-
-        console.log('✅ Return request deleted:', id);
-
-        res.status(200).json({
-            success: true,
-            message: 'Return request deleted successfully'
-        });
-
+        return res.status(200).json({ success: true, returns });
     } catch (error) {
-        console.error('❌ Delete return request error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to delete return request',
-            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal Server Error'
-        });
+        return res.status(500).json({ success: false, message: 'Failed to fetch your returns' });
     }
 };

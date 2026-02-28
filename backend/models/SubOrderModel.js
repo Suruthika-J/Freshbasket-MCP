@@ -79,7 +79,7 @@ const subOrderSchema = new mongoose.Schema({
     // Delivery configuration
     deliveryOption: {
         type: String,
-        enum: ['SELF_PICKUP', 'DELIVERY_AGENT'],
+        enum: ['SELF_PICKUP', 'DELIVERY_AGENT', 'self_pickup', 'delivery_agent', 'self-pickup', 'delivery-agent'],
         required: function () { return this.vendor.vendorType === 'farmer'; }
     },
     deliveryCharge: {
@@ -102,15 +102,23 @@ const subOrderSchema = new mongoose.Schema({
             'ready',         // Ready for pickup/delivery
             'out-for-delivery', // Agent picked up (legacy, using deliveryStatus instead)
             'delivered',     // Completed
-            'cancelled'      // Cancelled
+            'cancelled',     // Cancelled
+            'returning',     // Return in progress
+            'refunded'       // Fully refunded
         ],
         default: 'pending',
         index: true
     },
+    // NEW: Product Ownership
+    productOwner: {
+        type: String,
+        enum: ['admin', 'farmer'],
+        required: true
+    },
     // NEW: Delivery Preferences (As per requirement)
     deliveryType: {
         type: String,
-        enum: ['self_pickup', 'delivery_agent'],
+        enum: ['selfPickup', 'deliveryAgent', 'self_pickup', 'delivery_agent', 'SELF_PICKUP', 'DELIVERY_AGENT'],
         required: function () { return this.vendor.vendorType === 'farmer'; }
     },
     deliveryRequired: {
@@ -173,28 +181,42 @@ const subOrderSchema = new mongoose.Schema({
 
 // Validate delivery option based on vendor type
 subOrderSchema.pre('validate', function (next) {
+    // Set productOwner
+    if (this.vendor && this.vendor.vendorType) {
+        this.productOwner = this.vendor.vendorType;
+    }
+
     // Admin products default to platform delivery (normal flow)
     if (this.vendor.vendorType === 'admin') {
         this.deliveryOption = 'DELIVERY_AGENT'; // Maintain for compatibility
-        this.deliveryType = 'delivery_agent';
+        this.deliveryType = 'deliveryAgent';
         this.deliveryRequired = true; // Admin products always need delivery in this app
         this.assignedAgent = null;
         this.deliveryStatus = 'PENDING_ASSIGNMENT';
     }
     // Farmer products use the selected choice
     else if (this.vendor.vendorType === 'farmer') {
-        // Map deliveryOption to deliveryType if only one is provided
-        if (this.deliveryOption === 'SELF_PICKUP') this.deliveryType = 'self_pickup';
-        if (this.deliveryOption === 'DELIVERY_AGENT') this.deliveryType = 'delivery_agent';
-        if (this.deliveryType === 'self_pickup') this.deliveryOption = 'SELF_PICKUP';
-        if (this.deliveryType === 'delivery_agent') this.deliveryOption = 'DELIVERY_AGENT';
+        const dOption = String(this.deliveryOption || '').toUpperCase().replace('-', '_');
+        const dType = String(this.deliveryType || '').toLowerCase().replace('-', '_');
+
+        if (dOption === 'SELF_PICKUP' || dType === 'self_pickup' || dType === 'selfpickup' || this.deliveryOption === 'self-pickup') {
+            this.deliveryOption = 'SELF_PICKUP';
+            this.deliveryType = 'selfPickup';
+        } else if (dOption === 'DELIVERY_AGENT' || dType === 'delivery_agent' || dType === 'deliveryagent' || this.deliveryOption === 'delivery-agent') {
+            this.deliveryOption = 'DELIVERY_AGENT';
+            this.deliveryType = 'deliveryAgent';
+        }
+
+        // Ensure we don't have undefined for required fields if we matched
+        if (!this.deliveryType && this.deliveryOption === 'DELIVERY_AGENT') this.deliveryType = 'deliveryAgent';
+        if (!this.deliveryType && this.deliveryOption === 'SELF_PICKUP') this.deliveryType = 'selfPickup';
 
         // Set deliveryRequired flag
-        this.deliveryRequired = this.deliveryType === 'delivery_agent';
+        this.deliveryRequired = this.deliveryType === 'deliveryAgent';
 
         // Initialize deliveryStatus
         if (this.deliveryRequired) {
-            if (!this.assignedAgent) {
+            if (!this.assignedAgent && (!this.deliveryStatus || this.deliveryStatus === 'NOT_REQUIRED')) {
                 this.deliveryStatus = 'PENDING_ASSIGNMENT';
             }
         } else {
@@ -214,10 +236,12 @@ subOrderSchema.pre('save', function (next) {
 // Update parent order status after sub-order status change
 subOrderSchema.post('save', async function (doc) {
     try {
+        const session = doc.$session() || null;
         const ParentOrder = mongoose.model('ParentOrder');
-        const parentOrder = await ParentOrder.findById(doc.parentOrder);
+        const parentOrder = await ParentOrder.findById(doc.parentOrder).session(session);
         if (parentOrder) {
-            await parentOrder.updateOverallStatus();
+            // ✅ CRITICAL: Pass the session to avoid write conflicts
+            await parentOrder.updateOverallStatus(session);
         }
     } catch (error) {
         console.error('Error updating parent order status:', error);
@@ -225,11 +249,11 @@ subOrderSchema.post('save', async function (doc) {
 });
 
 // Static method to generate unique sub-order ID
-subOrderSchema.statics.generateSubOrderId = async function (parentOrderId) {
+subOrderSchema.statics.generateSubOrderId = async function (parentOrderId, session = null) {
     const parentIdPart = parentOrderId.replace('PO-', 'SO-');
     const count = await this.countDocuments({
         subOrderId: new RegExp(`^${parentIdPart}-`)
-    });
+    }).session(session);
     const letter = String.fromCharCode(65 + count); // A, B, C, etc.
     return `${parentIdPart}-${letter}`;
 };

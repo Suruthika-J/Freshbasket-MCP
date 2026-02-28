@@ -12,7 +12,7 @@ const parentOrderSchema = new mongoose.Schema({
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: true,
         index: true
     },
@@ -53,12 +53,12 @@ const parentOrderSchema = new mongoose.Schema({
     // Aggregated status from all sub-orders
     overallStatus: {
         type: String,
-        enum: ['pending', 'processing', 'partially-delivered', 'completed', 'cancelled'],
+        enum: ['pending', 'processing', 'partially-delivered', 'completed', 'cancelled', 'returning', 'refunded'],
         default: 'pending'
     },
     deliveryType: {
         type: String,
-        enum: ['self_pickup', 'delivery_agent', 'mixed'],
+        enum: ['self_pickup', 'delivery_agent', 'mixed', 'self-pickup', 'delivery-agent', 'SELF_PICKUP', 'DELIVERY_AGENT'],
         default: 'delivery_agent'
     },
     deliveryRequired: {
@@ -76,15 +76,26 @@ const parentOrderSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
+// Normalization hook for delivery types
+parentOrderSchema.pre('validate', function (next) {
+    if (this.deliveryType) {
+        const normalized = this.deliveryType.toLowerCase().replace('-', '_');
+        if (['self_pickup', 'delivery_agent', 'mixed'].includes(normalized)) {
+            this.deliveryType = normalized;
+        }
+    }
+    next();
+});
+
 // Virtual to get sub-order count
 parentOrderSchema.virtual('subOrderCount').get(function () {
     return this.subOrders ? this.subOrders.length : 0;
 });
 
 // Method to update overall status based on sub-orders
-parentOrderSchema.methods.updateOverallStatus = async function () {
+parentOrderSchema.methods.updateOverallStatus = async function (session = null) {
     const SubOrder = mongoose.model('SubOrder');
-    const subOrders = await SubOrder.find({ parentOrder: this._id });
+    const subOrders = await SubOrder.find({ parentOrder: this._id }).session(session);
 
     if (subOrders.length === 0) {
         this.overallStatus = 'pending';
@@ -96,6 +107,14 @@ parentOrderSchema.methods.updateOverallStatus = async function () {
     // All cancelled
     if (statuses.every(s => s === 'cancelled')) {
         this.overallStatus = 'cancelled';
+    }
+    // All refunded
+    else if (statuses.every(s => s === 'refunded')) {
+        this.overallStatus = 'refunded';
+    }
+    // Any returning
+    else if (statuses.some(s => s === 'returning')) {
+        this.overallStatus = 'returning';
     }
     // All delivered
     else if (statuses.every(s => s === 'delivered')) {
@@ -114,15 +133,15 @@ parentOrderSchema.methods.updateOverallStatus = async function () {
         this.overallStatus = 'pending';
     }
 
-    await this.save();
+    await this.save({ session });
 };
 
 // Static method to generate unique parent order ID
-parentOrderSchema.statics.generateParentOrderId = async function () {
+parentOrderSchema.statics.generateParentOrderId = async function (session = null) {
     const year = new Date().getFullYear();
     const count = await this.countDocuments({
         parentOrderId: new RegExp(`^PO-${year}-`)
-    });
+    }).session(session);
     const nextNumber = (count + 1).toString().padStart(4, '0');
     return `PO-${year}-${nextNumber}`;
 };

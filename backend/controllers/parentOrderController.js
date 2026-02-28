@@ -32,12 +32,23 @@ const deductStock = async (stockUpdates, session = null) => {
 // CREATE PARENT ORDER (FIXED - Auto-groups by farmer)
 // ============================================
 export const createParentOrder = async (req, res) => {
-    const session = await ParentOrder.startSession();
+    // Robust session start
+    let session;
+    try {
+        session = await ParentOrder.startSession();
+    } catch (sessionError) {
+        console.error('❌ Failed to start DB session:', sessionError.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Database session error. Please ensure your MongoDB cluster supports transactions.'
+        });
+    }
+
     session.startTransaction();
 
     try {
-        const { customer, paymentMethod, items } = req.body; // ✅ Now accepts flat items array
-        const userId = req.user.id;
+        const { customer, paymentMethod, items } = req.body;
+        const userId = req.user.id || req.user._id;
 
         console.log('📦 Creating multi-vendor parent order for user:', userId);
         console.log('Cart items count:', items?.length);
@@ -53,7 +64,7 @@ export const createParentOrder = async (req, res) => {
             });
         }
 
-        if (!items || items.length === 0) {
+        if (!items || !Array.isArray(items) || items.length === 0) {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
@@ -70,28 +81,37 @@ export const createParentOrder = async (req, res) => {
         }
 
         // ============================================
-        // ✅ FIX: Fetch products and group by farmer
+        // Fetch products and group by farmer
         // ============================================
-        const productIds = items.map(item => item.productId);
+        const productIds = items.map(item => item.productId).filter(Boolean);
+        if (productIds.length !== items.length) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid product IDs in cart'
+            });
+        }
+
         const products = await Product.find({ _id: { $in: productIds } })
             .populate('farmerId', 'name district')
             .session(session);
 
-        if (products.length !== items.length) {
+        if (products.length === 0) {
             await session.abortTransaction();
             return res.status(400).json({
                 success: false,
-                message: 'Some products not found'
+                message: 'None of the products were found'
             });
         }
 
-        // ✅ Group items by vendor (farmer or admin)
+        // ✅ Group items by vendor
         const vendorGroups = {};
 
         for (const item of items) {
-            const product = products.find(p => p._id.toString() === item.productId);
+            const product = products.find(p => p._id.toString() === item.productId.toString());
 
             if (!product) {
+                console.error(`❌ Product not found: ${item.productId}`);
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
@@ -108,20 +128,20 @@ export const createParentOrder = async (req, res) => {
                 });
             }
 
-            // ✅ Determine vendor ID and type
+            // Determine vendor ID and type
             let vendorId, vendorType, vendorName;
 
             if (product.adminUploaded || product.uploaderRole === 'admin') {
-                // Admin product
                 vendorId = 'admin';
                 vendorType = 'admin';
                 vendorName = 'FreshBasket Admin';
             } else if (product.farmerId) {
-                // Farmer product
-                vendorId = product.farmerId._id.toString();
+                // Populate might fail if user was deleted
+                vendorId = (product.farmerId._id || product.farmerId).toString();
                 vendorType = 'farmer';
                 vendorName = product.farmerId.name || 'Unknown Farmer';
             } else {
+                console.error('❌ Product has no vendor:', product._id);
                 await session.abortTransaction();
                 return res.status(400).json({
                     success: false,
@@ -129,7 +149,7 @@ export const createParentOrder = async (req, res) => {
                 });
             }
 
-            // ✅ Group by vendor
+            // Group by vendor
             if (!vendorGroups[vendorId]) {
                 const vendorDeliveryType = vendorType === 'admin' ? 'delivery_agent' : (item.deliveryType || item.deliveryOption?.toLowerCase() || 'delivery_agent');
 
@@ -149,14 +169,14 @@ export const createParentOrder = async (req, res) => {
                 price: product.price,
                 quantity: item.quantity,
                 imageUrl: product.imageUrl || '',
-                product: product // Keep reference for stock updates
+                product: product // Keep for stock updates
             });
         }
 
         console.log('✅ Grouped into', Object.keys(vendorGroups).length, 'vendors');
 
         // ============================================
-        // Create sub-orders for each vendor
+        // Create sub-orders data
         // ============================================
         const subOrdersData = [];
         let totalAmount = 0;
@@ -165,7 +185,6 @@ export const createParentOrder = async (req, res) => {
         for (const vendorGroup of Object.values(vendorGroups)) {
             const { vendorId, vendorType, vendorName, deliveryOption, deliveryType, items: vendorItems } = vendorGroup;
 
-            // Calculate subtotal
             let subtotal = 0;
             for (const item of vendorItems) {
                 subtotal += item.price * item.quantity;
@@ -175,11 +194,9 @@ export const createParentOrder = async (req, res) => {
                 });
             }
 
-            // Calculate delivery charge
             const deliveryCharge = calculateDeliveryCharge(subtotal, deliveryOption, vendorType);
             const vendorTotal = subtotal + deliveryCharge;
 
-            // ✅ Clean items (remove product reference)
             const cleanItems = vendorItems.map(({ productId, name, price, quantity, imageUrl }) => ({
                 productId,
                 name,
@@ -189,11 +206,7 @@ export const createParentOrder = async (req, res) => {
             }));
 
             subOrdersData.push({
-                vendor: {
-                    vendorId,
-                    vendorType,
-                    vendorName
-                },
+                vendor: { vendorId, vendorType, vendorName },
                 items: cleanItems,
                 deliveryOption,
                 deliveryType,
@@ -207,7 +220,7 @@ export const createParentOrder = async (req, res) => {
         }
 
         // ============================================
-        // Deduct stock for Cash on Delivery
+        // Deduct stock for COD
         // ============================================
         if (paymentMethod === 'Cash on Delivery') {
             await deductStock(allStockUpdates, session);
@@ -216,7 +229,7 @@ export const createParentOrder = async (req, res) => {
         // ============================================
         // Create Parent Order
         // ============================================
-        const parentOrderId = await ParentOrder.generateParentOrderId();
+        const parentOrderId = await ParentOrder.generateParentOrderId(session);
 
         const parentOrder = new ParentOrder({
             parentOrderId,
@@ -224,21 +237,18 @@ export const createParentOrder = async (req, res) => {
             customer,
             totalAmount,
             paymentMethod,
-            paymentStatus: paymentMethod === 'Cash on Delivery' ? 'Unpaid' : 'Unpaid',
+            paymentStatus: 'Unpaid',
             overallStatus: 'pending',
             deliveryType: subOrdersData.length === 1 ? subOrdersData[0].deliveryType : 'mixed',
             deliveryRequired: subOrdersData.some(so => so.deliveryRequired)
         });
 
         await parentOrder.save({ session });
-        console.log('✅ Parent order created:', parentOrderId);
 
         // ============================================
         // Create Sub-Orders
         // ============================================
         const createdSubOrders = [];
-
-        // Geocode customer address
         let deliveryLocation = null;
         try {
             const geocoded = await geocodeAddress(customer.address);
@@ -254,7 +264,7 @@ export const createParentOrder = async (req, res) => {
         }
 
         for (const subOrderData of subOrdersData) {
-            const subOrderId = await SubOrder.generateSubOrderId(parentOrderId);
+            const subOrderId = await SubOrder.generateSubOrderId(parentOrderId, session);
 
             const subOrder = new SubOrder({
                 subOrderId,
@@ -268,7 +278,7 @@ export const createParentOrder = async (req, res) => {
                 deliveryRequired: subOrderData.deliveryRequired,
                 deliveryCharge: subOrderData.deliveryCharge,
                 total: subOrderData.total,
-                paymentStatus: paymentMethod === 'Cash on Delivery' ? 'Unpaid' : 'Unpaid', // Matches parent order initial state
+                paymentStatus: 'Unpaid',
                 status: paymentMethod === 'Cash on Delivery' ? 'confirmed' : 'pending',
                 deliveryLocation,
                 trackingEnabled: subOrderData.deliveryOption === 'DELIVERY_AGENT'
@@ -276,18 +286,15 @@ export const createParentOrder = async (req, res) => {
 
             await subOrder.save({ session });
             createdSubOrders.push(subOrder);
-            console.log('✅ Sub-order created:', subOrderId, 'for vendor:', subOrderData.vendor.vendorName);
         }
 
-        // Update parent order with sub-order references
         parentOrder.subOrders = createdSubOrders.map(so => so._id);
-        await parentOrder.save({ session });
+        await parentOrder.updateOverallStatus(session);
 
         // ============================================
-        // Handle Payment
+        // Handle Online Payment
         // ============================================
         if (paymentMethod === 'Online Payment') {
-            // Create Stripe checkout session
             const lineItems = createdSubOrders.flatMap(subOrder =>
                 subOrder.items.map(item => ({
                     price_data: {
@@ -302,7 +309,6 @@ export const createParentOrder = async (req, res) => {
                 }))
             );
 
-            // Add delivery charges
             createdSubOrders.forEach(subOrder => {
                 if (subOrder.deliveryCharge > 0) {
                     lineItems.push({
@@ -326,7 +332,7 @@ export const createParentOrder = async (req, res) => {
                 cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/checkout`,
                 metadata: {
                     parentOrderId: parentOrder._id.toString(),
-                    userId: userId
+                    userId: userId.toString()
                 }
             });
 
@@ -357,14 +363,11 @@ export const createParentOrder = async (req, res) => {
             });
         }
 
-        // ============================================
-        // Cash on Delivery - Complete
-        // ============================================
         await session.commitTransaction();
 
         return res.status(201).json({
             success: true,
-            message: 'Parent order created successfully',
+            message: 'Parent order placed successfully',
             parentOrder: {
                 parentOrderId: parentOrder.parentOrderId,
                 _id: parentOrder._id,
@@ -382,20 +385,26 @@ export const createParentOrder = async (req, res) => {
         });
 
     } catch (error) {
-        await session.abortTransaction();
+        if (session) await session.abortTransaction();
         console.error('❌ Error creating parent order:', error);
+
+        // Return a cleaner error message
+        const message = error.name === 'ValidationError'
+            ? Object.values(error.errors).map(val => val.message).join(', ')
+            : error.message || 'An unexpected error occurred while placing your order';
 
         return res.status(500).json({
             success: false,
-            message: error.message || 'Failed to create order'
+            message: message,
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     } finally {
-        session.endSession();
+        if (session) session.endSession();
     }
 };
 
 // ============================================
-// CONFIRM PAYMENT (No changes needed)
+// CONFIRM PAYMENT
 // ============================================
 export const confirmParentOrderPayment = async (req, res) => {
     try {
@@ -450,6 +459,7 @@ export const confirmParentOrderPayment = async (req, res) => {
                 }
 
                 subOrder.status = 'confirmed';
+                subOrder.paymentStatus = 'Paid';
                 await subOrder.save({ session: mongoSession });
             }
 

@@ -1,505 +1,270 @@
-// ============================================
-// FILE: frontend/src/admin/components/AdminReturnRequests.jsx
-// Path: frontend/src/admin/components/AdminReturnRequests.jsx
-// ============================================
-
+// frontend/src/admin/components/AdminReturnRequests.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { 
-    FiPackage, FiClock, FiCheck, FiX, FiTruck, 
-    FiRefreshCw, FiFilter, FiSearch, FiEye, FiAlertCircle
+import { toast } from 'react-toastify';
+import {
+    FiPackage, FiClock, FiCheck, FiX, FiTruck,
+    FiRefreshCw, FiFilter, FiSearch, FiEye, FiAlertCircle, FiDollarSign, FiInfo
 } from 'react-icons/fi';
+import Modal from '../../components/Modal';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const AdminReturnRequests = () => {
-    const [returnRequests, setReturnRequests] = useState([]);
-    const [filteredRequests, setFilteredRequests] = useState([]);
-    const [stats, setStats] = useState({});
+    const [returns, setReturns] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [statusFilter, setStatusFilter] = useState('All');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [selectedReturn, setSelectedReturn] = useState(null);
+    const [remarks, setRemarks] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [actionLoading, setActionLoading] = useState(false);
-    const [adminResponse, setAdminResponse] = useState('');
+    const [actionType, setActionType] = useState('');
+    const [reusable, setReusable] = useState(false);
 
     const getAuthHeaders = () => {
         const sessionData = localStorage.getItem('adminSession');
         if (sessionData) {
             try {
                 const { token } = JSON.parse(sessionData);
-                return {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                };
+                return { 'Authorization': `Bearer ${token}` };
             } catch (err) {
-                console.error('Error parsing admin session:', err);
                 return {};
             }
         }
         return {};
     };
 
-    const fetchReturnRequests = async () => {
+    const fetchReturns = async () => {
         setLoading(true);
         try {
             const response = await axios.get(
-                'http://localhost:4000/api/returns/admin/all',
+                `${API_BASE_URL}/api/returns/admin/all`,
                 { headers: getAuthHeaders() }
             );
-
             if (response.data.success) {
-                setReturnRequests(response.data.returnRequests);
-                setStats(response.data.stats);
+                setReturns(response.data.returns);
             }
         } catch (error) {
             console.error('Fetch error:', error);
-            if (error.response?.status === 401) {
-                localStorage.removeItem('adminSession');
-                window.location.href = '/admin/login';
-            }
+            toast.error('Failed to load return requests');
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchReturnRequests();
+        fetchReturns();
     }, []);
 
-    useEffect(() => {
-        let result = [...returnRequests];
-
-        // Filter by status
-        if (statusFilter !== 'All') {
-            result = result.filter(req => req.status === statusFilter);
-        }
-
-        // Filter by search term
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            result = result.filter(req => 
-                req.orderId?.orderId?.toLowerCase().includes(term) ||
-                req.orderId?.customer?.name?.toLowerCase().includes(term) ||
-                req.reason?.toLowerCase().includes(term)
-            );
-        }
-
-        setFilteredRequests(result);
-    }, [returnRequests, statusFilter, searchTerm]);
-
-    const handleStatusUpdate = async (id, newStatus) => {
-        setActionLoading(true);
+    const handleUpdateStatus = async () => {
         try {
-            const response = await axios.put(
-                `http://localhost:4000/api/returns/admin/${id}`,
-                { 
-                    status: newStatus,
-                    adminResponse: adminResponse || undefined
-                },
+            let status = '';
+            if (actionType === 'approve') status = 'approved';
+            if (actionType === 'reject') status = 'rejected';
+            if (actionType === 'receive') status = 'received';
+            if (actionType === 'refund') status = 'refunded';
+
+            const response = await axios.patch(
+                `${API_BASE_URL}/api/returns/${selectedReturn._id}/status`,
+                { status, adminRemarks: remarks, reusable },
                 { headers: getAuthHeaders() }
             );
 
             if (response.data.success) {
-                await fetchReturnRequests();
+                toast.success(`Return request ${status} successfully`);
                 setIsModalOpen(false);
-                setSelectedRequest(null);
-                setAdminResponse('');
+                setRemarks('');
+                fetchReturns();
             }
         } catch (error) {
-            console.error('Update error:', error);
-            alert(error.response?.data?.message || 'Failed to update status');
-        } finally {
-            setActionLoading(false);
+            toast.error(error.response?.data?.message || 'Failed to update status');
         }
     };
 
     const getStatusBadge = (status) => {
-        const badges = {
-            'Pending': 'bg-yellow-100 text-yellow-800 border-yellow-300',
-            'Approved': 'bg-green-100 text-green-800 border-green-300',
-            'Rejected': 'bg-red-100 text-red-800 border-red-300',
-            'Collected': 'bg-blue-100 text-blue-800 border-blue-300',
-            'Returned': 'bg-purple-100 text-purple-800 border-purple-300'
+        const styles = {
+            requested: 'bg-yellow-100 text-yellow-700',
+            approved: 'bg-blue-100 text-blue-700',
+            rejected: 'bg-red-100 text-red-700',
+            'picked-up': 'bg-purple-100 text-purple-700',
+            received: 'bg-indigo-100 text-indigo-700',
+            refunded: 'bg-green-100 text-green-700',
         };
-        return badges[status] || 'bg-gray-100 text-gray-800 border-gray-300';
+        return <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${styles[status] || 'bg-gray-100 text-gray-700'}`}>{status}</span>;
     };
-
-    const getStatusIcon = (status) => {
-        const icons = {
-            'Pending': <FiClock className="inline mr-1" />,
-            'Approved': <FiCheck className="inline mr-1" />,
-            'Rejected': <FiX className="inline mr-1" />,
-            'Collected': <FiTruck className="inline mr-1" />,
-            'Returned': <FiPackage className="inline mr-1" />
-        };
-        return icons[status] || <FiAlertCircle className="inline mr-1" />;
-    };
-
-    const statsCards = [
-        { 
-            label: 'Total', 
-            value: stats.total || 0, 
-            color: 'blue',
-            icon: FiPackage 
-        },
-        { 
-            label: 'Pending', 
-            value: stats.pending || 0, 
-            color: 'yellow',
-            icon: FiClock 
-        },
-        { 
-            label: 'Approved', 
-            value: stats.approved || 0, 
-            color: 'green',
-            icon: FiCheck 
-        },
-        { 
-            label: 'Rejected', 
-            value: stats.rejected || 0, 
-            color: 'red',
-            icon: FiX 
-        }
-    ];
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex justify-between items-center mb-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Return Requests
-                            </h1>
-                            <p className="text-gray-600 mt-1">
-                                Manage customer return requests
-                            </p>
-                        </div>
-                        <button
-                            onClick={fetchReturnRequests}
-                            disabled={loading}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                        >
-                            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                            Refresh
-                        </button>
-                    </div>
-
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        {statsCards.map((stat) => {
-                            const IconComponent = stat.icon;
-                            return (
-                                <div
-                                    key={stat.label}
-                                    className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-600">
-                                                {stat.label}
-                                            </p>
-                                            <p className="text-2xl font-bold text-gray-900 mt-1">
-                                                {stat.value}
-                                            </p>
-                                        </div>
-                                        <div className={`p-3 rounded-lg bg-${stat.color}-100`}>
-                                            <IconComponent className={`w-6 h-6 text-${stat.color}-600`} />
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Filters */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                        <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1 relative">
-                                <FiSearch className="absolute left-3 top-3 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search by order ID, customer, or reason..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <FiFilter className="text-gray-400" />
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="All">All Status</option>
-                                    <option value="Pending">Pending</option>
-                                    <option value="Approved">Approved</option>
-                                    <option value="Rejected">Rejected</option>
-                                    <option value="Collected">Collected</option>
-                                    <option value="Returned">Returned</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+        <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Return Management</h1>
+                    <p className="text-gray-500 mt-1">Review and process customer returns across all vendors</p>
                 </div>
-
-                {/* Return Requests Table */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Order Details
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Customer
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Reason
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Amount
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Requested
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {filteredRequests.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="7" className="px-6 py-12 text-center">
-                                            <FiPackage className="mx-auto text-gray-400 text-4xl mb-4" />
-                                            <h3 className="text-lg font-medium text-gray-900 mb-1">
-                                                No return requests found
-                                            </h3>
-                                            <p className="text-gray-500">
-                                                {searchTerm || statusFilter !== 'All'
-                                                    ? 'Try adjusting your filters'
-                                                    : 'Return requests will appear here'}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredRequests.map((request) => (
-                                        <tr key={request._id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">
-                                                    {request.orderId?.orderId}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {request.orderId?.items?.length || 0} items
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">
-                                                    {request.orderId?.customer?.name}
-                                                </div>
-                                                <div className="text-sm text-gray-500">
-                                                    {request.orderId?.customer?.phone}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-900 max-w-xs truncate">
-                                                    {request.reason}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">
-                                                    ₹{request.refundAmount?.toFixed(2)}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(request.status)}`}>
-                                                    {getStatusIcon(request.status)}
-                                                    {request.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-900">
-                                                    {new Date(request.requestedAt).toLocaleDateString()}
-                                                </div>
-                                                <div className="text-xs text-gray-500">
-                                                    {request.daysOld} days ago
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedRequest(request);
-                                                        setIsModalOpen(true);
-                                                    }}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                                                >
-                                                    <FiEye size={14} />
-                                                    View
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <button
+                    onClick={fetchReturns}
+                    className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+                >
+                    <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+                    Refresh
+                </button>
             </div>
 
-            {/* Detail Modal */}
-            {isModalOpen && selectedRequest && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-                        <div className="bg-gray-50 px-6 py-4 border-b">
-                            <div className="flex justify-between items-center">
-                                <h2 className="text-xl font-semibold text-gray-900">
-                                    Return Request Details
-                                </h2>
-                                <button
-                                    onClick={() => {
-                                        setIsModalOpen(false);
-                                        setSelectedRequest(null);
-                                        setAdminResponse('');
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <FiX size={24} />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="overflow-y-auto flex-1 p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-3">Order Information</h3>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Order ID:</span>
-                                            <span className="font-medium">{selectedRequest.orderId?.orderId}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Customer:</span>
-                                            <span className="font-medium">{selectedRequest.orderId?.customer?.name}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Total Amount:</span>
-                                            <span className="font-medium">₹{selectedRequest.refundAmount?.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Payment Method:</span>
-                                            <span className="font-medium">{selectedRequest.orderId?.paymentMethod}</span>
-                                        </div>
+            {returns.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
+                    <FiPackage className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                    <h3 className="text-xl font-bold text-gray-900">No Return Requests</h3>
+                    <p className="text-gray-500">New return requests will appear here when customers submit them.</p>
+                </div>
+            ) : (
+                <div className="grid gap-6">
+                    {returns.map((ret) => (
+                        <div key={ret._id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex flex-col lg:flex-row justify-between gap-6">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg font-bold text-sm">{ret.returnId}</span>
+                                        {getStatusBadge(ret.status)}
+                                        <span className="text-xs text-gray-400">Requested {new Date(ret.createdAt).toLocaleDateString()}</span>
                                     </div>
-                                </div>
 
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 mb-3">Return Status</h3>
-                                    <div className="space-y-2 text-sm">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Current Status:</span>
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(selectedRequest.status)}`}>
-                                                {selectedRequest.status}
-                                            </span>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Reason: {ret.overallReason}</h3>
+                                    <p className="text-gray-600 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100 italic">
+                                        "{ret.description || 'No additional comments provided'}"
+                                    </p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="border border-gray-100 rounded-2xl p-4">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Customer & Order</p>
+                                            <p className="font-bold text-gray-800">{ret.user?.name}</p>
+                                            <p className="text-sm text-gray-500">{ret.user?.phone}</p>
+                                            <p className="text-xs text-emerald-600 mt-2 font-bold">Farmer ID: {ret.farmerId}</p>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Requested:</span>
-                                            <span className="font-medium">
-                                                {new Date(selectedRequest.requestedAt).toLocaleDateString()}
-                                            </span>
-                                        </div>
-                                        {selectedRequest.approvedAt && (
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Approved:</span>
-                                                <span className="font-medium">
-                                                    {new Date(selectedRequest.approvedAt).toLocaleDateString()}
-                                                </span>
+                                        <div className="border border-gray-100 rounded-2xl p-4">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Items to Return</p>
+                                            {ret.items.map((item, i) => (
+                                                <div key={i} className="flex justify-between text-sm">
+                                                    <span className="text-gray-700">{item.name} × {item.quantity}</span>
+                                                    <span className="font-bold text-gray-900">₹{item.price * item.quantity}</span>
+                                                </div>
+                                            ))}
+                                            <div className="mt-2 pt-2 border-t border-gray-50 flex justify-between font-bold text-emerald-600">
+                                                <span>Total Refund</span>
+                                                <span>₹{ret.refundDetails.amount}</span>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="lg:w-72 flex flex-col gap-3">
+                                    {ret.images && ret.images.length > 0 && (
+                                        <div className="flex gap-2 mb-2">
+                                            {ret.images.map((img, i) => (
+                                                <img key={i} src={img} className="w-16 h-16 rounded-lg object-cover border border-gray-200" alt="Proof" />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="flex flex-col gap-2 mt-auto">
+                                        {ret.status === 'requested' && (
+                                            <>
+                                                <button
+                                                    onClick={() => { setSelectedReturn(ret); setActionType('approve'); setIsModalOpen(true); }}
+                                                    className="w-full py-3 bg-emerald-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all"
+                                                >
+                                                    <FiCheck /> Approve Return
+                                                </button>
+                                                <button
+                                                    onClick={() => { setSelectedReturn(ret); setActionType('reject'); setIsModalOpen(true); }}
+                                                    className="w-full py-3 bg-red-50 text-red-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all"
+                                                >
+                                                    <FiX /> Reject Request
+                                                </button>
+                                            </>
                                         )}
+                                        {ret.status === 'approved' && (
+                                            <button
+                                                onClick={() => { setSelectedReturn(ret); setActionType('receive'); setIsModalOpen(true); }}
+                                                className="w-full py-3 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
+                                            >
+                                                <FiPackage /> Mark as Received
+                                            </button>
+                                        )}
+                                        {ret.status === 'received' && (
+                                            <button
+                                                onClick={() => { setSelectedReturn(ret); setActionType('refund'); setIsModalOpen(true); }}
+                                                className="w-full py-3 bg-emerald-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-800 transition-all"
+                                            >
+                                                <FiDollarSign /> Process Refund
+                                            </button>
+                                        )}
+                                        <button className="w-full py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-all">
+                                            View Full History
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="mb-6">
-                                <h3 className="font-semibold text-gray-900 mb-3">Return Reason</h3>
-                                <div className="bg-gray-50 rounded-lg p-4">
-                                    <p className="text-gray-700">{selectedRequest.reason}</p>
-                                </div>
-                            </div>
-
-                            {selectedRequest.status === 'Pending' && (
-                                <div className="mb-6">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Admin Response (Optional)
-                                    </label>
-                                    <textarea
-                                        value={adminResponse}
-                                        onChange={(e) => setAdminResponse(e.target.value)}
-                                        placeholder="Add a note or reason for your decision..."
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
-                                        rows="3"
-                                    />
-                                </div>
-                            )}
                         </div>
-
-                        <div className="bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
-                            {selectedRequest.status === 'Pending' && (
-                                <>
-                                    <button
-                                        onClick={() => handleStatusUpdate(selectedRequest._id, 'Rejected')}
-                                        disabled={actionLoading}
-                                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50"
-                                    >
-                                        Reject
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusUpdate(selectedRequest._id, 'Approved')}
-                                        disabled={actionLoading}
-                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
-                                    >
-                                        Approve
-                                    </button>
-                                </>
-                            )}
-                            {selectedRequest.status === 'Approved' && (
-                                <button
-                                    onClick={() => handleStatusUpdate(selectedRequest._id, 'Collected')}
-                                    disabled={actionLoading}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
-                                >
-                                    Mark as Collected
-                                </button>
-                            )}
-                            {selectedRequest.status === 'Collected' && (
-                                <button
-                                    onClick={() => handleStatusUpdate(selectedRequest._id, 'Returned')}
-                                    disabled={actionLoading}
-                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50"
-                                >
-                                    Complete Return
-                                </button>
-                            )}
-                            <button
-                                onClick={() => {
-                                    setIsModalOpen(false);
-                                    setSelectedRequest(null);
-                                    setAdminResponse('');
-                                }}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
+                    ))}
                 </div>
             )}
+
+            {/* Action Modal */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Return Request`}
+            >
+                <div className="p-8">
+                    <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-3xl">
+                        <FiInfo className="text-emerald-600 w-6 h-6" />
+                        <p className="text-sm font-bold text-gray-700">Confirm {actionType} for {selectedReturn?.returnId}. This will notify the customer.</p>
+                    </div>
+
+                    {actionType === 'receive' && (
+                        <div className="mb-6 p-4 bg-blue-50 rounded-3xl border border-blue-100">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={reusable}
+                                    onChange={(e) => setReusable(e.target.checked)}
+                                    className="w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500"
+                                />
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-gray-900">Items are Reusable?</span>
+                                    <span className="text-xs text-gray-500">Returned items will be added back to stock quantity.</span>
+                                </div>
+                            </label>
+                        </div>
+                    )}
+
+                    <div className="mb-8">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Remarks / Response</label>
+                        <textarea
+                            value={remarks}
+                            onChange={(e) => setRemarks(e.target.value)}
+                            className="w-full h-32 px-5 py-4 bg-gray-50 border-none rounded-3xl focus:ring-2 focus:ring-emerald-500 transition-all font-semibold"
+                            placeholder="Add internal notes or customer message..."
+                        />
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-3xl font-black uppercase tracking-widest text-[10px] transition-all hover:bg-gray-200"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleUpdateStatus}
+                            className={`flex-1 py-4 rounded-3xl font-black uppercase tracking-widest text-[10px] text-white shadow-lg transition-all ${actionType === 'approve' ? 'bg-emerald-600 hover:shadow-emerald-100 shadow-emerald-50' :
+                                    actionType === 'reject' ? 'bg-red-600 hover:shadow-red-100 shadow-red-50' :
+                                        actionType === 'receive' ? 'bg-blue-600 shadow-blue-50' :
+                                            'bg-emerald-700 shadow-emerald-50'
+                                }`}
+                        >
+                            Confirm {actionType}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };
