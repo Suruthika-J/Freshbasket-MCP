@@ -12,6 +12,7 @@ import {
   FiTrash2,
   FiMic,
   FiMicOff,
+  FiGlobe,
 } from 'react-icons/fi';
 import { IoLeaf } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';

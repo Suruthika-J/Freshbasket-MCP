@@ -17,6 +17,7 @@ import {
   getUserStats,
   deleteAccount,
   logoutUser,
+  getAdminSummary,
   getPendingFarmers,
   getApprovedFarmers,
   updateFarmerApproval,
@@ -70,6 +71,9 @@ userRouter.put('/farmer/profile', authMiddleware, updateFarmerProfile);
 
 // Get pending farmers awaiting approval
 userRouter.get('/admin/farmers/pending', authMiddleware, requireAdmin, getPendingFarmers);
+
+// Get admin summary counts
+userRouter.get('/admin/summary-counts', authMiddleware, requireAdmin, getAdminSummary);
 
 // Get approved farmers
 userRouter.get('/admin/farmers/approved', authMiddleware, requireAdmin, getApprovedFarmers);

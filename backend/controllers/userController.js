@@ -4,16 +4,18 @@
 
 import User from "../models/userModel.js";
 import DeliveryAgent from "../models/deliveryAgentModel.js";
+import Return from "../models/ReturnModel.js";
+import Message from "../models/Message.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import validator from "validator";
 import { OAuth2Client } from 'google-auth-library';
-import { 
-    generateOTP, 
-    hashOTP, 
-    verifyOTP, 
-    sendSignupOTP, 
-    sendForgotPasswordOTP 
+import {
+    generateOTP,
+    hashOTP,
+    verifyOTP,
+    sendSignupOTP,
+    sendForgotPasswordOTP
 } from "../otp/otpService.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
@@ -28,12 +30,12 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // ============================================
 const createToken = (userId, userRole, isApproved = true) =>
     jwt.sign(
-        { 
+        {
             id: userId,
             role: userRole,
             isApproved: isApproved // Include approval status in token
-        }, 
-        JWT_SECRET, 
+        },
+        JWT_SECRET,
         { expiresIn: TOKEN_EXPIRES }
     );
 
@@ -45,9 +47,9 @@ export async function googleAuthSuccess(req, res) {
         console.log('🔵 Google auth request received');
         console.log('Request body keys:', Object.keys(req.body));
         console.log('Request body:', JSON.stringify(req.body, null, 2));
-        
+
         const { credential } = req.body;
-        
+
         if (!credential) {
             console.log('❌ No credential provided');
             console.log('Available fields:', Object.keys(req.body));
@@ -59,7 +61,7 @@ export async function googleAuthSuccess(req, res) {
 
         console.log('🔍 Verifying Google token...');
         console.log('Using GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Missing');
-        
+
         let ticket;
         try {
             ticket = await client.verifyIdToken({
@@ -98,21 +100,21 @@ export async function googleAuthSuccess(req, res) {
 
         if (user) {
             console.log('📝 Existing user found:', user.email);
-            
+
             if (!user.googleId) {
                 user.googleId = googleId;
                 user.isVerified = true;
             }
-            
+
             user.lastLogin = new Date();
             await user.save();
         } else {
             console.log('➕ Creating new user...');
-            
-            const randomPassword = Math.random().toString(36).slice(-8) + 
-                                 Math.random().toString(36).slice(-8) + 
-                                 Math.random().toString(36).slice(-8);
-            
+
+            const randomPassword = Math.random().toString(36).slice(-8) +
+                Math.random().toString(36).slice(-8) +
+                Math.random().toString(36).slice(-8);
+
             user = await User.create({
                 name: name.trim(),
                 email: email.toLowerCase().trim(),
@@ -124,13 +126,13 @@ export async function googleAuthSuccess(req, res) {
                 isApproved: true, // Auto-approve Google users
                 lastLogin: new Date()
             });
-            
+
             isNewUser = true;
             console.log('✅ New user created:', user.email);
         }
 
         const authToken = createToken(user._id, user.role, user.isApproved);
-        
+
         console.log('🎫 JWT token generated');
 
         res.status(200).json({
@@ -150,7 +152,7 @@ export async function googleAuthSuccess(req, res) {
                 lastLogin: user.lastLogin
             }
         });
-        
+
         console.log('✅ Response sent successfully');
     } catch (error) {
         console.error('❌ Google auth error:', error);
@@ -207,14 +209,14 @@ export async function signupWithOtp(req, res) {
                 message: "Pincode is required for farmer registration."
             });
         }
-        
+
         if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
             return res.status(400).json({
                 success: false,
                 message: "Pincode must be a valid 6-digit number."
             });
         }
-        
+
         if (!district) {
             return res.status(400).json({
                 success: false,
@@ -283,7 +285,7 @@ export async function signupWithOtp(req, res) {
             if (pincode) {
                 userData.pincode = pincode.trim();
             }
-            
+
             console.log('🌾 Creating farmer with location:', {
                 district: userData.district,
                 city: userData.location.city,
@@ -318,58 +320,58 @@ export async function signupWithOtp(req, res) {
 
 export async function verifySignupOtp(req, res) {
     const { email, otp } = req.body;
-    
+
     if (!email || !otp) {
         return res.status(400).json({
             success: false,
             message: "Email and OTP are required."
         });
     }
-    
+
     try {
-        const user = await User.findOne({ 
+        const user = await User.findOne({
             email: email.toLowerCase(),
             otpPurpose: 'signup'
         });
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found or invalid request."
             });
         }
-        
+
         if (user.isVerified) {
             return res.status(400).json({
                 success: false,
                 message: "Account already verified. Please login."
             });
         }
-        
+
         if (!user.otpExpiry || new Date() > user.otpExpiry) {
             return res.status(400).json({
                 success: false,
                 message: "OTP has expired. Please request a new one."
             });
         }
-        
+
         const isValid = await verifyOTP(otp, user.otp);
-        
+
         if (!isValid) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid OTP. Please try again."
             });
         }
-        
+
         user.isVerified = true;
         user.otp = null;
         user.otpExpiry = null;
         user.otpPurpose = null;
         await user.save();
-        
+
         const token = createToken(user._id, user.role, user.isApproved);
-        
+
         res.status(200).json({
             success: true,
             message: "Email verified successfully! You can now login.",
@@ -394,41 +396,41 @@ export async function verifySignupOtp(req, res) {
 
 export async function resendSignupOtp(req, res) {
     const { email } = req.body;
-    
+
     if (!email) {
         return res.status(400).json({
             success: false,
             message: "Email is required."
         });
     }
-    
+
     try {
         const user = await User.findOne({ email: email.toLowerCase() });
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found."
             });
         }
-        
+
         if (user.isVerified) {
             return res.status(400).json({
                 success: false,
                 message: "Account already verified. Please login."
             });
         }
-        
+
         const otp = generateOTP();
         const hashedOtp = await hashOTP(otp);
-        
+
         user.otp = hashedOtp;
         user.otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
         user.otpPurpose = 'signup';
         await user.save();
-        
+
         await sendSignupOTP(user.email, otp, user.name);
-        
+
         res.status(200).json({
             success: true,
             message: "New OTP sent to your email."
@@ -448,48 +450,48 @@ export async function resendSignupOtp(req, res) {
 
 export async function forgotPasswordOtp(req, res) {
     const { email } = req.body;
-    
+
     if (!email) {
         return res.status(400).json({
             success: false,
             message: "Email is required."
         });
     }
-    
+
     if (!validator.isEmail(email)) {
         return res.status(400).json({
             success: false,
             message: "Invalid email format."
         });
     }
-    
+
     try {
         const user = await User.findOne({ email: email.toLowerCase() });
-        
+
         if (!user) {
             return res.status(200).json({
                 success: true,
                 message: "If this email is registered, you will receive a password reset OTP."
             });
         }
-        
+
         if (!user.isVerified) {
             return res.status(400).json({
                 success: false,
                 message: "Please verify your account first before resetting password."
             });
         }
-        
+
         const otp = generateOTP();
         const hashedOtp = await hashOTP(otp);
-        
+
         user.otp = hashedOtp;
         user.otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
         user.otpPurpose = 'forgot-password';
         await user.save();
-        
+
         await sendForgotPasswordOTP(user.email, otp, user.name);
-        
+
         res.status(200).json({
             success: true,
             message: "Password reset OTP sent to your email.",
@@ -506,49 +508,49 @@ export async function forgotPasswordOtp(req, res) {
 
 export async function verifyForgotOtp(req, res) {
     const { email, otp } = req.body;
-    
+
     if (!email || !otp) {
         return res.status(400).json({
             success: false,
             message: "Email and OTP are required."
         });
     }
-    
+
     try {
-        const user = await User.findOne({ 
+        const user = await User.findOne({
             email: email.toLowerCase(),
             otpPurpose: 'forgot-password'
         });
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "Invalid request or user not found."
             });
         }
-        
+
         if (!user.otpExpiry || new Date() > user.otpExpiry) {
             return res.status(400).json({
                 success: false,
                 message: "OTP has expired. Please request a new one."
             });
         }
-        
+
         const isValid = await verifyOTP(otp, user.otp);
-        
+
         if (!isValid) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid OTP. Please try again."
             });
         }
-        
+
         const resetToken = jwt.sign(
             { id: user._id, purpose: 'password-reset' },
             JWT_SECRET,
             { expiresIn: '15m' }
         );
-        
+
         res.status(200).json({
             success: true,
             message: "OTP verified! You can now reset your password.",
@@ -664,7 +666,7 @@ export async function loginUser(req, res) {
         // Step 1: Try to find user in User collection first
         console.log('🔍 STEP 1: Searching for user in User collection...');
         console.log('🔍 Search email:', email.toLowerCase());
-        
+
         let user = await User.findOne({ email: email.toLowerCase() });
         let isAgent = false;
 
@@ -746,13 +748,13 @@ export async function loginUser(req, res) {
         // Step 7: Check farmer approval AFTER password verification
         if (!isAgent && user.role === 'farmer') {
             console.log('🌾 STEP 7: Checking farmer approval status...');
-            
+
             // Re-fetch user from DB to get latest approval status
             const freshUser = await User.findById(user._id);
             console.log('🌾 Fresh farmer data:');
             console.log('  - isApproved:', freshUser.isApproved);
             console.log('  - role:', freshUser.role);
-            
+
             if (!freshUser.isApproved) {
                 console.log('❌ STEP 7: Farmer not approved');
                 console.log('❌ LOGIN FAILED - Pending approval');
@@ -763,9 +765,9 @@ export async function loginUser(req, res) {
                     email: freshUser.email
                 });
             }
-            
+
             console.log('✅ STEP 7: Farmer is approved');
-            
+
             // Update user reference to fresh data
             user = freshUser;
         } else {
@@ -827,7 +829,7 @@ export async function loginUser(req, res) {
         console.error('❌ Error:', err.message);
         console.error('❌ Stack:', err.stack);
         console.error('❌ ==========================================');
-        
+
         res.status(500).json({
             success: false,
             message: "Server error during login. Please try again."
@@ -842,7 +844,7 @@ export async function loginUser(req, res) {
 export async function getUserProfile(req, res) {
     try {
         const user = await User.findById(req.user._id).select('-password');
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -895,7 +897,7 @@ export async function updateProfile(req, res) {
                     message: 'Email cannot be empty'
                 });
             }
-            
+
             if (!validator.isEmail(email)) {
                 return res.status(400).json({
                     success: false,
@@ -903,11 +905,11 @@ export async function updateProfile(req, res) {
                 });
             }
 
-            const existingUser = await User.findOne({ 
-                email: email.toLowerCase(), 
-                _id: { $ne: userId } 
+            const existingUser = await User.findOne({
+                email: email.toLowerCase(),
+                _id: { $ne: userId }
             });
-            
+
             if (existingUser) {
                 return res.status(400).json({
                     success: false,
@@ -938,7 +940,7 @@ export async function updateProfile(req, res) {
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             updateData,
-            { 
+            {
                 new: true,
                 runValidators: true
             }
@@ -1048,7 +1050,7 @@ export async function changePassword(req, res) {
 export async function getUserStats(req, res) {
     try {
         const userId = req.user._id;
-        
+
         const stats = {
             totalOrders: 12,
             completedOrders: 10,
@@ -1138,6 +1140,36 @@ export async function logoutUser(req, res) {
 // ADMIN-ONLY: FARMER MANAGEMENT
 // ============================================
 
+// ============================================
+// ADMIN: GET SUMMARY COUNTS
+// ============================================
+export async function getAdminSummary(req, res) {
+    try {
+        const pendingFarmersCount = await User.countDocuments({ role: 'farmer', isApproved: false });
+        const pendingReturnsCount = await Return.countDocuments({ status: 'requested' });
+        const unreadMessagesCount = await Message.countDocuments({ senderRole: 'farmer', seen: false });
+
+        res.status(200).json({
+            success: true,
+            summary: {
+                pendingFarmers: pendingFarmersCount,
+                pendingReturns: pendingReturnsCount,
+                unreadMessages: unreadMessagesCount
+            }
+        });
+    } catch (error) {
+        console.error('❌ Get admin summary error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+}
+
+// ============================================
+// ADMIN: FARMER MANAGEMENT
+// ============================================
 export async function getPendingFarmers(req, res) {
     try {
         const pendingFarmers = await User.find({
@@ -1335,7 +1367,7 @@ export async function updateFarmerProfile(req, res) {
         });
 
         const user = await User.findById(userId);
-        
+
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -1368,7 +1400,7 @@ export async function updateFarmerProfile(req, res) {
         if (certification) user.certification = certification;
         if (experience !== undefined) user.experience = Number(experience);
         if (district) user.district = district.trim();
-        
+
         user.profileUpdatedAt = new Date();
         await user.save();
 

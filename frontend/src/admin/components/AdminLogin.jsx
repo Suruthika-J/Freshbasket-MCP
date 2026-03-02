@@ -95,7 +95,7 @@ const AdminLogin = ({ onLogin }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="fb-input w-full pl-10 pr-3 py-3 rounded-lg"
+                className="fb-input w-full !pl-11 pr-3 py-3 rounded-lg"
                 placeholder="admin@freshbasket.com"
               />
             </div>
@@ -118,7 +118,7 @@ const AdminLogin = ({ onLogin }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="fb-input w-full pl-10 pr-3 py-3 rounded-lg"
+                className="fb-input w-full !pl-11 pr-3 py-3 rounded-lg"
                 placeholder="Enter your password"
               />
             </div>
