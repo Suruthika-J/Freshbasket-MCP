@@ -109,10 +109,10 @@ const Home = () => {
 
                             {/* Call to Action */}
                             <div className="pt-4">
-                                <p className="fb-text-secondary text-lg mb-4">
+                                <p className="fb-text text-lg mb-4">
                                     Please login or signup to continue shopping or selling your produce
                                 </p>
-                                <p className="text-sm fb-text-muted">
+                                <p className="text-sm fb-text-secondary font-medium">
                                     ✨ Join thousands of satisfied farmers and customers today!
                                 </p>
                             </div>

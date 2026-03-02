@@ -266,11 +266,11 @@ const BannerHome = ({ onSearch }) => {
                 </div>
 
                 {/* Info Text */}
-                <div className="mt-6 text-center md:text-left">
-                  <p className="text-sm fb-text-secondary">
+                <div className="mt-6 text-center md:text-left space-y-2">
+                  <p className="text-base fb-text font-medium">
                     🌾 <strong>Farmers:</strong> Sell your produce directly to customers
                   </p>
-                  <p className="text-sm fb-text-secondary">
+                  <p className="text-base fb-text font-medium">
                     🛒 <strong>Customers:</strong> Buy fresh farm produce at the best prices
                   </p>
                 </div>

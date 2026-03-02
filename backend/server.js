@@ -249,10 +249,23 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
     try {
         await connectDB();
+
+        // Handle port conflicts gracefully
+        httpServer.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error(`\n❌ ERROR: Port ${port} is already in use.`);
+                console.error(`👉 Run 'npx kill-port ${port}' or end the process using port ${port}.\n`);
+                process.exit(1);
+            } else {
+                console.error('❌ Server error:', err);
+            }
+        });
+
         httpServer.listen(port, () => {
             console.log(`\n🚀 SERVER RUNNING AT: http://localhost:${port}`);
             console.log(`📡 Socket.io path: http://localhost:${port}/socket.io/`);
         });
+
     } catch (error) {
         console.error('❌ Failed to start server:', error.message);
         process.exit(1);

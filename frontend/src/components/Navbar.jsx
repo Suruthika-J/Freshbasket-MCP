@@ -356,7 +356,9 @@ export default function Navbar() {
               // Login link when not logged in
               <Link to="/login" className={navbarStyles.loginLink}>
                 <FiUser className={navbarStyles.loginIcon} />
-                <span className="ml-1 text-white">{t('nav.login')}</span>
+                <span className="ml-1 fb-text-secondary group-hover:fb-text-primary font-medium transition-colors">
+                  {t('nav.login')}
+                </span>
               </Link>
             )}
 
