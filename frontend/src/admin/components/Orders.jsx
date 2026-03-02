@@ -100,6 +100,25 @@ const Orders = () => {
     }
   };
 
+  const updatePaymentStatus = async (id, paymentStatus) => {
+    try {
+      const response = await axios.patch(`${API_BASE_URL}/api/sub-orders/${id}/payment-status`,
+        { paymentStatus },
+        { headers: getAuthHeaders() }
+      );
+      if (response.data.success) {
+        toast.success(`Payment status updated to ${paymentStatus}`);
+        fetchSubOrders();
+        // Update selected sub order in modal if it's the one we just updated
+        if (selectedSubOrder && selectedSubOrder._id === id) {
+          setSelectedSubOrder({ ...selectedSubOrder, paymentStatus });
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to update payment status');
+    }
+  };
+
   const handleAgentAssigned = (updatedSubOrder) => {
     fetchSubOrders();
     setIsAssignModalOpen(false);
@@ -376,6 +395,27 @@ const Orders = () => {
                       <FiMapPin className="mt-1 flex-shrink-0" />
                       <span>{selectedSubOrder.parentOrder?.customer?.address}</span>
                     </div>
+                  </div>
+
+                  <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100 flex justify-between items-center">
+                    <div>
+                      <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-2">
+                        <FiCreditCard /> Payment Status
+                      </h4>
+                      <p className={`font-black uppercase text-xs ${selectedSubOrder.paymentStatus === 'Paid' ? 'text-green-600' : 'text-orange-600'}`}>
+                        {selectedSubOrder.paymentStatus || 'Unpaid'}
+                      </p>
+                    </div>
+                    <select
+                      value={selectedSubOrder.paymentStatus || 'Unpaid'}
+                      onChange={(e) => updatePaymentStatus(selectedSubOrder._id, e.target.value)}
+                      className="bg-white border border-emerald-200 rounded-xl px-3 py-1.5 text-[10px] font-black text-emerald-700 outline-none uppercase tracking-widest shadow-sm"
+                    >
+                      <option value="Unpaid">Unpaid</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Failed">Failed</option>
+                      <option value="Refunded">Refunded</option>
+                    </select>
                   </div>
 
                   <div className="bg-emerald-50/50 rounded-3xl p-6 border border-emerald-100">

@@ -11,6 +11,7 @@ import OrdersPage from './components/Orders';
 import DeliveryAgents from './components/DeliveryAgents';
 import AdminReturnRequests from './components/AdminReturnRequests';
 import FarmerManagement from './components/FarmerManagement';
+import AdminChat from './components/AdminChat';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Logout Confirmation Dialog Component
@@ -195,6 +196,7 @@ function AdminApp() {
             <Route path="/agents" element={<DeliveryAgents />} />
             <Route path="/returns" element={<AdminReturnRequests />} />
             <Route path="/farmers" element={<FarmerManagement />} />
+            <Route path="/chat" element={<AdminChat />} />
             <Route path="*" element={<Navigate to="/admin/add-item" replace />} />
           </Routes>
         </main>

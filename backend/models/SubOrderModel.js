@@ -179,49 +179,55 @@ const subOrderSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Validate delivery option based on vendor type
+// ============================================
+// Normalized Delivery Logic & Defaulting
+// (Only apply defaults if not already set correctly)
+// ============================================
 subOrderSchema.pre('validate', function (next) {
-    // Set productOwner
+    // Set productOwner based on vendorType
     if (this.vendor && this.vendor.vendorType) {
         this.productOwner = this.vendor.vendorType;
     }
 
-    // Admin products default to platform delivery (normal flow)
-    if (this.vendor.vendorType === 'admin') {
-        this.deliveryOption = 'DELIVERY_AGENT'; // Maintain for compatibility
-        this.deliveryType = 'deliveryAgent';
-        this.deliveryRequired = true; // Admin products always need delivery in this app
-        this.assignedAgent = null;
-        this.deliveryStatus = 'PENDING_ASSIGNMENT';
+    // Admin fulfillment logic
+    if (this.vendor?.vendorType === 'admin') {
+        const isNew = this.isNew;
+        if (isNew) {
+            this.deliveryOption = 'DELIVERY_AGENT';
+            this.deliveryType = 'deliveryAgent';
+            this.deliveryRequired = true;
+            if (!this.deliveryStatus) this.deliveryStatus = 'PENDING_ASSIGNMENT';
+        }
+        // DO NOT reset assignedAgent or deliveryStatus on subsequent saves!
     }
-    // Farmer products use the selected choice
-    else if (this.vendor.vendorType === 'farmer') {
+    // Farmer fulfillment logic
+    else if (this.vendor?.vendorType === 'farmer') {
         const dOption = String(this.deliveryOption || '').toUpperCase().replace('-', '_');
         const dType = String(this.deliveryType || '').toLowerCase().replace('-', '_');
 
-        if (dOption === 'SELF_PICKUP' || dType === 'self_pickup' || dType === 'selfpickup' || this.deliveryOption === 'self-pickup') {
+        const isSelfPickup = dOption === 'SELF_PICKUP' || dType === 'self_pickup' || dType === 'selfpickup' || this.deliveryOption === 'self-pickup';
+
+        if (isSelfPickup) {
             this.deliveryOption = 'SELF_PICKUP';
             this.deliveryType = 'selfPickup';
-        } else if (dOption === 'DELIVERY_AGENT' || dType === 'delivery_agent' || dType === 'deliveryagent' || this.deliveryOption === 'delivery-agent') {
+            this.deliveryRequired = false;
+        } else {
             this.deliveryOption = 'DELIVERY_AGENT';
             this.deliveryType = 'deliveryAgent';
+            this.deliveryRequired = true;
         }
 
-        // Ensure we don't have undefined for required fields if we matched
-        if (!this.deliveryType && this.deliveryOption === 'DELIVERY_AGENT') this.deliveryType = 'deliveryAgent';
-        if (!this.deliveryType && this.deliveryOption === 'SELF_PICKUP') this.deliveryType = 'selfPickup';
-
-        // Set deliveryRequired flag
-        this.deliveryRequired = this.deliveryType === 'deliveryAgent';
-
-        // Initialize deliveryStatus
+        // Initialize status only if not already set or if option changed
         if (this.deliveryRequired) {
-            if (!this.assignedAgent && (!this.deliveryStatus || this.deliveryStatus === 'NOT_REQUIRED')) {
-                this.deliveryStatus = 'PENDING_ASSIGNMENT';
+            if (!this.deliveryStatus || this.deliveryStatus === 'NOT_REQUIRED') {
+                this.deliveryStatus = this.assignedAgent ? 'ASSIGNED' : 'PENDING_ASSIGNMENT';
             }
         } else {
-            this.deliveryStatus = 'NOT_REQUIRED';
-            this.assignedAgent = null;
+            // For Self-Pickup, only set to NOT_REQUIRED if it's not already DELIVERED
+            if (this.status !== 'delivered') {
+                this.deliveryStatus = 'NOT_REQUIRED';
+                this.assignedAgent = null;
+            }
         }
     }
     next();
@@ -236,15 +242,22 @@ subOrderSchema.pre('save', function (next) {
 // Update parent order status after sub-order status change
 subOrderSchema.post('save', async function (doc) {
     try {
-        const session = doc.$session() || null;
         const ParentOrder = mongoose.model('ParentOrder');
-        const parentOrder = await ParentOrder.findById(doc.parentOrder).session(session);
+        const parentOrder = await ParentOrder.findById(doc.parentOrder);
+
         if (parentOrder) {
-            // ✅ CRITICAL: Pass the session to avoid write conflicts
+            console.log(`\n🔔 HOOK: SubOrder ${doc.subOrderId} saved. Triggering ParentOrder update...`);
+            console.log(`   SubOrder Status: ${doc.status}`);
+            console.log(`   SubOrder Delivery: ${doc.deliveryStatus}`);
+
+            // Use the doc's session if it exists to maintain transaction atomic integrity
+            const session = doc.$session() || null;
             await parentOrder.updateOverallStatus(session);
+        } else {
+            console.warn(`⚠️ HOOK: ParentOrder not found for SubOrder ${doc.subOrderId}`);
         }
     } catch (error) {
-        console.error('Error updating parent order status:', error);
+        console.error('❌ HOOK ERROR: Failed to sync parent order status:', error.message);
     }
 });
 

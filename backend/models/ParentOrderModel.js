@@ -51,7 +51,7 @@ const parentOrderSchema = new mongoose.Schema({
         default: null
     },
     // Aggregated status from all sub-orders
-    overallStatus: {
+    orderStatus: {
         type: String,
         enum: ['pending', 'processing', 'partially-delivered', 'completed', 'cancelled', 'returning', 'refunded'],
         default: 'pending'
@@ -87,6 +87,11 @@ parentOrderSchema.pre('validate', function (next) {
     next();
 });
 
+// Virtual for overallStatus (legacy compatibility)
+parentOrderSchema.virtual('overallStatus').get(function () {
+    return this.orderStatus;
+});
+
 // Virtual to get sub-order count
 parentOrderSchema.virtual('subOrderCount').get(function () {
     return this.subOrders ? this.subOrders.length : 0;
@@ -98,39 +103,44 @@ parentOrderSchema.methods.updateOverallStatus = async function (session = null) 
     const subOrders = await SubOrder.find({ parentOrder: this._id }).session(session);
 
     if (subOrders.length === 0) {
-        this.overallStatus = 'pending';
+        this.orderStatus = 'pending';
         return;
     }
 
     const statuses = subOrders.map(so => so.status);
+    const activeStatuses = statuses.filter(s => s !== 'cancelled' && s !== 'refunded');
 
     // All cancelled
-    if (statuses.every(s => s === 'cancelled')) {
-        this.overallStatus = 'cancelled';
+    if (statuses.length > 0 && statuses.every(s => s === 'cancelled')) {
+        this.orderStatus = 'cancelled';
     }
     // All refunded
-    else if (statuses.every(s => s === 'refunded')) {
-        this.overallStatus = 'refunded';
+    else if (statuses.length > 0 && statuses.every(s => s === 'refunded')) {
+        this.orderStatus = 'refunded';
     }
     // Any returning
     else if (statuses.some(s => s === 'returning')) {
-        this.overallStatus = 'returning';
+        this.orderStatus = 'returning';
     }
-    // All delivered
+    // All active sub-orders are delivered
+    else if (activeStatuses.length > 0 && activeStatuses.every(s => s === 'delivered')) {
+        this.orderStatus = 'completed';
+    }
+    // All delivered (none cancelled/refunded) - legacy path
     else if (statuses.every(s => s === 'delivered')) {
-        this.overallStatus = 'completed';
+        this.orderStatus = 'completed';
     }
     // Some delivered
     else if (statuses.some(s => s === 'delivered')) {
-        this.overallStatus = 'partially-delivered';
+        this.orderStatus = 'partially-delivered';
     }
     // At least one processing
     else if (statuses.some(s => ['confirmed', 'preparing', 'ready', 'out-for-delivery'].includes(s))) {
-        this.overallStatus = 'processing';
+        this.orderStatus = 'processing';
     }
     // All pending
     else {
-        this.overallStatus = 'pending';
+        this.orderStatus = 'pending';
     }
 
     await this.save({ session });

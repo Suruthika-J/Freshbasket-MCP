@@ -1,9 +1,12 @@
-// backend/server.js - COMPLETE UPDATED VERSION
+// backend/server.js - COMPLETE UPDATED VERSION WITH SOCKET.IO
 import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import { connectDB } from './config/db.js';
 
 // Pre-load all models to avoid population/registration issues
@@ -12,6 +15,8 @@ import './models/productModel.js';
 import './models/ParentOrderModel.js';
 import './models/SubOrderModel.js';
 import './models/deliveryAgentModel.js';
+import Conversation from './models/Conversation.js';
+import Message from './models/Message.js';
 
 import returnRouter from './routes/returnRoute.js';
 
@@ -22,10 +27,12 @@ import authMiddleware from './middleware/auth.js';
 import cartRouter from './routes/cartRoute.js';
 import chatbotRouter from './routes/chatbot.js';
 import chatRouter from './routes/chatRoute.js';
+import directChatRouter from './routes/directChatRoute.js';
 import deliveryAgentRouter from './routes/deliveryAgentRoute.js';
 import orderRouter from './routes/orderRoute.js';
 import productRouter from './routes/productRoute.js';
 import userRouter from './routes/userRoute.js';
+import User from './models/userModel.js';
 import reviewRouter from './routes/reviewRoute.js';
 
 // Multi-vendor order routes
@@ -39,20 +46,21 @@ import farmerRouter from './routes/farmerRouter.js';
 import voiceRouter from './routes/voiceRoute.js';
 
 // ============================================
-// INITIAL ENVIRONMENT CHECK
-// ============================================
-console.log('\n🔍 Environment Check:');
-console.log('  - GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? '✅ Found' : '❌ Missing');
-console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? '✅ Found' : '❌ Missing');
-console.log('  - MONGODB_URI:', (process.env.MONGODB_URI || process.env.MONGO_USER) ? '✅ Found' : '❌ Missing');
-console.log('  - PORT:', process.env.PORT || 4000);
-console.log('  - NODE_ENV:', process.env.NODE_ENV || 'development');
-console.log('');
-
-// ============================================
 // APP & SERVER CONFIGURATION
 // ============================================
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: [
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://localhost:3000',
+        ],
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        credentials: true
+    }
+});
 const port = process.env.PORT || 4000;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -62,7 +70,7 @@ const __dirname = path.dirname(__filename);
 // CORE MIDDLEWARE (Order is important)
 // ============================================
 
-// 1. CORS Configuration (Handles cross-origin requests first)
+// 1. CORS Configuration
 app.use(
     cors({
         origin: function (origin, callback) {
@@ -76,14 +84,12 @@ app.use(
             ];
 
             if (process.env.NODE_ENV !== 'production') {
-                console.log('✅ CORS: Allowing development origin:', origin);
                 return callback(null, true);
             }
 
             if (allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
-                console.log('⚠️ CORS blocked origin:', origin);
                 callback(new Error('Not allowed by CORS'));
             }
         },
@@ -95,84 +101,116 @@ app.use(
     })
 );
 
-// Add COOP header middleware
 app.use((req, res, next) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     next();
 });
 
-// 2. Body Parsers (To parse JSON payloads)
+// 2. Body Parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 3. Global Loggers (BEFORE routes are mounted)
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        console.log(`📨 ${req.method} ${req.path}`);
-        if (req.body && Object.keys(req.body).length > 0) {
-            console.log('  Body:', JSON.stringify(req.body).substring(0, 150) + '...');
-        }
-        next();
-    });
-}
-
-// Global logger specifically for order routes
-app.use((req, res, next) => {
-    if (req.url.includes('/orders')) {
-        console.log(`🌐 ${req.method} ${req.url}`);
-    }
-    next();
-});
-
-// ============================================
-// DATABASE CONNECTION (Handled in startServer)
-// ============================================
-
-// ============================================
-// STATIC FILE SERVING
-// ============================================
+// 3. Static File Serving
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ============================================
-// API ROUTES (Order matters for overlapping paths)
+// SOCKET.IO LOGIC
 // ============================================
+io.use(async (socket, next) => {
+    const token = socket.handshake.auth.token || socket.handshake.headers.token;
+    if (!token) {
+        return next(new Error('Authentication error: No token provided'));
+    }
 
-// User authentication routes
+    try {
+        if (typeof token === 'string' && token.startsWith('admin-session-token-')) {
+            // Find a real admin user from DB for mock session
+            const admin = await User.findOne({ role: 'admin' });
+            if (admin) {
+                socket.user = { id: admin._id.toString(), role: 'admin' };
+            } else {
+                // Fallback if no admin in DB
+                socket.user = { id: 'admin-001', role: 'admin' };
+            }
+            return next();
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_here');
+        socket.user = { id: decoded.id || decoded.userId, role: decoded.role };
+        next();
+    } catch (err) {
+        return next(new Error('Authentication error: Invalid token'));
+    }
+});
+
+io.on('connection', (socket) => {
+    console.log(`🔌 New socket connection: ${socket.id} (User: ${socket.user.id}, Role: ${socket.user.role})`);
+
+    socket.on('joinChat', (chatId) => {
+        socket.join(chatId);
+        console.log(`👤 User ${socket.user.id} joined chat room: ${chatId}`);
+    });
+
+    socket.on('sendMessage', async (data) => {
+        if (!data || typeof data !== 'object') {
+            console.error('❌ Socket Error: Malformed data in sendMessage');
+            return;
+        }
+
+        const { chatId, text } = data;
+        const senderId = socket.user?.id;
+        const senderRole = socket.user?.role;
+
+        try {
+            const newMessage = await Message.create({
+                chatId,
+                senderId,
+                senderRole,
+                text
+            });
+
+            const conversation = await Conversation.findByIdAndUpdate(chatId, {
+                lastMessage: newMessage._id,
+                $inc: senderRole === 'admin' ? { unreadCountFarmer: 1 } : { unreadCountAdmin: 1 }
+            }, { new: true });
+
+            // Emit to the room
+            io.to(chatId).emit('receiveMessage', newMessage);
+
+            // Also emit an update to the chat list (for admin)
+            if (senderRole === 'farmer') {
+                io.emit('chatListUpdate', { chatId, lastMessage: newMessage, unreadCountAdmin: conversation.unreadCountAdmin });
+            } else {
+                io.to(chatId).emit('chatListUpdate', { chatId, lastMessage: newMessage, unreadCountFarmer: conversation.unreadCountFarmer });
+            }
+
+        } catch (error) {
+            console.error('Error in sendMessage socket event:', error);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`🔌 Socket disconnected: ${socket.id}`);
+    });
+});
+
+// ============================================
+// API ROUTES
+// ============================================
 app.use("/api/user", userRouter);
-
-// Product routes (dual mounting for compatibility)
 app.use('/api/items', productRouter);
 app.use('/api/products', productRouter);
-
-// Multi-vendor order routes (NEW)
 app.use('/api/parent-orders', parentOrderRouter);
 app.use('/api/sub-orders', subOrderRouter);
-
-// Legacy order routes (maintained for backward compatibility)
 app.use('/api/orders', orderRouter);
-
-// Farmer analytics and dashboard routes
 app.use('/api/farmer', farmerRouter);
-
-// Chatbot routes (legacy)
 app.use('/api/chatbot', chatbotRouter);
-
-// New unified chat routes (customer + farmer)
 app.use('/api/chat', chatRouter);
-
-// Review routes
+app.use('/api/direct-chat', directChatRouter); // Added
 app.use('/api/reviews', reviewRouter);
-
-// Voice transcription routes
 app.use('/api/voice', voiceRouter);
-
-// Return routes
 app.use('/api/returns', returnRouter);
-
-// Delivery Agent routes
 app.use('/api', deliveryAgentRouter);
-
-// Protected cart routes (require auth)
 app.use('/api/cart', authMiddleware, cartRouter);
 
 // Root endpoint
@@ -181,50 +219,27 @@ app.get('/', (req, res) => {
         status: 'ok',
         message: 'RushBasket API is running smoothly',
         version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        endpoints: {
-            users: '/api/user',
-            products: '/api/products',
-            orders: '/api/orders',
-            cart: '/api/cart',
-            agents: '/api/agents',
-            reviews: '/api/reviews',
-            chat: '/api/chat',
-            chatbot: '/api/chatbot (legacy)',
-            returns: '/api/returns'
-        }
+        timestamp: new Date().toISOString()
     });
 });
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Server is healthy',
-        timestamp: new Date().toISOString()
-    });
+    res.json({ success: true, message: 'Server is healthy', timestamp: new Date().toISOString() });
 });
 
-// 404 Handler (runs if no other route matches)
+// 404 Handler
 app.use((req, res) => {
-    console.log('❌ 404 Not Found:', req.method, req.path);
-    res.status(404).json({
-        success: false,
-        message: `Route ${req.method} ${req.path} not found`
-    });
+    res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found` });
 });
 
-// ============================================
-// GLOBAL ERROR HANDLER
-// ============================================
+// Global Error Handler
 app.use((err, req, res, next) => {
-    console.error('❌ Global Error Handler:', err.message);
-    console.error('Stack:', err.stack);
-
-    res.status(err.status || 500).json({
+    const errorMsg = err?.message || err || 'Internal Server Error';
+    console.error('❌ Global Error Handler:', errorMsg);
+    res.status(err?.status || 500).json({
         success: false,
-        message: err.message || 'An internal server error occurred',
-        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        message: errorMsg,
     });
 });
 
@@ -234,17 +249,9 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
     try {
         await connectDB();
-
-        app.listen(port, '0.0.0.0', () => {
-            console.log('\n🚀 ========================================');
-            console.log(`✅ Server running on http://localhost:${port}`);
-            console.log(`🌐 Also accessible on http://0.0.0.0:${port} (for mobile testing)`);
-            console.log(`📍 API Base: http://localhost:${port}/api`);
-            console.log(`📦 Products: http://localhost:${port}/api/items`);
-            console.log(`🛒 Cart: http://localhost:${port}/api/cart`);
-            console.log(`📋 Orders: http://localhost:${port}/api/orders`);
-            console.log(`🚚 Agents: http://localhost:${port}/api/agents`);
-            console.log('========================================\n');
+        httpServer.listen(port, () => {
+            console.log(`\n🚀 SERVER RUNNING AT: http://localhost:${port}`);
+            console.log(`📡 Socket.io path: http://localhost:${port}/socket.io/`);
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error.message);

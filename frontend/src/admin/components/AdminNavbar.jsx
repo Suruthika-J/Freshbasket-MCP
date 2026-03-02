@@ -1,7 +1,7 @@
-// frontend/src/admin/components/AdminNavbar.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { useChat } from '../../ChatContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -9,6 +9,7 @@ const AdminNavbar = ({ onLogout, adminUser }) => {
   const location = useLocation();
   const [pendingFarmersCount, setPendingFarmersCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const { unreadTotal } = useChat();
 
   useEffect(() => {
     fetchPendingFarmersCount();
@@ -39,6 +40,7 @@ const AdminNavbar = ({ onLogout, adminUser }) => {
     { path: '/admin/agents', icon: 'fas fa-truck', label: 'Agents' },
     { path: '/admin/farmers', icon: 'fas fa-tractor', label: 'Farmers', badge: pendingFarmersCount },
     { path: '/admin/returns', icon: 'fas fa-undo', label: 'Returns' },
+    { path: '/admin/chat', icon: 'fas fa-comments', label: 'Messages', badge: unreadTotal },
   ];
 
   return (
@@ -59,8 +61,8 @@ const AdminNavbar = ({ onLogout, adminUser }) => {
                 key={path}
                 to={path}
                 className={`text-white px-3 py-2 rounded-md text-sm flex items-center gap-1.5 relative transition-colors ${isActive(path)
-                    ? 'bg-black/20 font-semibold'
-                    : 'hover:bg-white/10'
+                  ? 'bg-black/20 font-semibold'
+                  : 'hover:bg-white/10'
                   }`}
               >
                 <i className={`${icon} text-sm`} />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FiHome, FiBarChart2, FiBox, FiClipboard, FiBell } from 'react-icons/fi';
+import { FiHome, FiBarChart2, FiBox, FiClipboard, FiBell, FiMessageSquare } from 'react-icons/fi';
 import FarmerProfileDropdown from './FarmerProfileDropdown';
 
 const FarmerNavbar = ({ farmerInfo }) => {
@@ -13,6 +13,7 @@ const FarmerNavbar = ({ farmerInfo }) => {
         { path: '/farmer-dashboard', label: t('navbar.dashboard'), icon: FiHome },
         { path: '/farmer/market-prices', label: t('navbar.dailyMarketPrice'), icon: FiBarChart2 },
         { path: '/farmer/add-product', label: t('navbar.addUpdateProducts'), icon: FiBox },
+        { path: '/farmer/chat', label: 'Chat Support', icon: FiMessageSquare },
     ];
 
     return (
@@ -46,8 +47,8 @@ const FarmerNavbar = ({ farmerInfo }) => {
                                     key={item.path}
                                     to={item.path}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isActive
-                                            ? 'bg-green-600 text-white shadow-md shadow-green-100'
-                                            : 'text-gray-600 hover:bg-green-50 hover:text-green-700'
+                                        ? 'bg-green-600 text-white shadow-md shadow-green-100'
+                                        : 'text-gray-600 hover:bg-green-50 hover:text-green-700'
                                         }`}
                                 >
                                     <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`} />

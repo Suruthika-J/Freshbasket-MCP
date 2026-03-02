@@ -169,6 +169,35 @@ const DeliveryDashboard = () => {
         }
     };
 
+    const updatePaymentStatus = async (orderId, paymentStatus) => {
+        setActionLoading(true);
+        try {
+            const response = await axios.patch(
+                `${API_BASE_URL}/api/sub-orders/${orderId}/payment-status`,
+                { paymentStatus },
+                { headers: getAuthHeaders() }
+            );
+
+            if (response.data.success) {
+                toast.success(`Payment marked as ${paymentStatus}`);
+                fetchOrders();
+                // Update selected order locally
+                if (selectedOrder) {
+                    setSelectedOrder(prev => ({
+                        ...prev,
+                        paymentStatus: paymentStatus,
+                        parentOrder: prev.parentOrder ? { ...prev.parentOrder, paymentStatus: paymentStatus } : prev.parentOrder
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error('Update payment status error:', error);
+            toast.error(error.response?.data?.message || 'Failed to update payment status');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     // NEW: Location sharing functions with improved error handling
     const requestLocationPermission = async () => {
         if (!navigator.permissions) {
@@ -773,16 +802,32 @@ const DeliveryDashboard = () => {
 
                         {/* Order Summary */}
                         <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                            <h3 className="font-semibold text-lg mb-3">Order Summary</h3>
+                            <div className="flex justify-between items-center mb-3">
+                                <h3 className="font-semibold text-lg">Order Summary</h3>
+                                {(selectedOrder.parentOrder?.paymentStatus !== 'Paid' && selectedOrder.paymentStatus !== 'Paid') ? (
+                                    <button
+                                        onClick={() => updatePaymentStatus(selectedOrder._id, 'Paid')}
+                                        disabled={actionLoading}
+                                        className="px-4 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-colors shadow-sm flex items-center gap-2"
+                                    >
+                                        <FiCheckCircle size={14} />
+                                        Mark as Paid
+                                    </button>
+                                ) : (
+                                    <span className="flex items-center gap-1 text-green-600 text-xs font-bold bg-green-100 px-3 py-1 rounded-lg">
+                                        <FiCheckCircle size={14} /> PAID
+                                    </span>
+                                )}
+                            </div>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
                                     <span>Payment Method:</span>
-                                    <span className="font-medium">{selectedOrder.paymentMethod}</span>
+                                    <span className="font-medium">{selectedOrder.parentOrder?.paymentMethod || 'N/A'}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Payment Status:</span>
-                                    <span className={`font-medium ${selectedOrder.paymentStatus === 'Paid' ? 'text-green-600' : 'text-red-600'}`}>
-                                        {selectedOrder.paymentStatus}
+                                    <span className={`font-medium ${(selectedOrder.parentOrder?.paymentStatus === 'Paid' || selectedOrder.paymentStatus === 'Paid') ? 'text-green-600' : 'text-red-600'}`}>
+                                        {selectedOrder.parentOrder?.paymentStatus || selectedOrder.paymentStatus || 'Unpaid'}
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold pt-2 border-t border-blue-200">

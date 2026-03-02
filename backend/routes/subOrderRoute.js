@@ -7,6 +7,7 @@ import {
     getFarmerSubOrders,
     getAgentSubOrders,
     updateSubOrderStatus,
+    updateSubOrderPaymentStatus,
     getAllSubOrders,
     getPendingDeliveryRequests,
     assignDeliveryAgent,
@@ -65,5 +66,8 @@ router.get('/:id', authMiddleware, getSubOrderById);
 
 // Update sub-order status (role-based: farmer/agent/admin)
 router.patch('/:id/status', authMiddleware, updateSubOrderStatus);
+
+// Update sub-order payment status (role-based)
+router.patch('/:id/payment-status', authMiddleware, updateSubOrderPaymentStatus);
 
 export default router;

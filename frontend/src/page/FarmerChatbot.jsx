@@ -6,504 +6,555 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-    FiSend,
-    FiArrowLeft,
-    FiAlertCircle,
-    FiTrash2,
-    FiMic,
-    FiMicOff,
+  FiSend,
+  FiArrowLeft,
+  FiAlertCircle,
+  FiTrash2,
+  FiMic,
+  FiMicOff,
 } from 'react-icons/fi';
 import { IoLeaf } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`;
+const getToken = () => localStorage.getItem('authToken') || localStorage.getItem('token');
 
 const FarmerChatbot = () => {
-    const navigate = useNavigate();
-    const [messages, setMessages] = useState([
-        {
-            type: 'bot',
-            text: "🌾 வணக்கம்! Welcome! I'm your **FreshBasket Market Price Assistant**.\n\nI can help you check today's vegetable and fruit prices.\n\n🗣️ **Voice Input**: Tap the 🎤 mic button and speak in Tamil or English\n⌨️ **Type**: Type your query in the text box\n\nExample questions:\n• \"இன்றைய தக்காளி விலை என்ன?\"\n• \"Today onion price\"\n• \"Carrot rate in Chennai\"",
-            timestamp: new Date(),
-        },
-    ]);
-    const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [connectionError, setConnectionError] = useState(false);
+  const navigate = useNavigate();
+  const [messages, setMessages] = useState([
+    {
+      type: 'bot',
+      text: "🌾 வணக்கம்! Welcome! I'm your **FreshBasket Market Price Assistant**.\n\nI can help you check today's vegetable and fruit prices.\n\n🗣️ **Voice Input**: Tap the 🎤 mic button and speak in Tamil or English\n⌨️ **Type**: Type your query in the text box\n\nExample questions:\n• \"இன்றைய தக்காளி விலை என்ன?\"\n• \"Today onion price\"\n• \"Carrot rate in Chennai\"",
+      timestamp: new Date(),
+    },
+  ]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
-    // Voice states
-    const [isListening, setIsListening] = useState(false);
-    const [voiceSupported, setVoiceSupported] = useState(false);
-    const [voiceError, setVoiceError] = useState('');
-    const [detectedLanguage, setDetectedLanguage] = useState('');
-    const [interimTranscript, setInterimTranscript] = useState('');
+  // Voice states
+  const [isListening, setIsListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
+  const [selectedVoiceLang, setSelectedVoiceLang] = useState('auto');
+  const [interimTranscript, setInterimTranscript] = useState('');
 
-    const messagesEndRef = useRef(null);
-    const inputRef = useRef(null);
-    const recognitionRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-    // ── Initialize Speech Recognition ─────────────────────────
-    useEffect(() => {
-        const SpeechRecognition =
-            window.SpeechRecognition || window.webkitSpeechRecognition;
+  // ── Initialize Speech Recognition ─────────────────────────
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        if (SpeechRecognition) {
-            setVoiceSupported(true);
-            const recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = true;
-            recognition.maxAlternatives = 3;
+    if (SpeechRecognition) {
+      setVoiceSupported(true);
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
 
-            // Support both Tamil and English
-            recognition.lang = 'ta-IN'; // Primary: Tamil
-
-            // Listen for language detection through alternatives
-            recognition.onresult = (event) => {
-                let interim = '';
-                let final = '';
-
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        final += transcript;
-                    } else {
-                        interim += transcript;
-                    }
-                }
-
-                setInterimTranscript(interim);
-
-                if (final) {
-                    // Detect language from the transcript
-                    const isTamil = /[\u0B80-\u0BFF]/.test(final);
-                    setDetectedLanguage(isTamil ? 'ta-IN' : 'en-IN');
-                    setInput((prev) => (prev ? prev + ' ' + final : final));
-                    setInterimTranscript('');
-                }
-            };
-
-            recognition.onerror = (event) => {
-                console.error('🎤 Speech error:', event.error);
-                setIsListening(false);
-                setInterimTranscript('');
-
-                if (event.error === 'not-allowed') {
-                    setVoiceError('Microphone access denied. Please allow microphone permission.');
-                } else if (event.error === 'no-speech') {
-                    setVoiceError('No speech detected. Please try again.');
-                } else if (event.error === 'network') {
-                    setVoiceError('Network error. Check your internet connection.');
-                } else {
-                    setVoiceError(`Voice error: ${event.error}. Try typing instead.`);
-                }
-
-                // Auto-clear error after 5 seconds
-                setTimeout(() => setVoiceError(''), 5000);
-            };
-
-            recognition.onend = () => {
-                setIsListening(false);
-                setInterimTranscript('');
-            };
-
-            recognitionRef.current = recognition;
-        } else {
-            setVoiceSupported(false);
-        }
-
-        return () => {
-            if (recognitionRef.current) {
-                try { recognitionRef.current.abort(); } catch { }
-            }
+      // Map internal lang name to BCP 47 code
+      const getLangCode = (name) => {
+        const map = {
+          'auto': 'ta-IN',
+          'tamil': 'ta-IN',
+          'english': 'en-IN',
+          'hindi': 'hi-IN',
+          'malayalam': 'ml-IN',
+          'telugu': 'te-IN',
+          'kannada': 'kn-IN'
         };
-    }, []);
+        return map[name] || 'ta-IN';
+      };
 
-    // ── Toggle Voice Listening ────────────────────────────────
-    const toggleListening = useCallback(() => {
-        if (!recognitionRef.current) return;
+      recognition.onresult = (event) => {
+        let interim = '';
+        let final = '';
 
-        if (isListening) {
-            recognitionRef.current.stop();
-            setIsListening(false);
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += transcript;
+          } else {
+            interim += transcript;
+          }
+        }
+
+        setInterimTranscript(interim);
+
+        if (final) {
+          setInput((prev) => (prev ? prev + ' ' + final : final));
+          setInterimTranscript('');
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('🎤 Speech error:', event.error);
+        setIsListening(false);
+        setInterimTranscript('');
+
+        if (event.error === 'not-allowed') {
+          setVoiceError('Microphone access denied. Please allow microphone permission.');
+        } else if (event.error === 'no-speech') {
+          setVoiceError('No speech detected. Please try again.');
+        } else if (event.error === 'network') {
+          setVoiceError('Network error. Check your internet connection.');
         } else {
-            setVoiceError('');
-            setInterimTranscript('');
-
-            // Alternate between Tamil and English based on last detection
-            recognitionRef.current.lang = detectedLanguage === 'en-IN' ? 'en-IN' : 'ta-IN';
-
-            try {
-                recognitionRef.current.start();
-                setIsListening(true);
-            } catch (err) {
-                console.error('Failed to start recognition:', err);
-                setVoiceError('Failed to start voice input. Please try again.');
-                setTimeout(() => setVoiceError(''), 3000);
-            }
-        }
-    }, [isListening, detectedLanguage]);
-
-    // ── Auto-scroll ───────────────────────────────────────────
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    useEffect(() => { scrollToBottom(); }, [messages]);
-    useEffect(() => { inputRef.current?.focus(); }, []);
-    useEffect(() => { checkHealth(); }, []);
-
-    const checkHealth = async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/chat/health`, { timeout: 5000 });
-            setConnectionError(response.data.status !== 'healthy');
-        } catch {
-            setConnectionError(true);
-        }
-    };
-
-    // Format markdown-like text
-    const formatMessage = (text) => {
-        return text.split('\n').map((line, i) => {
-            line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            line = line.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            return (
-                <span key={i}>
-                    <span dangerouslySetInnerHTML={{ __html: line }} />
-                    {i < text.split('\n').length - 1 && <br />}
-                </span>
-            );
-        });
-    };
-
-    // ── Send Message ──────────────────────────────────────────
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
-
-        // Stop listening if active
-        if (isListening && recognitionRef.current) {
-            recognitionRef.current.stop();
-            setIsListening(false);
+          setVoiceError(`Voice error: ${event.error}. Try typing instead.`);
         }
 
-        const userMessage = input.trim();
-        setInput('');
-        setConnectionError(false);
+        // Auto-clear error after 5 seconds
+        setTimeout(() => setVoiceError(''), 5000);
+      };
 
-        // Detect language of the message
-        const isTamil = /[\u0B80-\u0BFF]/.test(userMessage);
-        const msgLanguage = isTamil ? 'ta-IN' : 'en-IN';
+      recognition.onend = () => {
+        setIsListening(false);
+        setInterimTranscript('');
+      };
 
+      recognitionRef.current = recognition;
+    } else {
+      setVoiceSupported(false);
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch { }
+      }
+    };
+  }, []);
+
+  // ── Toggle Voice Listening ────────────────────────────────
+  const toggleListening = useCallback(() => {
+    if (!recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setVoiceError('');
+      setInterimTranscript('');
+
+      // Set language based on selection
+      const map = {
+        'auto': 'ta-IN',
+        'tamil': 'ta-IN',
+        'english': 'en-IN',
+        'hindi': 'hi-IN',
+        'malayalam': 'ml-IN',
+        'telugu': 'te-IN',
+        'kannada': 'kn-IN'
+      };
+      recognitionRef.current.lang = map[selectedVoiceLang] || 'ta-IN';
+
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Failed to start recognition:', err);
+        setVoiceError('Failed to start voice input. Please try again.');
+        setTimeout(() => setVoiceError(''), 3000);
+      }
+    }
+  }, [isListening, selectedVoiceLang]);
+
+  // ── Auto-scroll ───────────────────────────────────────────
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => { scrollToBottom(); }, [messages]);
+  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => { checkHealth(); }, []);
+
+  const checkHealth = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/chat/health`, { timeout: 5000 });
+      setConnectionError(response.data.status !== 'healthy');
+    } catch {
+      setConnectionError(true);
+    }
+  };
+
+  // Format markdown-like text
+  const formatMessage = (text) => {
+    return text.split('\n').map((line, i) => {
+      line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      line = line.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      return (
+        <span key={i}>
+          <span dangerouslySetInnerHTML={{ __html: line }} />
+          {i < text.split('\n').length - 1 && <br />}
+        </span>
+      );
+    });
+  };
+
+  // ── Send Message ──────────────────────────────────────────
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    // Stop listening if active
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+
+    const userMessage = input.trim();
+    setInput('');
+    setConnectionError(false);
+
+    // Detect language of the message
+    const isTamil = /[\u0B80-\u0BFF]/.test(userMessage);
+    const msgLanguage = isTamil ? 'ta-IN' : 'en-IN';
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        type: 'user',
+        text: userMessage,
+        timestamp: new Date(),
+        language: msgLanguage,
+      },
+    ]);
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/chat/farmer`,
+        {
+          message: userMessage,
+          language: selectedVoiceLang,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'token': getToken()
+          },
+          timeout: 35000,
+        }
+      );
+
+      if (response.data.success) {
         setMessages((prev) => [
-            ...prev,
-            {
-                type: 'user',
-                text: userMessage,
-                timestamp: new Date(),
-                language: msgLanguage,
-            },
+          ...prev,
+          {
+            type: 'bot',
+            text: response.data.response,
+            timestamp: new Date(),
+          },
         ]);
-        setIsLoading(true);
-
-        try {
-            const response = await axios.post(
-                `${API_BASE_URL}/chat/farmer`,
-                {
-                    message: userMessage,
-                    language: msgLanguage,
-                },
-                {
-                    headers: { 'Content-Type': 'application/json' },
-                    timeout: 35000,
-                }
-            );
-
-            if (response.data.success) {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        type: 'bot',
-                        text: response.data.response,
-                        timestamp: new Date(),
-                    },
-                ]);
-            } else {
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        type: 'bot',
-                        text: `❌ ${response.data.error || 'Sorry, something went wrong.'}`,
-                        timestamp: new Date(),
-                        isError: true,
-                    },
-                ]);
-            }
-        } catch (error) {
-            let errorMessage = '❌ Something went wrong. ';
-
-            if (error.code === 'ECONNABORTED') {
-                errorMessage += 'Request timed out.';
-            } else if (error.response) {
-                const { status, data } = error.response;
-                if (status === 503) {
-                    errorMessage = '🔧 AI service unavailable. Check backend.';
-                } else if (status === 429) {
-                    errorMessage = '⏳ Rate limit. Please wait.';
-                } else {
-                    errorMessage += data.error || `Error (${status})`;
-                }
-            } else if (error.request) {
-                errorMessage = '🔌 Cannot connect to server.';
-                setConnectionError(true);
-            }
-
-            setMessages((prev) => [
-                ...prev,
-                {
-                    type: 'bot',
-                    text: errorMessage,
-                    timestamp: new Date(),
-                    isError: true,
-                },
-            ]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-        }
-    };
-
-    const handleClearChat = async () => {
-        try {
-            await axios.post(`${API_BASE_URL}/chat/clear`, { role: 'farmer' });
-        } catch { }
-        setMessages([
-            {
-                type: 'bot',
-                text: '🔄 Chat cleared! Ask me about today\'s market prices.\n\n\"இன்றைய காய்கறி விலை என்ன?\" or \"Today vegetable price?\"',
-                timestamp: new Date(),
-            },
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            type: 'bot',
+            text: `❌ ${response.data.error || 'Sorry, something went wrong.'}`,
+            timestamp: new Date(),
+            isError: true,
+          },
         ]);
-    };
+      }
+    } catch (error) {
+      let errorMessage = '❌ Something went wrong. ';
 
-    const suggestedPrompts = [
-        { text: 'இன்றைய தக்காளி விலை என்ன?', emoji: '🍅' },
-        { text: 'Today onion price', emoji: '🧅' },
-        { text: 'Carrot rate in Chennai market', emoji: '🥕' },
-        { text: 'உருளைக்கிழங்கு விலை', emoji: '🥔' },
-    ];
+      if (error.code === 'ECONNABORTED') {
+        errorMessage += 'Request timed out.';
+      } else if (error.response) {
+        const { status, data } = error.response;
+        if (status === 503) {
+          errorMessage = '🔧 AI service unavailable. Check backend.';
+        } else if (status === 429) {
+          errorMessage = '⏳ Rate limit. Please wait.';
+        } else {
+          errorMessage += data.error || `Error (${status})`;
+        }
+      } else if (error.request) {
+        errorMessage = '🔌 Cannot connect to server.';
+        setConnectionError(true);
+      }
 
-    return (
-        <div className="farmer-chatbot-page">
-            {/* Header */}
-            <div className="chatbot-header farmer-header">
-                <div className="chatbot-header-inner">
-                    <button onClick={() => navigate('/farmer-dashboard')} className="chatbot-back-btn" aria-label="Go back">
-                        <FiArrowLeft className="w-5 h-5" />
-                        <span>Back</span>
-                    </button>
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: 'bot',
+          text: errorMessage,
+          timestamp: new Date(),
+          isError: true,
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-                    <div className="chatbot-title-group">
-                        <div className="chatbot-avatar farmer-avatar">
-                            <IoLeaf className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h1 className="chatbot-title">Market Price Assistant</h1>
-                            <p className="chatbot-subtitle-farmer">
-                                🗣️ Tamil & English • Farmer
-                            </p>
-                        </div>
-                    </div>
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
-                    <button onClick={handleClearChat} className="chatbot-clear-btn" title="Clear chat">
-                        <FiTrash2 className="w-4 h-4" />
-                    </button>
-                </div>
+  const handleClearChat = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/chat/clear`, { role: 'farmer' });
+    } catch { }
+    setMessages([
+      {
+        type: 'bot',
+        text: '🔄 Chat cleared! Ask me about today\'s market prices.\n\n\"இன்றைய காய்கறி விலை என்ன?\" or \"Today vegetable price?\"',
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const suggestedPrompts = [
+    { text: 'இன்றைய தக்காளி விலை என்ன?', emoji: '🍅' },
+    { text: 'Today onion price', emoji: '🧅' },
+    { text: 'Carrot rate in Chennai market', emoji: '🥕' },
+    { text: 'உருளைக்கிழங்கு விலை', emoji: '🥔' },
+  ];
+
+  return (
+    <div className="farmer-chatbot-page">
+      {/* Header */}
+      <div className="chatbot-header farmer-header">
+        <div className="chatbot-header-inner">
+          <button onClick={() => navigate('/farmer-dashboard')} className="chatbot-back-btn" aria-label="Go back">
+            <FiArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
+
+          <div className="chatbot-title-group">
+            <div className="chatbot-avatar farmer-avatar">
+              <IoLeaf className="w-6 h-6" />
             </div>
+            <div>
+              <h1 className="chatbot-title">Market Price Assistant</h1>
+              <p className="chatbot-subtitle-farmer">
+                🗣️ Tamil & English • Farmer
+              </p>
+            </div>
+          </div>
 
-            {/* Connection / Voice Error Banners */}
-            {connectionError && (
-                <div className="chatbot-error-banner">
-                    <FiAlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <div className="flex-1">
-                        <p className="font-bold text-sm">Connection Issue</p>
-                        <p className="text-xs mt-1">Cannot connect to AI service.</p>
-                    </div>
-                    <button onClick={checkHealth} className="font-bold text-sm hover:underline">
-                        Retry
-                    </button>
-                </div>
+          <button onClick={handleClearChat} className="chatbot-clear-btn" title="Clear chat">
+            <FiTrash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Language Selector Sub-Header */}
+      <div className="voice-lang-bar">
+        <div className="voice-lang-bar-inner">
+          <FiGlobe className="w-4 h-4 text-orange-500" />
+          <span className="text-[11px] font-bold text-gray-500 uppercase">Voice:</span>
+          <select
+            value={selectedVoiceLang}
+            onChange={(e) => setSelectedVoiceLang(e.target.value)}
+            className="voice-lang-select-dropdown"
+          >
+            <option value="auto">🌐 Auto-Detect</option>
+            <option value="tamil">தமிழ் (Tamil)</option>
+            <option value="english">English</option>
+            <option value="hindi">हिन्दी (Hindi)</option>
+            <option value="malayalam">മലയാളം (Malayalam)</option>
+            <option value="telugu">తెలుగు (Telugu)</option>
+            <option value="kannada">ಕನ್ನಡ (Kannada)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Connection / Voice Error Banners */}
+      {connectionError && (
+        <div className="chatbot-error-banner">
+          <FiAlertCircle className="w-5 h-5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-bold text-sm">Connection Issue</p>
+            <p className="text-xs mt-1">Cannot connect to AI service.</p>
+          </div>
+          <button onClick={checkHealth} className="font-bold text-sm hover:underline">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {voiceError && (
+        <div className="voice-error-banner">
+          <FiMicOff className="w-5 h-5 flex-shrink-0" />
+          <p className="text-sm">{voiceError}</p>
+        </div>
+      )}
+
+      {/* Voice Listening Indicator */}
+      {isListening && (
+        <div className="voice-listening-overlay">
+          <div className="voice-listening-card">
+            <div className="voice-pulse-ring">
+              <div className="voice-pulse-inner">
+                <FiMic className="w-8 h-8" />
+              </div>
+            </div>
+            <p className="voice-listening-text">
+              Listening... 🎤
+            </p>
+            <p className="voice-listening-hint">
+              Speak in Tamil or English
+            </p>
+            {interimTranscript && (
+              <p className="voice-interim">{interimTranscript}</p>
             )}
+            <button onClick={toggleListening} className="voice-stop-btn">
+              Stop Listening
+            </button>
+          </div>
+        </div>
+      )}
 
-            {voiceError && (
-                <div className="voice-error-banner">
-                    <FiMicOff className="w-5 h-5 flex-shrink-0" />
-                    <p className="text-sm">{voiceError}</p>
-                </div>
-            )}
-
-            {/* Voice Listening Indicator */}
-            {isListening && (
-                <div className="voice-listening-overlay">
-                    <div className="voice-listening-card">
-                        <div className="voice-pulse-ring">
-                            <div className="voice-pulse-inner">
-                                <FiMic className="w-8 h-8" />
-                            </div>
-                        </div>
-                        <p className="voice-listening-text">
-                            Listening... 🎤
-                        </p>
-                        <p className="voice-listening-hint">
-                            Speak in Tamil or English
-                        </p>
-                        {interimTranscript && (
-                            <p className="voice-interim">{interimTranscript}</p>
-                        )}
-                        <button onClick={toggleListening} className="voice-stop-btn">
-                            Stop Listening
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Messages Container */}
-            <div className="chatbot-messages-container farmer-container">
-                <div className="chatbot-messages">
-                    {messages.map((msg, idx) => (
-                        <div
-                            key={idx}
-                            className={`chatbot-message-row ${msg.type === 'user' ? 'user-row' : 'bot-row'}`}
-                        >
-                            <div
-                                className={`chatbot-bubble ${msg.type === 'user'
-                                        ? 'farmer-user-bubble'
-                                        : msg.isError
-                                            ? 'error-bubble'
-                                            : 'farmer-bot-bubble'
-                                    }`}
-                            >
-                                {msg.language && msg.type === 'user' && (
-                                    <span className="language-badge">
-                                        {msg.language === 'ta-IN' ? 'தமிழ்' : 'EN'}
-                                    </span>
-                                )}
-                                <div className="bubble-text">
-                                    {msg.type === 'bot' ? formatMessage(msg.text) : msg.text}
-                                </div>
-                                <p className="bubble-time">
-                                    {msg.timestamp.toLocaleTimeString([], {
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                    })}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-
-                    {isLoading && (
-                        <div className="chatbot-message-row bot-row">
-                            <div className="chatbot-bubble farmer-bot-bubble">
-                                <div className="typing-indicator farmer-typing">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* Suggested Prompts */}
-                {messages.length === 1 && (
-                    <div className="suggested-prompts">
-                        <p className="suggested-label">Try asking / கேள்விகள்:</p>
-                        <div className="suggested-grid">
-                            {suggestedPrompts.map((prompt, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setInput(prompt.text)}
-                                    className="suggested-btn farmer-suggested"
-                                >
-                                    <span className="text-xl">{prompt.emoji}</span>
-                                    <span>{prompt.text}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+      {/* Messages Container */}
+      <div className="chatbot-messages-container farmer-container">
+        <div className="chatbot-messages">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`chatbot-message-row ${msg.type === 'user' ? 'user-row' : 'bot-row'}`}
+            >
+              <div
+                className={`chatbot-bubble ${msg.type === 'user'
+                  ? 'farmer-user-bubble'
+                  : msg.isError
+                    ? 'error-bubble'
+                    : 'farmer-bot-bubble'
+                  }`}
+              >
+                {msg.language && msg.type === 'user' && (
+                  <span className="language-badge">
+                    {msg.language === 'ta-IN' ? 'தமிழ்' : 'EN'}
+                  </span>
                 )}
-            </div>
-
-            {/* Input Area with Mic Button */}
-            <div className="chatbot-input-area farmer-input-area">
-                <div className="chatbot-input-inner">
-                    {/* Mic Button */}
-                    {voiceSupported && (
-                        <button
-                            onClick={toggleListening}
-                            className={`mic-btn ${isListening ? 'mic-active' : ''}`}
-                            aria-label={isListening ? 'Stop listening' : 'Start voice input'}
-                            title={isListening ? 'Stop listening' : 'Tap to speak (Tamil / English)'}
-                        >
-                            {isListening ? (
-                                <FiMicOff className="w-5 h-5" />
-                            ) : (
-                                <FiMic className="w-5 h-5" />
-                            )}
-                        </button>
-                    )}
-
-                    <div className="input-wrapper">
-                        <textarea
-                            ref={inputRef}
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyPress={handleKeyPress}
-                            placeholder={
-                                voiceSupported
-                                    ? '🎤 Tap mic or type your question...'
-                                    : 'Type your question (e.g., tomato price today)...'
-                            }
-                            rows="1"
-                            disabled={isLoading}
-                            className="chatbot-textarea farmer-textarea"
-                            onInput={(e) => {
-                                e.target.style.height = 'auto';
-                                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-                            }}
-                        />
-                    </div>
-
-                    <button
-                        onClick={handleSend}
-                        disabled={!input.trim() || isLoading}
-                        className="chatbot-send-btn farmer-send-btn"
-                        aria-label="Send message"
-                    >
-                        <FiSend className="w-5 h-5" />
-                    </button>
+                <div className="bubble-text">
+                  {msg.type === 'bot' ? formatMessage(msg.text) : msg.text}
                 </div>
-                <p className="input-hint">
-                    {voiceSupported
-                        ? '🎤 Voice: Tamil & English supported • ⌨️ Enter to send'
-                        : 'Enter to send • Shift+Enter for new line'}
+                <p className="bubble-time">
+                  {msg.timestamp.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
+              </div>
             </div>
+          ))}
 
-            <style>{`
+          {isLoading && (
+            <div className="chatbot-message-row bot-row">
+              <div className="chatbot-bubble farmer-bot-bubble">
+                <div className="typing-indicator farmer-typing">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Suggested Prompts */}
+        {messages.length === 1 && (
+          <div className="suggested-prompts">
+            <p className="suggested-label">Try asking / கேள்விகள்:</p>
+            <div className="suggested-grid">
+              {suggestedPrompts.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setInput(prompt.text)}
+                  className="suggested-btn farmer-suggested"
+                >
+                  <span className="text-xl">{prompt.emoji}</span>
+                  <span>{prompt.text}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Input Area with Mic Button */}
+      <div className="chatbot-input-area farmer-input-area">
+        <div className="chatbot-input-inner">
+          {/* Mic Button */}
+          {voiceSupported && (
+            <button
+              onClick={toggleListening}
+              className={`mic-btn ${isListening ? 'mic-active' : ''}`}
+              aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+              title={isListening ? 'Stop listening' : 'Tap to speak (Tamil / English)'}
+            >
+              {isListening ? (
+                <FiMicOff className="w-5 h-5" />
+              ) : (
+                <FiMic className="w-5 h-5" />
+              )}
+            </button>
+          )}
+
+          <div className="input-wrapper">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={
+                voiceSupported
+                  ? '🎤 Tap mic or type your question...'
+                  : 'Type your question (e.g., tomato price today)...'
+              }
+              rows="1"
+              disabled={isLoading}
+              className="chatbot-textarea farmer-textarea"
+              onInput={(e) => {
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
+            />
+          </div>
+
+          <button
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            className="chatbot-send-btn farmer-send-btn"
+            aria-label="Send message"
+          >
+            <FiSend className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="input-hint">
+          {voiceSupported
+            ? '🎤 Voice: Tamil & English supported • ⌨️ Enter to send'
+            : 'Enter to send • Shift+Enter for new line'}
+        </p>
+      </div>
+
+      <style>{`
         .farmer-chatbot-page {
           min-height: 100vh;
           background: var(--color-bg);
           display: flex;
           flex-direction: column;
         }
+
+        /* Icon Utilities (Fix for missing icon visibility) */
+        .w-4 { width: 1rem !important; }
+        .h-4 { height: 1rem !important; }
+        .w-5 { width: 1.25rem !important; }
+        .h-5 { height: 1.25rem !important; }
+        .w-6 { width: 1.5rem !important; }
+        .h-6 { height: 1.5rem !important; }
+        .w-8 { width: 2rem !important; }
+        .h-8 { height: 2rem !important; }
 
         /* ── Header ────────────────────────────────── */
         .chatbot-header {
@@ -525,10 +576,39 @@ const FarmerChatbot = () => {
         .chatbot-header-inner {
           max-width: 900px;
           margin: 0 auto;
-          padding: 14px 20px;
+          padding: 10px 20px;
           display: flex;
           align-items: center;
           justify-content: space-between;
+        }
+
+        .voice-lang-bar {
+          background: white;
+          border-bottom: 1px solid var(--color-border);
+          padding: 8px 0;
+          position: sticky;
+          top: 65px;
+          z-index: 40;
+        }
+
+        .voice-lang-bar-inner {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 0 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .voice-lang-select-dropdown {
+          border: 1px solid #FFE0B2;
+          background: #FFF8E1;
+          border-radius: 6px;
+          padding: 2px 8px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #E65100;
+          outline: none;
         }
 
         .chatbot-back-btn {
@@ -1043,8 +1123,8 @@ const FarmerChatbot = () => {
           .voice-listening-card { padding: 30px 20px; min-width: auto; margin: 0 16px; }
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default FarmerChatbot;

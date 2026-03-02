@@ -13,6 +13,10 @@ const SUPPORTED_LANGUAGES = {
     auto: ['ta-IN', 'en-IN'],
     tamil: 'ta-IN',
     english: 'en-IN',
+    hindi: 'hi-IN',
+    malayalam: 'ml-IN',
+    telugu: 'te-IN',
+    kannada: 'kn-IN',
 };
 
 /**

@@ -238,7 +238,7 @@ export const createParentOrder = async (req, res) => {
             totalAmount,
             paymentMethod,
             paymentStatus: 'Unpaid',
-            overallStatus: 'pending',
+            orderStatus: 'pending',
             deliveryType: subOrdersData.length === 1 ? subOrdersData[0].deliveryType : 'mixed',
             deliveryRequired: subOrdersData.some(so => so.deliveryRequired)
         });
@@ -550,7 +550,7 @@ export const getCustomerParentOrders = async (req, res) => {
         const parentOrders = await ParentOrder.find({ user: userId })
             .populate({
                 path: 'subOrders',
-                select: 'subOrderId vendor status deliveryOption total'
+                select: 'subOrderId vendor status deliveryOption total items deliveryStatus deliveryDate paymentStatus updatedAt'
             })
             .sort({ createdAt: -1 });
 
@@ -578,7 +578,7 @@ export const getAllParentOrders = async (req, res) => {
             .populate('user', 'name email phone')
             .populate({
                 path: 'subOrders',
-                select: 'subOrderId vendor status deliveryOption total assignedAgent'
+                select: 'subOrderId vendor status items deliveryOption deliveryStatus deliveryDate total assignedAgent paymentStatus updatedAt'
             })
             .sort({ createdAt: -1 });
 

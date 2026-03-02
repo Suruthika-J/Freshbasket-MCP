@@ -90,7 +90,7 @@ export const createDeliveryAgent = async (req, res) => {
 export const getAllAgents = async (req, res) => {
     try {
         console.log('📋 Fetching all agents...');
-        
+
         const agents = await DeliveryAgent.find()
             .select('-password')
             .sort({ createdAt: -1 })
@@ -278,8 +278,8 @@ export const agentLogin = async (req, res) => {
         }
 
         // Find agent by email
-        const agent = await DeliveryAgent.findOne({ 
-            email: email.toLowerCase() 
+        const agent = await DeliveryAgent.findOne({
+            email: email.toLowerCase()
         });
 
         if (!agent) {
@@ -313,7 +313,7 @@ export const agentLogin = async (req, res) => {
 
         // Generate JWT token with role
         const token = jwt.sign(
-            { 
+            {
                 id: agent._id,
                 role: 'agent'
             },
@@ -373,49 +373,40 @@ export const getAgentOrders = async (req, res) => {
     }
 };
 
+import { syncOrderStatus } from '../services/orderStatusService.js';
+import SubOrder from '../models/SubOrderModel.js';
+
 // ============================================
-// UPDATE ORDER DELIVERY STATUS (Agent Action)
+// UPDATE SUB-ORDER DELIVERY STATUS (Agent Action)
 // ============================================
 export const updateDeliveryStatus = async (req, res) => {
     try {
-        const { orderId } = req.params;
-        const { status } = req.body;
-        const agentId = req.user._id;
+        const { orderId } = req.params; // This will be the SubOrder ID
+        const { status, deliveryStatus } = req.body;
+        const agentId = req.user.id || req.user._id;
+        const requestedStatus = req.body.status || req.body.deliveryStatus;
 
-        // Validate status
-        const validStatuses = ['Processing', 'Shipped', 'Delivered'];
-        if (!validStatuses.includes(status)) {
+        if (!requestedStatus) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid status. Allowed: Processing, Shipped, Delivered'
+                message: 'Status or deliveryStatus is required'
             });
         }
 
-        // Find order and verify it's assigned to this agent
-        const order = await Order.findOne({
-            _id: orderId,
-            assignedTo: agentId
-        });
+        const targetStatus = requestedStatus.toUpperCase();
 
-        if (!order) {
-            return res.status(404).json({
+        if (!targetStatus) {
+            return res.status(400).json({
                 success: false,
-                message: 'Order not found or not assigned to you'
+                message: 'Status or deliveryStatus is required'
             });
         }
 
-        // Update order status
-        order.status = status;
-
-        // If delivered and COD, mark as paid
-        if (status === 'Delivered' && order.paymentMethod === 'Cash on Delivery') {
-            order.paymentStatus = 'Paid';
-        }
-
-        await order.save();
+        // Use the centralized sync service which handles role validation and parent aggregation
+        const { subOrder, parentOrder } = await syncOrderStatus(orderId, targetStatus, 'agent', agentId);
 
         // Update agent's completed orders count if delivered
-        if (status === 'Delivered') {
+        if (targetStatus === 'DELIVERED') {
             await DeliveryAgent.findByIdAndUpdate(
                 agentId,
                 { $inc: { completedOrders: 1 } }
@@ -424,16 +415,18 @@ export const updateDeliveryStatus = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: `Order status updated to ${status}`,
-            order
+            message: `Delivery status updated to ${targetStatus}`,
+            subOrder,
+            parentOrderStatus: parentOrder?.orderStatus || 'N/A'
         });
 
     } catch (error) {
-        console.error('Update delivery status error:', error);
-        res.status(500).json({
+        const errorMsg = error?.message || 'Failed to update delivery status';
+        console.error('❌ Update delivery status error:', errorMsg);
+
+        res.status(errorMsg.includes('Access denied') ? 403 : 400).json({
             success: false,
-            message: 'Server error',
-            error: error.message
+            message: errorMsg
         });
     }
 };

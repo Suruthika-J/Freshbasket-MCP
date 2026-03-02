@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FiPackage, FiTruck, FiUser, FiClock, FiCheck } from 'react-icons/fi';
+import { FiPackage, FiTruck, FiUser, FiClock, FiCheck, FiCreditCard } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -47,6 +47,21 @@ const FarmerSubOrders = () => {
             }
         } catch (error) {
             toast.error('Failed to update order status');
+        }
+    };
+
+    const updatePaymentStatus = async (subOrderId, paymentStatus) => {
+        try {
+            const token = localStorage.getItem('authToken');
+            const response = await axios.patch(`${API_BASE_URL}/api/sub-orders/${subOrderId}/payment-status`, { paymentStatus }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.data.success) {
+                toast.success(`Payment status updated to ${paymentStatus}`);
+                fetchSubOrders();
+            }
+        } catch (error) {
+            toast.error('Failed to update payment status');
         }
     };
 
@@ -193,6 +208,28 @@ const FarmerSubOrders = () => {
                                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t('orders.address')}</p>
                                                         <p className="text-xs text-gray-600 font-medium leading-relaxed">{subOrder.customerAddress}</p>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-emerald-50/50 rounded-2xl p-6 border border-emerald-100">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <h4 className="text-xs font-black text-emerald-700 uppercase tracking-widest flex items-center gap-2">
+                                                        <FiCreditCard size={14} /> Payment Details
+                                                    </h4>
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${subOrder.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                                                        {subOrder.paymentStatus}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <p className="text-xs font-bold text-gray-500">{subOrder.paymentMethod || 'N/A'}</p>
+                                                    {subOrder.paymentStatus !== 'Paid' && (
+                                                        <button
+                                                            onClick={() => updatePaymentStatus(subOrder._id, 'Paid')}
+                                                            className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm"
+                                                        >
+                                                            Mark Paid
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
 

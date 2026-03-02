@@ -17,7 +17,7 @@ export const getSubOrderById = async (req, res) => {
 
         // Try to find by _id first, then by subOrderId
         let subOrder = await SubOrder.findById(id)
-            .populate('parentOrder', 'parentOrderId customer')
+            .populate('parentOrder', 'parentOrderId customer paymentMethod paymentStatus')
             .populate('assignedAgent', 'name phone email');
 
         if (!subOrder) {
@@ -107,7 +107,7 @@ export const getFarmerSubOrders = async (req, res) => {
         })
             .populate({
                 path: 'parentOrder',
-                select: 'parentOrderId customer paymentStatus',
+                select: 'parentOrderId customer paymentStatus paymentMethod',
                 model: 'ParentOrder'
             })
             .sort({ createdAt: -1 })
@@ -146,6 +146,7 @@ export const getFarmerSubOrders = async (req, res) => {
                 subTotal: so.subtotal || 0,
                 orderStatus: so.status || 'pending',
                 paymentStatus: so.paymentStatus || (so.parentOrder?.paymentStatus === 'Paid' ? 'Paid' : 'Unpaid'),
+                paymentMethod: so.parentOrder?.paymentMethod || 'N/A',
                 deliveryOption: so.deliveryOption || 'N/A',
                 createdAt: so.createdAt || new Date()
             };
@@ -179,7 +180,7 @@ export const getAgentSubOrders = async (req, res) => {
             assignedAgent: agentId,
             deliveryRequired: true
         })
-            .populate('parentOrder', 'parentOrderId customer')
+            .populate('parentOrder', 'parentOrderId customer paymentMethod paymentStatus')
             .sort({ createdAt: -1 });
 
         return res.status(200).json({
@@ -197,8 +198,10 @@ export const getAgentSubOrders = async (req, res) => {
     }
 };
 
+import { syncOrderStatus } from '../services/orderStatusService.js';
+
 // ============================================
-// UPDATE SUB-ORDER STATUS (Role-based)
+// UPDATE SUB-ORDER STATUS (Role-based) Centralized
 // ============================================
 export const updateSubOrderStatus = async (req, res) => {
     try {
@@ -207,101 +210,30 @@ export const updateSubOrderStatus = async (req, res) => {
         const userId = req.user.id || req.user._id;
         const userRole = req.user.role;
 
-        console.log(`📦 Status Update Attempt: id=${id}, role=${userRole}, status=${status}, deliveryStatus=${deliveryStatus}`);
+        const targetStatus = deliveryStatus || status;
 
-        // Find by _id or subOrderId
-        let subOrder = await SubOrder.findById(id);
-        if (!subOrder) {
-            subOrder = await SubOrder.findOne({ subOrderId: id });
-        }
-
-        if (!subOrder) {
-            console.warn(`⚠️ Sub-order not found: ${id}`);
-            return res.status(404).json({
+        if (!targetStatus) {
+            return res.status(400).json({
                 success: false,
-                message: 'Sub-order not found'
+                message: 'Status or deliveryStatus is required'
             });
         }
 
-        // Handle Delivery Agent specific status updates
-        if (userRole === 'agent') {
-            const targetStatus = deliveryStatus || status;
-
-            if (!subOrder.assignedAgent || subOrder.assignedAgent.toString() !== userId.toString()) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Access denied: You are not assigned to this sub-order'
-                });
-            }
-
-            if (!['PICKED_UP', 'DELIVERED'].includes(targetStatus)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Agents can only update status to: PICKED_UP, DELIVERED'
-                });
-            }
-
-            subOrder.deliveryStatus = targetStatus;
-
-            // Sync legacy status field for compatibility
-            if (targetStatus === 'DELIVERED') {
-                subOrder.status = 'delivered';
-                subOrder.deliveryDate = new Date();
-            } else if (targetStatus === 'PICKED_UP') {
-                subOrder.status = 'out-for-delivery';
-            }
-        }
-        // Handle Farmer status updates
-        else if (userRole === 'farmer') {
-            const vendorId = subOrder.vendor?.vendorId || subOrder.farmerId;
-
-            if (vendorId?.toString() !== userId.toString()) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Access denied: You do not own this sub-order'
-                });
-            }
-
-            // Allowed farmer statuses: preparing, ready, and delivered (for self-pickup)
-            const allowedFarmerStatuses = ['preparing', 'ready'];
-            if (subOrder.deliveryOption === 'SELF_PICKUP') {
-                allowedFarmerStatuses.push('delivered');
-            }
-
-            if (!allowedFarmerStatuses.includes(status)) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Farmers can only update status to: ${allowedFarmerStatuses.join(', ')}`
-                });
-            }
-            subOrder.status = status;
-        }
-        // Admin can do anything
-        else if (userRole === 'admin') {
-            if (status) subOrder.status = status;
-            if (deliveryStatus) subOrder.deliveryStatus = deliveryStatus;
-        } else {
-            return res.status(403).json({
-                success: false,
-                message: 'Access denied: Invalid role for status update'
-            });
-        }
-
-        await subOrder.save();
-        console.log(`✅ Status updated successfully for ${subOrder.subOrderId}`);
+        // Use the centralized service
+        const { subOrder, parentOrder } = await syncOrderStatus(id, targetStatus, userRole, userId);
 
         return res.status(200).json({
             success: true,
-            message: 'Status updated successfully',
-            subOrder
+            message: `Status updated successfully to ${targetStatus}`,
+            subOrder,
+            parentOrderStatus: parentOrder?.orderStatus || 'N/A'
         });
 
     } catch (error) {
-        console.error('❌ Error updating order status:', error);
-        return res.status(500).json({
+        console.error('❌ Error updating sub-order status:', error.message);
+        return res.status(error.message.includes('Access denied') ? 403 : 400).json({
             success: false,
-            message: error.name === 'ValidationError' ? 'Validation failed' : 'Failed to update status',
-            error: error.message
+            message: error.message || 'Failed to update status'
         });
     }
 };
@@ -328,7 +260,7 @@ export const getAllSubOrders = async (req, res) => {
         }
 
         const subOrders = await SubOrder.find(filter)
-            .populate('parentOrder', 'parentOrderId customer paymentStatus')
+            .populate('parentOrder', 'parentOrderId customer paymentStatus paymentMethod')
             .populate('assignedAgent', 'name phone email')
             .sort({ createdAt: -1 });
 
@@ -359,7 +291,7 @@ export const getPendingDeliveryRequests = async (req, res) => {
             assignedAgent: null,
             status: { $nin: ['cancelled', 'delivered'] }
         })
-            .populate('parentOrder', 'parentOrderId customer')
+            .populate('parentOrder', 'parentOrderId customer paymentMethod paymentStatus')
             .sort({ createdAt: 1 }); // Oldest first
 
         return res.status(200).json({
@@ -549,6 +481,86 @@ export const updateAgentLocation = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Failed to update location'
+        });
+    }
+};
+
+// ============================================
+// UPDATE SUB-ORDER PAYMENT STATUS (Role-based)
+// ============================================
+export const updateSubOrderPaymentStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { paymentStatus } = req.body;
+        const userId = req.user.id || req.user._id;
+        const userRole = req.user.role;
+
+        if (!paymentStatus) {
+            return res.status(400).json({
+                success: false,
+                message: 'paymentStatus is required'
+            });
+        }
+
+        const subOrder = await SubOrder.findById(id);
+
+        if (!subOrder) {
+            return res.status(404).json({
+                success: false,
+                message: 'Sub-order not found'
+            });
+        }
+
+        // Role-based authorization
+        if (userRole === 'farmer') {
+            const vendorId = subOrder.vendor?.vendorId || subOrder.farmerId;
+            if (vendorId?.toString() !== userId.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Access denied: You can only update payment for your own sub-orders'
+                });
+            }
+        } else if (userRole === 'agent') {
+            if (!subOrder.assignedAgent || subOrder.assignedAgent.toString() !== userId.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Access denied: You can only update payment for orders assigned to you'
+                });
+            }
+        }
+        // Admin has full access
+
+        subOrder.paymentStatus = paymentStatus;
+        await subOrder.save();
+
+        // Also update parent order payment status if needed (e.g. if all sub-orders are paid)
+        if (paymentStatus === 'Paid') {
+            const parentOrder = await ParentOrder.findById(subOrder.parentOrder);
+            if (parentOrder) {
+                const otherSubOrders = await SubOrder.find({
+                    parentOrder: parentOrder._id,
+                    _id: { $ne: subOrder._id }
+                });
+                const allPaid = otherSubOrders.every(so => so.paymentStatus === 'Paid');
+                if (allPaid) {
+                    parentOrder.paymentStatus = 'Paid';
+                    await parentOrder.save();
+                }
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Payment status updated to ${paymentStatus}`,
+            subOrder
+        });
+
+    } catch (error) {
+        console.error('❌ Error updating payment status:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to update payment status',
+            error: error.message
         });
     }
 };
