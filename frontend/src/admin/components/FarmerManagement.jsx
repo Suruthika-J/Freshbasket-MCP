@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaCheck, FaTimes, FaUser, FaMapMarkerAlt, FaEnvelope, FaCalendar, FaBan, FaPhone, FaEye } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaUser, FaMapMarkerAlt, FaEnvelope, FaCalendar, FaBan, FaPhone, FaEye, FaComments } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import { GiFarmer } from 'react-icons/gi';
 import { FiPackage } from 'react-icons/fi';
 import FarmerProductsModal from './FarmerProductsModal';
@@ -12,10 +13,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 const FarmerManagement = () => {
   const [pendingFarmers, setPendingFarmers] = useState([]);
   const [approvedFarmers, setApprovedFarmers] = useState([]);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
-  
+
   // New state for products modal
   const [productsModal, setProductsModal] = useState({
     isOpen: false,
@@ -32,7 +34,7 @@ const FarmerManagement = () => {
     setLoading(true);
     try {
       const token = JSON.parse(localStorage.getItem('adminSession'))?.token;
-      
+
       if (!token) {
         toast.error('Authentication required');
         return;
@@ -67,7 +69,7 @@ const FarmerManagement = () => {
   const fetchApprovedFarmers = async () => {
     try {
       const token = JSON.parse(localStorage.getItem('adminSession'))?.token;
-      
+
       if (!token) {
         return;
       }
@@ -328,21 +330,19 @@ const FarmerManagement = () => {
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('pending')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                  activeTab === 'pending'
-                    ? 'border-amber-500 text-amber-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'pending'
+                  ? 'border-amber-500 text-amber-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Pending Approvals ({pendingFarmers.length})
               </button>
               <button
                 onClick={() => setActiveTab('approved')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                  activeTab === 'approved'
-                    ? 'border-green-500 text-green-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'approved'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Approved Farmers ({approvedFarmers.length})
               </button>
@@ -527,7 +527,6 @@ const FarmerManagement = () => {
 
                     {/* Action Buttons */}
                     <div className="border-t border-gray-200 p-4 flex gap-2">
-                      {/* NEW: View Products Button */}
                       <button
                         onClick={() => handleViewProducts(farmer._id)}
                         className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200"
@@ -535,6 +534,15 @@ const FarmerManagement = () => {
                       >
                         <FaEye />
                         View Products
+                      </button>
+
+                      <button
+                        onClick={() => navigate('/admin/chat')}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors duration-200"
+                        title="Chat with this farmer"
+                      >
+                        <FaComments />
+                        Chat
                       </button>
 
                       <button

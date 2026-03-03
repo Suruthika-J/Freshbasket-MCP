@@ -3,15 +3,20 @@ import {
     getAdminChatList,
     getChatMessages,
     getOrCreateFarmerConversation,
-    markChatAsSeen
+    markChatAsSeen,
+    adminCreateConversation
 } from '../controllers/directChatController.js';
-import authMiddleware from '../middleware/auth.js';
+import authMiddleware, { requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // ── Admin Chat List ─────────────────────────────────────────
 // GET /api/direct-chat/admin/conversations
-router.get('/admin/conversations', authMiddleware, getAdminChatList);
+router.get('/admin/conversations', authMiddleware, requireAdmin, getAdminChatList);
+
+// ── Admin Create Conversation ────────────────────────────────
+// POST /api/direct-chat/admin/create
+router.post('/admin/create', authMiddleware, requireAdmin, adminCreateConversation);
 
 // ── Messages for Chat ───────────────────────────────────────
 // GET /api/direct-chat/messages/:chatId

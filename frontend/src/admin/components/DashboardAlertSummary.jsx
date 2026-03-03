@@ -75,29 +75,31 @@ const DashboardAlertSummary = () => {
         <div className="flex flex-col gap-6">
             {/* Alert Banner */}
             <div className={`p-6 rounded-[2.5rem] flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300 shadow-2xl relative overflow-hidden ${totalAlerts > 0
-                    ? 'bg-gradient-to-br from-red-500 to-rose-600 text-white'
-                    : 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white'
+                ? 'bg-emerald-50 text-emerald-900 border border-emerald-100'
+                : 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white'
                 }`}>
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                        <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white font-black text-xl">
+                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black text-xl backdrop-blur-md ${totalAlerts > 0 ? 'bg-emerald-200/50 text-emerald-700' : 'bg-white/20 text-white'}`}>
                             {totalAlerts > 0 ? <FiAlertTriangle /> : <FiCheckCircle />}
                         </div>
                         <h2 className="text-2xl font-black tracking-tight">{totalAlerts > 0 ? `${totalAlerts} Critical Attention Points` : 'System Stable. Zero Alerts.'}</h2>
                     </div>
-                    <p className="text-white/80 font-medium text-sm translate-x-13">{totalAlerts > 0 ? 'Action items detected across farmers, returns, and messages.' : 'All platform registrations and requests are fully processed.'}</p>
+                    <p className={`font-medium text-sm translate-x-13 ${totalAlerts > 0 ? 'text-emerald-600/80' : 'text-white/80'}`}>
+                        {totalAlerts > 0 ? 'Action items detected across farmers, returns, and messages.' : 'All platform registrations and requests are fully processed.'}
+                    </p>
                 </div>
 
                 {totalAlerts > 0 && (
-                    <div className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md px-6 py-3 rounded-2xl transition-all cursor-default border border-white/10 shadow-lg">
-                        <span className="font-black text-lg">{totalAlerts}</span>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Remaining Alerts</span>
+                    <div className="flex items-center gap-2 bg-emerald-100/50 backdrop-blur-md px-6 py-3 rounded-2xl transition-all cursor-default border border-emerald-200/50 shadow-sm">
+                        <span className="font-black text-lg text-emerald-800">{totalAlerts}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600/70">Remaining Alerts</span>
                     </div>
                 )}
 
                 {/* Dynamic background element for aesthetic */}
-                <div className="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-                <div className="absolute left-0 bottom-0 w-48 h-48 bg-black/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+                <div className={`absolute right-0 top-0 w-64 h-64 rounded-full -translate-y-1/2 translate-x-1/2 ${totalAlerts > 0 ? 'bg-emerald-200/20' : 'bg-white/5'}`} />
+                <div className={`absolute left-0 bottom-0 w-48 h-48 rounded-full translate-y-1/2 -translate-x-1/2 ${totalAlerts > 0 ? 'bg-emerald-800/5' : 'bg-black/5'}`} />
             </div>
 
             {/* Alert Breakdown Cards */}
@@ -111,8 +113,8 @@ const DashboardAlertSummary = () => {
                     >
                         <div className="flex items-center justify-between mb-4 relative z-10">
                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-all duration-300 ${alert.count > 0
-                                    ? `bg-${alert.color}-100 text-${alert.color}-600 group-hover:bg-${alert.color}-600 group-hover:text-white group-hover:rotate-12 group-hover:scale-110 shadow-lg shadow-${alert.color}-100`
-                                    : 'bg-gray-100 text-gray-400'
+                                ? `bg-${alert.color}-100 text-${alert.color}-600 group-hover:bg-${alert.color}-600 group-hover:text-white group-hover:rotate-12 group-hover:scale-110 shadow-lg shadow-${alert.color}-100`
+                                : 'bg-gray-100 text-gray-400'
                                 }`}>
                                 {alert.icon}
                             </div>

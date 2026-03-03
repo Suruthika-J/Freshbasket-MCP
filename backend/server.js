@@ -74,6 +74,11 @@ const __dirname = path.dirname(__filename);
 app.use(
     cors({
         origin: function (origin, callback) {
+            // Allow all origins in development
+            if (process.env.NODE_ENV !== 'production') {
+                return callback(null, true);
+            }
+
             if (!origin) return callback(null, true);
 
             const allowedOrigins = [
@@ -82,10 +87,6 @@ app.use(
                 'http://localhost:3000',
                 'https://accounts.google.com',
             ];
-
-            if (process.env.NODE_ENV !== 'production') {
-                return callback(null, true);
-            }
 
             if (allowedOrigins.includes(origin)) {
                 callback(null, true);
@@ -96,8 +97,7 @@ app.use(
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'token', 'X-Requested-With', 'Accept', 'Origin'],
-        optionsSuccessStatus: 204,
-        exposedHeaders: ['Cross-Origin-Opener-Policy']
+        optionsSuccessStatus: 204
     })
 );
 
