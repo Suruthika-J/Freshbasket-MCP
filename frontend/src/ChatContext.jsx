@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
@@ -103,7 +103,7 @@ export const ChatProvider = ({ children }) => {
         } catch (e) {
             // Check if it's a mock admin token
             if (token && typeof token === 'string' && token.startsWith('admin-session-token-')) {
-                return { id: 'admin-001', role: 'admin' };
+                return { id: '507f1f77bcf86cd799439011', role: 'admin' };
             }
             return null;
         }
@@ -115,6 +115,12 @@ export const ChatProvider = ({ children }) => {
             fetchAdminConversations();
         }
     }, [userRole, token, fetchAdminConversations]);
+
+    // Use a ref for activeChat to be used in socket listeners without triggering re-connections
+    const activeChatRef = useRef(null);
+    useEffect(() => {
+        activeChatRef.current = activeChat;
+    }, [activeChat]);
 
     // Initialize Socket
     useEffect(() => {
@@ -129,6 +135,10 @@ export const ChatProvider = ({ children }) => {
 
         newSocket.on('connect', () => {
             console.log('🔌 Connected to chat socket');
+            // Re-join active chat on reconnect if it exists
+            if (activeChatRef.current) {
+                newSocket.emit('joinChat', activeChatRef.current);
+            }
         });
 
         newSocket.on('receiveMessage', (message) => {
@@ -154,7 +164,7 @@ export const ChatProvider = ({ children }) => {
             });
 
             // If the message is for the current active chat, add it to messages
-            if (activeChat === message.chatId) {
+            if (activeChatRef.current === message.chatId) {
                 setMessages((prev) => {
                     if (prev.find(m => m._id === message._id)) return prev;
                     return [...prev, message];
@@ -179,14 +189,14 @@ export const ChatProvider = ({ children }) => {
             newSocket.disconnect();
             console.log('🔌 Disconnected from chat socket');
         };
-    }, [token, backendUrl, userRole, activeChat, currentUser?.id, fetchAdminConversations]);
-
-
-
-
+    }, [token, backendUrl, userRole, currentUser?.id, fetchAdminConversations]);
 
     const joinChat = useCallback(async (chatId) => {
         if (!socket || !token) return;
+
+        // Set active chat immediately for UI responsiveness
+        // The chat window will show basic info from the virtual conversation object
+        setActiveChat(chatId);
 
         let realChatId = chatId;
 
@@ -195,21 +205,26 @@ export const ChatProvider = ({ children }) => {
             const farmerId = chatId.replace('virtual-', '');
             try {
                 const res = await axios.post(`${backendUrl}/api/direct-chat/admin/create`, { farmerId }, {
-                    headers: { token }
+                    headers: {
+                        'token': token,
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 if (res.data.success) {
                     realChatId = res.data.conversation._id;
                     // Update current list to include the newly created conversation instead of the virtual one
                     setConversations(prev => prev.map(c => c._id === chatId ? res.data.conversation : c));
+                    // Update active chat to the real ID
+                    setActiveChat(realChatId);
                 }
             } catch (error) {
                 console.error('Error creating real conversation from virtual:', error);
+                setActiveChat(null); // Reset if failed
                 return;
             }
         }
 
         socket.emit('joinChat', realChatId);
-        setActiveChat(realChatId);
         fetchMessages(realChatId);
     }, [socket, fetchMessages, backendUrl, token]);
 

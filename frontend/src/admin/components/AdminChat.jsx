@@ -28,11 +28,10 @@ const AdminChat = () => {
     }, [fetchAdminConversations]);
 
     // Auto-select first farmer on initial load or viewMode switch if nothing active
-    const hasAutoSelected = useRef(false);
     useEffect(() => {
-        if (!activeChat && displayList.length > 0 && !hasAutoSelected.current) {
+        if (!activeChat && displayList.length > 0) {
+            // joinChat returns early if socket is null, so we only count it as "autoSelected" if successful
             joinChat(displayList[0]._id);
-            hasAutoSelected.current = true;
         }
     }, [displayList, activeChat, joinChat]);
 

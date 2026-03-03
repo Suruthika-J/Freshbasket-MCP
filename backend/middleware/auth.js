@@ -50,12 +50,19 @@ const authMiddleware = async (req, res, next) => {
         if (token.startsWith('admin-session-token-')) {
             console.log('✅ Admin session token detected');
 
+            // Find an actual admin from the database to use their real ID
+            // This prevents CastError (ObjectId) in later DB operations
+            let adminUser = await User.findOne({ role: 'admin' });
+
+            // If no admin exists in DB yet, use a valid 24-char hex string as fallback
+            const fallbackId = '507f1f77bcf86cd799439011';
+
             // Create a mock admin user object for session-based admin
             req.user = {
-                _id: 'admin-001',
-                id: 'admin-001',
-                name: 'Admin User',
-                email: 'qcommerceapp@gmail.com',
+                _id: adminUser ? adminUser._id : fallbackId,
+                id: adminUser ? adminUser._id.toString() : fallbackId,
+                name: adminUser ? adminUser.name : 'Admin User',
+                email: adminUser ? adminUser.email : 'qcommerceapp@gmail.com',
                 role: 'admin',
                 isActive: true
             };

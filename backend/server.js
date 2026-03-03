@@ -129,8 +129,8 @@ io.use(async (socket, next) => {
             if (admin) {
                 socket.user = { id: admin._id.toString(), role: 'admin' };
             } else {
-                // Fallback if no admin in DB
-                socket.user = { id: 'admin-001', role: 'admin' };
+                // Fallback if no admin in DB - must be a valid 24-char hex string
+                socket.user = { id: '507f1f77bcf86cd799439011', role: 'admin' };
             }
             return next();
         }

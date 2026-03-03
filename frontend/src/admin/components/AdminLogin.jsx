@@ -20,7 +20,7 @@ const AdminLogin = ({ onLogin }) => {
         const adminSession = {
           token: 'admin-session-token-' + Date.now(),
           user: {
-            id: 'admin-001',
+            id: '507f1f77bcf86cd799439011',
             name: 'Admin User',
             email: 'qcommerceapp@gmail.com',
             role: 'admin'
