@@ -32,7 +32,17 @@ const ReturnRequestModal = ({ isOpen, onClose, order, onReturnRequested }) => {
         }
 
         try {
-            const token = localStorage.getItem('authToken');
+            let token = localStorage.getItem('authToken');
+            const sessionData = localStorage.getItem('adminSession');
+            if (sessionData) {
+                try {
+                    const session = JSON.parse(sessionData);
+                    token = session.token;
+                } catch (e) {
+                    console.error('Error parsing adminSession:', e);
+                }
+            }
+
             const response = await axios.post(
                 'http://localhost:4000/api/returns',
                 {
@@ -59,7 +69,7 @@ const ReturnRequestModal = ({ isOpen, onClose, order, onReturnRequested }) => {
         } catch (err) {
             console.error('Return request error:', err);
             setError(
-                err.response?.data?.message || 
+                err.response?.data?.message ||
                 'Failed to submit return request. Please try again.'
             );
         } finally {
@@ -174,8 +184,8 @@ const ReturnRequestModal = ({ isOpen, onClose, order, onReturnRequested }) => {
                                 {/* Return Reason Form */}
                                 <form onSubmit={handleSubmit}>
                                     <div className="mb-6">
-                                        <label 
-                                            htmlFor="reason" 
+                                        <label
+                                            htmlFor="reason"
                                             className="block text-sm font-medium text-gray-700 mb-2"
                                         >
                                             Reason for Return <span className="text-red-500">*</span>
@@ -192,12 +202,11 @@ const ReturnRequestModal = ({ isOpen, onClose, order, onReturnRequested }) => {
                                             disabled={loading}
                                         />
                                         <div className="flex justify-between mt-2">
-                                            <span className={`text-xs ${
-                                                reason.length < 10 
-                                                    ? 'text-red-500' 
+                                            <span className={`text-xs ${reason.length < 10
+                                                    ? 'text-red-500'
                                                     : 'text-gray-500'
-                                            }`}>
-                                                {reason.length < 10 
+                                                }`}>
+                                                {reason.length < 10
                                                     ? `${10 - reason.length} more characters required`
                                                     : 'Minimum requirement met'
                                                 }

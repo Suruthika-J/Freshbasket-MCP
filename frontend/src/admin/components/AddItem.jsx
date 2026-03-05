@@ -74,17 +74,17 @@ export default function AddItemPage() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith('image/')) {
       alert('Please select a valid image file');
       return;
     }
-    
+
     if (file.size > 5 * 1024 * 1024) {
       alert('Image size should be less than 5MB');
       return;
     }
-    
+
     setFormData((f) => ({
       ...f,
       image: file,
@@ -99,17 +99,27 @@ export default function AddItemPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
     if (formData.visibleDistricts.length === 0) {
       alert('Please select at least one district where this product will be visible');
       return;
     }
-    
+
     setLoading(true);
     try {
-      const token = localStorage.getItem('adminToken') || localStorage.getItem('authToken');
-      
+      let token = null;
+      const sessionData = localStorage.getItem('adminSession');
+      if (sessionData) {
+        const session = JSON.parse(sessionData);
+        token = session.token;
+      }
+
+      if (!token) {
+        // Fallback for cases where it might be in other keys, but adminSession is preferred
+        token = localStorage.getItem('adminToken') || localStorage.getItem('authToken');
+      }
+
       const body = new FormData();
       body.append("name", formData.name);
       body.append("description", formData.description);
@@ -118,13 +128,13 @@ export default function AddItemPage() {
       body.append("price", formData.price);
       body.append("stock", formData.stock);
       body.append("visibleDistricts", JSON.stringify(formData.visibleDistricts));
-      
+
       if (formData.image) {
         body.append("image", formData.image);
       }
 
       const res = await axios.post("http://localhost:4000/api/items", body, {
-        headers: { 
+        headers: {
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${token}`
         },
@@ -149,7 +159,7 @@ export default function AddItemPage() {
       <div className={styles.innerContainer}>
         <h1 className={styles.heading}>Add New Product (Admin)</h1>
         <p className="text-sm text-gray-600 mb-6">Select districts where this product will be visible to customers</p>
-        
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.gridContainer}>
             <div>
@@ -256,16 +266,15 @@ export default function AddItemPage() {
                 {visibleDistricts.length === tamilNaduDistricts.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-2 bg-gray-50 rounded border border-gray-200">
               {tamilNaduDistricts.map((district) => (
                 <label
                   key={district}
-                  className={`flex items-center p-2 rounded cursor-pointer transition-colors ${
-                    visibleDistricts.includes(district)
+                  className={`flex items-center p-2 rounded cursor-pointer transition-colors ${visibleDistricts.includes(district)
                       ? 'bg-green-100 border border-green-400'
                       : 'bg-white border border-gray-200 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   <input
                     type="checkbox"
@@ -277,7 +286,7 @@ export default function AddItemPage() {
                 </label>
               ))}
             </div>
-            
+
             {visibleDistricts.length === 0 && (
               <p className="text-xs text-red-600 mt-2">Please select at least one district</p>
             )}
@@ -326,8 +335,8 @@ export default function AddItemPage() {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={styles.submitButton}
             disabled={loading}
           >

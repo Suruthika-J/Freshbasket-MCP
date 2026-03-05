@@ -18,9 +18,22 @@ const DeliveryAssignment = () => {
         fetchAgents();
     }, []);
 
+    const getToken = () => {
+        try {
+            const sessionData = localStorage.getItem('adminSession');
+            if (sessionData) {
+                const { token } = JSON.parse(sessionData);
+                return token;
+            }
+        } catch (error) {
+            console.error('Error getting admin token:', error);
+        }
+        return localStorage.getItem('authToken'); // Fallback
+    };
+
     const fetchPendingDeliveries = async () => {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = getToken();
             const response = await axios.get(`${API_BASE_URL}/api/sub-orders/admin/pending-deliveries`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -39,7 +52,7 @@ const DeliveryAssignment = () => {
 
     const fetchAgents = async () => {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = getToken();
             const response = await axios.get(`${API_BASE_URL}/api/user/agents`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -54,7 +67,7 @@ const DeliveryAssignment = () => {
 
     const assignAgent = async (subOrderId, agentId) => {
         try {
-            const token = localStorage.getItem('authToken');
+            const token = getToken();
             // Updated to PATCH /api/sub-orders/:id/assign-delivery-agent
             const response = await axios.patch(
                 `${API_BASE_URL}/api/sub-orders/${subOrderId}/assign-delivery-agent`,

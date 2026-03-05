@@ -5,8 +5,54 @@ import { toast } from 'react-toastify';
 import { FaCheck, FaTimes, FaUser, FaMapMarkerAlt, FaEnvelope, FaCalendar, FaBan, FaPhone, FaEye, FaComments } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { GiFarmer } from 'react-icons/gi';
-import { FiPackage } from 'react-icons/fi';
+import { FiPackage, FiAlertTriangle } from 'react-icons/fi';
 import FarmerProductsModal from './FarmerProductsModal';
+
+// Deactivate Confirm Modal
+const DeactivateConfirmModal = ({ isOpen, onClose, onConfirm, loading }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-[60]"
+      style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.15)' }}>
+      <div className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all duration-300"
+        style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+        <div className="p-6 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FiAlertTriangle className="text-red-500 w-8 h-8" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Deactivate Farmer</h3>
+          <p className="text-gray-500 text-sm mb-6">
+            Are you sure you want to deactivate this farmer? They will not be able to login.
+          </p>
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-semibold shadow-lg shadow-red-200 disabled:opacity-50 flex items-center justify-center"
+            >
+              {loading ? (
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                'Deactivate'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -17,6 +63,8 @@ const FarmerManagement = () => {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
+  const [farmerToDeactivate, setFarmerToDeactivate] = useState(null);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   // New state for products modal
   const [productsModal, setProductsModal] = useState({
@@ -150,12 +198,10 @@ const FarmerManagement = () => {
     }
   };
 
-  const handleDeactivate = async (farmerId) => {
-    if (!window.confirm('Are you sure you want to deactivate this farmer? They will not be able to login.')) {
-      return;
-    }
+  const confirmDeactivate = async () => {
+    if (!farmerToDeactivate) return;
 
-    setProcessingId(farmerId);
+    setIsDeactivating(true);
 
     try {
       const token = JSON.parse(localStorage.getItem('adminSession'))?.token;
@@ -165,10 +211,10 @@ const FarmerManagement = () => {
         return;
       }
 
-      console.log('🔄 Deactivating farmer:', farmerId);
+      console.log('🔄 Deactivating farmer:', farmerToDeactivate);
 
       const response = await axios.put(
-        `${API_BASE_URL}/api/user/admin/farmers/${farmerId}/deactivate`,
+        `${API_BASE_URL}/api/user/admin/farmers/${farmerToDeactivate}/deactivate`,
         {},
         {
           headers: {
@@ -177,11 +223,9 @@ const FarmerManagement = () => {
         }
       );
 
-      console.log('📥 Deactivation response:', response.data);
-
       if (response.data.success) {
         toast.success('Farmer deactivated successfully!');
-        setApprovedFarmers(prev => prev.filter(farmer => farmer._id !== farmerId));
+        setApprovedFarmers(prev => prev.filter(farmer => farmer._id !== farmerToDeactivate));
       } else {
         toast.error(response.data.message || 'Deactivation failed');
       }
@@ -189,7 +233,8 @@ const FarmerManagement = () => {
       console.error('❌ Error deactivating farmer:', error);
       toast.error(error.response?.data?.message || 'Failed to deactivate farmer');
     } finally {
-      setProcessingId(null);
+      setIsDeactivating(false);
+      setFarmerToDeactivate(null);
     }
   };
 
@@ -546,8 +591,8 @@ const FarmerManagement = () => {
                       </button>
 
                       <button
-                        onClick={() => handleDeactivate(farmer._id)}
-                        disabled={processingId === farmer._id}
+                        onClick={() => setFarmerToDeactivate(farmer._id)}
+                        disabled={processingId === farmer._id || isDeactivating}
                         className="flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Deactivate farmer account"
                       >
@@ -568,6 +613,14 @@ const FarmerManagement = () => {
         onClose={closeProductsModal}
         farmerData={productsModal.farmerData}
         loading={productsModal.loading}
+      />
+
+      {/* Deactivate Confirmation Modal */}
+      <DeactivateConfirmModal
+        isOpen={!!farmerToDeactivate}
+        onClose={() => setFarmerToDeactivate(null)}
+        onConfirm={confirmDeactivate}
+        loading={isDeactivating}
       />
     </div>
   );

@@ -7,7 +7,7 @@ import { listItemsPageStyles as styles } from "../assets/adminStyles";
 import StockModal from './StockModal';
 
 const StatsCard = ({ icon: Icon, color, border, label, value, onClick, clickable }) => (
-  <div 
+  <div
     className={`${styles.statsCard(border)} ${clickable ? 'cursor-pointer hover:shadow-lg transform hover:scale-105 transition-all duration-200' : ''}`}
     onClick={clickable ? onClick : undefined}
   >
@@ -43,30 +43,30 @@ const EditProductModal = ({ product, onClose, onSave }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.price || Number(formData.price) < 0) {
       newErrors.price = 'Price must be a positive number';
     }
-    
+
     if (formData.oldPrice && Number(formData.oldPrice) < 0) {
       newErrors.oldPrice = 'Old price must be a positive number';
     }
-    
+
     if (!formData.stock || Number(formData.stock) < 0) {
       newErrors.stock = 'Stock must be 0 or greater';
     }
-    
+
     if (formData.oldPrice && Number(formData.oldPrice) < Number(formData.price)) {
       newErrors.oldPrice = 'Original price should be higher than selling price';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error('Please fix the errors in the form', {
         position: "top-right",
@@ -74,21 +74,21 @@ const EditProductModal = ({ product, onClose, onSave }) => {
       });
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       await onSave(product._id, {
         price: Number(formData.price),
         oldPrice: Number(formData.oldPrice) || null,
         stock: Number(formData.stock),
       });
-      
+
       toast.success('✅ Product updated successfully!', {
         position: "top-right",
         autoClose: 3000,
       });
-      
+
       onClose();
     } catch (error) {
       console.error('Update failed:', error);
@@ -266,19 +266,67 @@ const StockBadge = ({ stock }) => {
   }
 };
 
+// Delete Confirm Modal
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, loading }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-[60]"
+      style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'rgba(255,255,255,0.15)' }}>
+      <div className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all duration-300"
+        style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+        <div className="p-6 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FiTrash2 className="text-red-500 w-8 h-8" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Product</h3>
+          <p className="text-gray-500 text-sm mb-6">
+            Are you sure you want to delete this product? This action cannot be undone.
+          </p>
+          <div className="flex space-x-3">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={loading}
+              className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-semibold shadow-lg shadow-red-200 disabled:opacity-50 flex items-center justify-center"
+            >
+              {loading ? (
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                'Delete'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function ListItemsPage() {
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [editingProduct, setEditingProduct] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [downloadingCSV, setDownloadingCSV] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     lowStock: 0,
     outOfStock: 0
   });
-  
+
   // Stock modal state
   const [stockModal, setStockModal] = useState({
     isOpen: false,
@@ -305,18 +353,18 @@ export default function ListItemsPage() {
 
       const itemCategories = data.map(item => item.category);
       const uniqueCategories = ['All', ...new Set(itemCategories)];
-      
+
       // Calculate stats
       const totalItems = withUrls.length;
       const lowStockItems = withUrls.filter(item => item.stock > 0 && item.stock < 10).length;
       const outOfStockItems = withUrls.filter(item => item.stock === 0).length;
-      
+
       setStats({
         total: totalItems,
         lowStock: lowStockItems,
         outOfStock: outOfStockItems
       });
-      
+
       setCategories(uniqueCategories);
       setItems(withUrls);
       setFilteredItems(withUrls);
@@ -339,12 +387,12 @@ export default function ListItemsPage() {
 
   const handleStockCardClick = async (type) => {
     try {
-      const endpoint = type === 'low' 
+      const endpoint = type === 'low'
         ? 'http://localhost:4000/api/items/low-stock'
         : 'http://localhost:4000/api/items/out-of-stock';
-      
+
       const response = await axios.get(endpoint);
-      
+
       setStockModal({
         isOpen: true,
         type,
@@ -373,15 +421,34 @@ export default function ListItemsPage() {
     setEditingProduct(product);
   };
 
+  const getToken = () => {
+    try {
+      const sessionData = localStorage.getItem('adminSession');
+      if (sessionData) {
+        const { token } = JSON.parse(sessionData);
+        return token;
+      }
+    } catch (error) {
+      console.error('Error getting token:', error);
+    }
+    return null;
+  };
+
   const handleSave = async (productId, updatedData) => {
     try {
+      const token = getToken();
       const response = await axios.put(
         `http://localhost:4000/api/items/${productId}`,
-        updatedData
+        updatedData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
 
       await loadItems();
-      
+
       return response.data;
     } catch (err) {
       console.error('Update failed:', err);
@@ -389,20 +456,26 @@ export default function ListItemsPage() {
     }
   };
 
-  const handleDelete = async id => {
-    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
-  
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await axios.delete(`http://localhost:4000/api/items/${id}`);
-      
-      setItems(prev => prev.filter(i => i._id !== id));
-      setFilteredItems(prev => prev.filter(i => i._id !== id));
-      
+      const token = getToken();
+      await axios.delete(`http://localhost:4000/api/items/${productToDelete}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      setItems(prev => prev.filter(i => i._id !== productToDelete));
+      setFilteredItems(prev => prev.filter(i => i._id !== productToDelete));
+
       toast.success('🗑️ Product deleted successfully!', {
         position: "top-right",
         autoClose: 3000,
       });
-      
+
       await loadItems();
     } catch (err) {
       console.error('Delete failed', err.response?.status, err.response?.data);
@@ -410,13 +483,16 @@ export default function ListItemsPage() {
         position: "top-right",
         autoClose: 4000,
       });
+    } finally {
+      setIsDeleting(false);
+      setProductToDelete(null);
     }
   };
 
   // CSV Download Function
   const handleDownloadCSV = async () => {
     setDownloadingCSV(true);
-    
+
     try {
       const response = await axios.get('http://localhost:4000/api/items/download');
       const products = response.data;
@@ -462,11 +538,11 @@ export default function ListItemsPage() {
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', `RushBasket_Stock_List_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
-      
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -662,7 +738,7 @@ export default function ListItemsPage() {
                             <FiEdit size={18} />
                           </button>
                           <button
-                            onClick={() => handleDelete(item._id)}
+                            onClick={() => setProductToDelete(item._id)}
                             className={styles.deleteButton}
                             title="Delete product"
                           >
@@ -695,6 +771,14 @@ export default function ListItemsPage() {
         items={stockModal.items}
         title={stockModal.title}
         type={stockModal.type}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!productToDelete}
+        onClose={() => setProductToDelete(null)}
+        onConfirm={confirmDelete}
+        loading={isDeleting}
       />
     </div>
   );
