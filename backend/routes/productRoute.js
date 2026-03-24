@@ -25,7 +25,21 @@ const storage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, 'uploads/'),
     filename: (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
 });
-const upload = multer({ storage });
+
+// File filter: only allow image files
+const imageFileFilter = (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image files (JPG, PNG, GIF, WebP) are allowed'), false);
+    }
+};
+
+const upload = multer({
+    storage,
+    fileFilter: imageFileFilter,
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB max
+});
 
 // ====== EXISTING ROUTES ======
 

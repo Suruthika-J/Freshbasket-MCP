@@ -6,6 +6,10 @@ import { toast } from 'react-toastify';
 import { listItemsPageStyles as styles } from "../assets/adminStyles";
 import StockModal from './StockModal';
 
+const unitOptions = [
+  'kg', 'grams', 'litres', 'ml', 'pieces', 'dozen', 'bundle', 'packet'
+];
+
 const StatsCard = ({ icon: Icon, color, border, label, value, onClick, clickable }) => (
   <div
     className={`${styles.statsCard(border)} ${clickable ? 'cursor-pointer hover:shadow-lg transform hover:scale-105 transition-all duration-200' : ''}`}
@@ -29,6 +33,7 @@ const EditProductModal = ({ product, onClose, onSave }) => {
     price: product?.price || '',
     oldPrice: product?.oldPrice || '',
     stock: product?.stock || 0,
+    unit: product?.unit || 'kg',
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -82,6 +87,7 @@ const EditProductModal = ({ product, onClose, onSave }) => {
         price: Number(formData.price),
         oldPrice: Number(formData.oldPrice) || null,
         stock: Number(formData.stock),
+        unit: formData.unit,
       });
 
       toast.success('✅ Product updated successfully!', {
@@ -184,6 +190,24 @@ const EditProductModal = ({ product, onClose, onSave }) => {
             <p className="text-xs text-gray-500 mt-1">
               Current stock: {product.stock} units
             </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Unit *
+            </label>
+            <select
+              name="unit"
+              value={formData.unit}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
+            >
+              {unitOptions.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
           </div>
 
           {formData.price && (

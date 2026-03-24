@@ -16,7 +16,7 @@ const returnRequestSchema = new mongoose.Schema({
     // User who requested the return
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: true,
         index: true
     },
@@ -46,7 +46,7 @@ const returnRequestSchema = new mongoose.Schema({
     // Admin who handled the request
     handledBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         default: null
     },
     

@@ -34,6 +34,23 @@ const StatusBadge = ({ status, size = 'sm' }) => {
   );
 };
 
+// ── Return status badge with color coding ───────────────────────────────────
+const ReturnStatusBadge = ({ status }) => {
+  if (!status || status === 'None') return null;
+  const styles = {
+    'Requested': 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    'Approved': 'bg-blue-100 text-blue-800 border-blue-300',
+    'Rejected': 'bg-red-100 text-red-800 border-red-300',
+    'Completed': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-bold rounded-full border ${styles[status] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+      <FiRotateCcw size={11} />
+      {status}
+    </span>
+  );
+};
+
 const UserOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -103,9 +120,11 @@ const UserOrdersPage = () => {
   const canReviewOrder = (order) => order.status === 'Delivered' && !orderReviews[order._id];
   const canReturnOrder = (order) => {
     if (order.status !== 'Delivered') return false;
+    if (order.returnStatus && order.returnStatus !== 'None') return false;
     const daysSince = Math.floor((new Date() - new Date(order.date)) / (1000 * 60 * 60 * 24));
     return daysSince <= 7;
   };
+  const hasReturnStatus = (order) => order.returnStatus && order.returnStatus !== 'None';
   const getReviewForOrder = (orderId) => orderReviews[orderId];
   const openTrackingModal = (order) => { setOrderToTrack(order); setIsTrackingModalOpen(true); };
   const closeTrackingModal = () => { setIsTrackingModalOpen(false); setOrderToTrack(null); };
@@ -160,13 +179,14 @@ const UserOrdersPage = () => {
                   <th className={ordersPageStyles.tableHeaderCell}>Items</th>
                   <th className={ordersPageStyles.tableHeaderCell}>Total</th>
                   <th className={ordersPageStyles.tableHeaderCell}>Status</th>
+                  <th className={ordersPageStyles.tableHeaderCell}>Return</th>
                   <th className={ordersPageStyles.tableHeaderCell}>Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y fb-border">
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="py-12 text-center">
+                    <td colSpan="7" className="py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <FiPackage className="fb-text-muted text-4xl mb-4" />
                         <h3 className="text-lg font-medium fb-text mb-1">No orders found</h3>
@@ -205,6 +225,11 @@ const UserOrdersPage = () => {
                         <StatusBadge status={order.status} />
                       </td>
 
+                      {/* Return Status */}
+                      <td className={ordersPageStyles.tableCell}>
+                        <ReturnStatusBadge status={order.returnStatus} />
+                      </td>
+
                       {/* Actions */}
                       <td className={ordersPageStyles.tableCell}>
                         <div className="flex gap-2 flex-wrap">
@@ -235,6 +260,10 @@ const UserOrdersPage = () => {
                               <FiRotateCcw size={13} />
                               Return
                             </button>
+                          )}
+
+                          {hasReturnStatus(order) && !canReturnOrder(order) && (
+                            <ReturnStatusBadge status={order.returnStatus} />
                           )}
 
                           {canReviewOrder(order) && (
@@ -447,6 +476,33 @@ const UserOrdersPage = () => {
               </div>
             </div>
 
+            {/* Return Status Info */}
+            {hasReturnStatus(selectedOrder) && (
+              <div className="mt-6 p-4 rounded-xl border" style={{
+                backgroundColor: selectedOrder.returnStatus === 'Completed' ? 'rgb(236, 253, 245)' :
+                  selectedOrder.returnStatus === 'Rejected' ? 'rgb(254, 242, 242)' :
+                    selectedOrder.returnStatus === 'Approved' ? 'rgb(239, 246, 255)' : 'rgb(254, 252, 232)',
+                borderColor: selectedOrder.returnStatus === 'Completed' ? 'rgb(167, 243, 208)' :
+                  selectedOrder.returnStatus === 'Rejected' ? 'rgb(254, 202, 202)' :
+                    selectedOrder.returnStatus === 'Approved' ? 'rgb(191, 219, 254)' : 'rgb(253, 230, 138)'
+              }}>
+                <div className="flex items-center gap-3 mb-2">
+                  <FiRotateCcw size={18} />
+                  <h3 className="font-bold text-base">Return Request</h3>
+                  <ReturnStatusBadge status={selectedOrder.returnStatus} />
+                </div>
+                {selectedOrder.returnReason && (
+                  <p className="text-sm mt-1"><strong>Reason:</strong> {selectedOrder.returnReason}</p>
+                )}
+                {selectedOrder.returnRequestedAt && (
+                  <p className="text-sm mt-1 opacity-75">Requested on {new Date(selectedOrder.returnRequestedAt).toLocaleDateString()}</p>
+                )}
+                {selectedOrder.refundAmount > 0 && (
+                  <p className="text-sm mt-1"><strong>Refund Amount:</strong> ₹{selectedOrder.refundAmount.toFixed(2)} — <em>{selectedOrder.refundStatus}</em></p>
+                )}
+              </div>
+            )}
+
             {/* Modal Footer */}
             <div className="flex justify-end gap-3 pt-4 mt-4 border-t fb-border">
               {canTrackOrder(selectedOrder) && (
@@ -456,6 +512,15 @@ const UserOrdersPage = () => {
                   style={{ backgroundColor: 'var(--color-info)' }}
                 >
                   <FiTruck size={15} /> Track Order
+                </button>
+              )}
+              {canReturnOrder(selectedOrder) && (
+                <button
+                  onClick={() => { closeModal(); openReturnModal(selectedOrder); }}
+                  className="px-4 py-2 rounded-full text-white font-medium transition-opacity hover:opacity-90 flex items-center gap-2 text-sm"
+                  style={{ backgroundColor: 'var(--color-warning)' }}
+                >
+                  <FiRotateCcw size={15} /> Return Order
                 </button>
               )}
               {canReviewOrder(selectedOrder) && (

@@ -101,6 +101,28 @@ const orderSchema = new mongoose.Schema({
         default: null
     },
     // ==========================================
+    // ========== RETURN FIELDS ==========
+    returnStatus: {
+        type: String,
+        enum: ['None', 'Requested', 'Approved', 'Rejected', 'Completed'],
+        default: 'None',
+        index: true
+    },
+    returnReason: { type: String, default: null },
+    returnRequestedAt: { type: Date, default: null },
+    returnHandledBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    returnHandledAt: { type: Date, default: null },
+    refundAmount: { type: Number, default: 0, min: 0 },
+    refundStatus: {
+        type: String,
+        enum: ['None', 'Pending', 'Processed', 'Completed'],
+        default: 'None'
+    },
+    // ====================================
     date: { type: Date, default: Date.now, index: true },
     deliveryDate: { type: Date, index: true },
     notes: { type: String }

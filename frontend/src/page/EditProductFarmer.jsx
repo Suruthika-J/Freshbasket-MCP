@@ -41,7 +41,7 @@ const EditProductFarmer = () => {
     'Other'
   ];
 
-  const units = ['kg', 'g', 'L', 'ml', 'piece', 'dozen', 'bundle'];
+  const units = ['kg', 'grams', 'litres', 'ml', 'pieces', 'dozen', 'bundle', 'packet'];
 
   // Fetch product details on mount
   useEffect(() => {

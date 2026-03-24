@@ -290,4 +290,31 @@ export const requireCustomer = (req, res, next) => {
     next();
 };
 
+// ============================================
+// CUSTOMER OR DELIVERY AGENT MIDDLEWARE
+// Allows both 'user' (customer) and 'agent' (delivery agent).
+// Use on routes accessible to both roles (e.g., order tracking).
+// ============================================
+export const allowCustomerOrAgent = (req, res, next) => {
+    console.log('🛒🚚 Customer/Agent Check - User:', req.user?.email, 'Role:', req.user?.role);
+
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            message: 'Authentication required'
+        });
+    }
+
+    if (!['user', 'agent'].includes(req.user.role)) {
+        console.log('❌ Access denied - Role is neither customer nor agent:', req.user.role);
+        return res.status(403).json({
+            success: false,
+            message: 'Access denied. This area is for customers and delivery agents only.'
+        });
+    }
+
+    console.log('✅ Customer/Agent access granted to:', req.user.email);
+    next();
+};
+
 export default authMiddleware;

@@ -745,9 +745,63 @@ export async function loginUser(req, res) {
 
         console.log('✅ STEP 6: Password verified successfully');
 
-        // Step 7: Check farmer approval AFTER password verification
+        // ============================================
+        // STEP 7: LOGIN TYPE ROLE VALIDATION
+        // Enforce which roles are allowed per login page.
+        // This is the backend security gate — frontend UI alone is not enough.
+        // ============================================
+        const effectiveRole = isAgent ? 'agent' : (user.role || 'user');
+
+        console.log('🔐 STEP 7: Validating loginType...');
+        console.log('  - loginType received:', loginType);
+        console.log('  - effectiveRole:', effectiveRole);
+
+        if (loginType) {
+            // Define which roles each login page permits
+            const allowedRoles = {
+                customer: ['user', 'agent'],  // Customer page: customers + delivery agents
+                farmer:   ['farmer'],          // Farmer page: farmers only
+                admin:    ['admin'],           // Admin/Retailer page: admins only
+            };
+
+            const permitted = allowedRoles[loginType];
+
+            if (!permitted) {
+                console.log('❌ STEP 7: Unknown loginType:', loginType);
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid login type specified."
+                });
+            }
+
+            if (!permitted.includes(effectiveRole)) {
+                console.log(`❌ STEP 7: Role "${effectiveRole}" not allowed on "${loginType}" login page`);
+
+                let deniedMessage = "Access denied: You are not allowed to login from this page.";
+                if (loginType === 'customer' && effectiveRole === 'farmer') {
+                    deniedMessage = "Farmer accounts must log in from the Farmer Login page.";
+                } else if (loginType === 'customer' && effectiveRole === 'admin') {
+                    deniedMessage = "Admin accounts must log in from the Retailer Login page.";
+                } else if (loginType === 'farmer' && effectiveRole !== 'farmer') {
+                    deniedMessage = "This login page is for Farmers only.";
+                } else if (loginType === 'admin' && effectiveRole !== 'admin') {
+                    deniedMessage = "This login page is for Retailers (Admins) only.";
+                }
+
+                return res.status(403).json({
+                    success: false,
+                    message: deniedMessage,
+                    accessDenied: true
+                });
+            }
+            console.log(`✅ STEP 7: Role "${effectiveRole}" permitted on "${loginType}" login page`);
+        } else {
+            console.log('⚠️  STEP 7: No loginType provided — skipping page-level role restriction');
+        }
+
+        // Step 8: Check farmer approval AFTER password verification
         if (!isAgent && user.role === 'farmer') {
-            console.log('🌾 STEP 7: Checking farmer approval status...');
+            console.log('🌾 STEP 8: Checking farmer approval status...');
 
             // Re-fetch user from DB to get latest approval status
             const freshUser = await User.findById(user._id);
@@ -756,7 +810,7 @@ export async function loginUser(req, res) {
             console.log('  - role:', freshUser.role);
 
             if (!freshUser.isApproved) {
-                console.log('❌ STEP 7: Farmer not approved');
+                console.log('❌ STEP 8: Farmer not approved');
                 console.log('❌ LOGIN FAILED - Pending approval');
                 return res.status(403).json({
                     success: false,
@@ -766,34 +820,34 @@ export async function loginUser(req, res) {
                 });
             }
 
-            console.log('✅ STEP 7: Farmer is approved');
+            console.log('✅ STEP 8: Farmer is approved');
 
             // Update user reference to fresh data
             user = freshUser;
         } else {
-            console.log('✅ STEP 7: Not a farmer or approval check not required');
+            console.log('✅ STEP 8: Not a farmer or approval check not required');
         }
 
-        console.log('🔄 STEP 8: Updating last login timestamp...');
+        console.log('🔄 STEP 9: Updating last login timestamp...');
 
-        // Step 8: Update last login
+        // Step 9: Update last login
         user.lastLogin = new Date();
         await user.save();
 
-        console.log('✅ STEP 8: Last login updated');
+        console.log('✅ STEP 9: Last login updated');
 
-        // Step 9: Determine role
+        // Step 10: Determine role
         const userRole = isAgent ? 'agent' : (user.role || 'user');
 
-        console.log('✅ STEP 9: Role determined:', userRole);
+        console.log('✅ STEP 10: Role determined:', userRole);
 
-        // Step 10: Generate token with isApproved flag
-        console.log('🎫 STEP 10: Generating JWT token...');
+        // Step 11: Generate token with isApproved flag
+        console.log('🎫 STEP 11: Generating JWT token...');
         const token = createToken(user._id, userRole, user.isApproved);
 
-        console.log('✅ STEP 10: Token generated successfully');
+        console.log('✅ STEP 11: Token generated successfully');
 
-        // Step 11: Send response with isApproved flag
+        // Step 12: Send response with isApproved flag
         const responseData = {
             success: true,
             message: "Login successful!",
@@ -813,7 +867,7 @@ export async function loginUser(req, res) {
             }
         };
 
-        console.log('📤 STEP 11: Sending success response');
+        console.log('📤 STEP 12: Sending success response');
         console.log('✅ ==========================================');
         console.log('✅ LOGIN SUCCESSFUL');
         console.log('✅ Email:', email);

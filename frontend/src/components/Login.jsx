@@ -165,15 +165,20 @@ const Login = () => {
     setError("");
     setIsLoading(true);
 
+    // Map intendedRole → loginType sent to the backend
+    // 'customer' page covers both customers and delivery agents
+    const loginType = intendedRole === 'farmer' ? 'farmer' : 'customer';
+
     try {
       console.log('📤 Sending login request to:', `${API_BASE_URL}/api/user/login`);
-      console.log('📤 Login data:', { email: formData.email });
+      console.log('📤 Login data:', { email: formData.email, loginType });
 
       const response = await axios.post(
         `${API_BASE_URL}/api/user/login`,
         {
           email: formData.email,
           password: formData.password,
+          loginType,
         },
         { 
           headers: { "Content-Type": "application/json" },
@@ -185,13 +190,6 @@ const Login = () => {
 
       if (response.data.success) {
         const { token, user } = response.data;
-        console.log('✅ Login successful - User data:', {
-          email: user.email,
-          role: user.role,
-          isApproved: user.isApproved
-        });
-
-        // Farmer approval check is now handled in handleLoginSuccess
         handleLoginSuccess(token, user);
       } else {
         setError(response.data.message || "Login failed");
@@ -203,10 +201,14 @@ const Login = () => {
       
       if (err.response && err.response.data) {
         const errorData = err.response.data;
-        
         console.log('Error response:', errorData);
 
-        // Handle specific error cases
+        // Access denied — wrong login page for this role
+        if (errorData.accessDenied) {
+          setError(errorData.message);
+          return;
+        }
+
         if (errorData.requiresApproval) {
           setError(errorData.message || "Your farmer account is pending admin approval.");
           return;

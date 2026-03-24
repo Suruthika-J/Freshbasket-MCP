@@ -3,8 +3,11 @@
 
 import React, { useState, useRef } from "react";
 import axios from "axios";
-import { FiUpload, FiX, FiSave } from "react-icons/fi";
+import { FiUpload, FiX, FiSave, FiCamera } from "react-icons/fi";
 import { addItemPageStyles as styles } from "../assets/adminStyles";
+import CameraCapture from "../../components/CameraCapture/CameraCapture";
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 const initialFormState = {
   name: "",
@@ -13,6 +16,7 @@ const initialFormState = {
   oldPrice: "",
   price: "",
   stock: "",
+  unit: "kg",
   image: null,
   preview: "",
   visibleDistricts: []
@@ -29,6 +33,17 @@ const categories = [
   "Meat",
 ];
 
+const units = [
+  "kg",
+  "grams",
+  "litres",
+  "ml",
+  "pieces",
+  "dozen",
+  "bundle",
+  "packet",
+];
+
 // Tamil Nadu Districts
 const tamilNaduDistricts = [
   "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore",
@@ -41,9 +56,17 @@ const tamilNaduDistricts = [
   "Viluppuram", "Virudhunagar"
 ];
 
+const formatFileSize = (bytes) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
 export default function AddItemPage() {
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
   const fileInputRef = useRef();
 
   const handleChange = (e) => {
@@ -71,17 +94,18 @@ export default function AddItemPage() {
     }
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  const processImageFile = (file) => {
     if (!file) return;
 
+    setImageError("");
+
     if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file');
+      setImageError('Please select a valid image file (JPG, PNG, GIF, WebP)');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image size should be less than 5MB');
+    if (file.size > MAX_FILE_SIZE) {
+      setImageError(`Image size (${formatFileSize(file.size)}) exceeds the 2MB limit. Please choose a smaller image.`);
       return;
     }
 
@@ -92,9 +116,19 @@ export default function AddItemPage() {
     }));
   };
 
+  const handleImageUpload = (e) => {
+    processImageFile(e.target.files[0]);
+  };
+
+  const handleCameraCapture = (file) => {
+    processImageFile(file);
+    setIsCameraOpen(false);
+  };
+
   const removeImage = () => {
+    setImageError("");
     setFormData((f) => ({ ...f, image: null, preview: "" }));
-    fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e) => {
@@ -116,7 +150,6 @@ export default function AddItemPage() {
       }
 
       if (!token) {
-        // Fallback for cases where it might be in other keys, but adminSession is preferred
         token = localStorage.getItem('adminToken') || localStorage.getItem('authToken');
       }
 
@@ -127,6 +160,7 @@ export default function AddItemPage() {
       body.append("oldPrice", formData.oldPrice);
       body.append("price", formData.price);
       body.append("stock", formData.stock);
+      body.append("unit", formData.unit);
       body.append("visibleDistricts", JSON.stringify(formData.visibleDistricts));
 
       if (formData.image) {
@@ -143,7 +177,8 @@ export default function AddItemPage() {
       console.log("Created", res.data);
       alert(`Product added successfully! Visible in ${formData.visibleDistricts.length} district(s)`);
       setFormData(initialFormState);
-      fileInputRef.current.value = "";
+      setImageError("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
       console.error(err);
       alert("Upload failed: " + (err.response?.data?.message || err.message));
@@ -250,6 +285,23 @@ export default function AddItemPage() {
                 placeholder="0"
               />
             </div>
+
+            <div>
+              <label className={styles.label}>⚖️ Unit *</label>
+              <select
+                name="unit"
+                value={formData.unit}
+                onChange={handleChange}
+                required
+                className={styles.input}
+              >
+                {units.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* District Selection */}
@@ -292,47 +344,93 @@ export default function AddItemPage() {
             )}
           </div>
 
-          {/* Image Upload */}
+          {/* Image Upload with Camera Support */}
           <div>
-            <label className={styles.label}>Product Image</label>
-            <div
-              onClick={() => fileInputRef.current.click()}
-              className={styles.imageUploadContainer}
-            >
-              {preview ? (
-                <div className="relative">
+            <label className={styles.label}>📸 Product Image</label>
+
+            {preview ? (
+              /* ── Image Preview ── */
+              <div className="border-2 border-emerald-300 rounded-lg p-4 bg-emerald-50">
+                <div className="relative inline-block w-full">
                   <img
                     src={preview}
                     alt="Preview"
-                    className={styles.previewImage}
+                    className="w-full h-56 object-contain rounded-lg bg-white"
                   />
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage();
-                    }}
-                    className={styles.removeButton}
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-colors"
+                    title="Remove image"
                   >
                     <FiX size={16} />
                   </button>
                 </div>
-              ) : (
-                <>
-                  <FiUpload className={styles.uploadIcon} />
-                  <p className={styles.uploadText}>
-                    Click to upload image (max 5 MB)
-                  </p>
-                </>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                className={styles.hiddenInput}
-              />
-            </div>
+                {formData.image && (
+                  <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                    <span className="truncate mr-2">📄 {formData.image.name}</span>
+                    <span className="text-emerald-600 font-medium whitespace-nowrap">
+                      {formatFileSize(formData.image.size)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ── Upload / Camera Buttons ── */
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-400 transition-colors bg-gray-50">
+                <FiUpload className="mx-auto text-4xl text-gray-400 mb-3" />
+                <p className="text-gray-500 mb-4">
+                  Upload from device or capture with camera
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {/* Upload from device */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current.click()}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium text-sm"
+                  >
+                    <FiUpload size={16} />
+                    Upload Image
+                  </button>
+
+                  {/* Capture from camera */}
+                  <button
+                    type="button"
+                    onClick={() => setIsCameraOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm"
+                  >
+                    <FiCamera size={16} />
+                    Take Photo
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-3">
+                  JPG, PNG, GIF, WebP — max 2 MB
+                </p>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {imageError && (
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                ⚠️ {imageError}
+              </p>
+            )}
+
+            {/* Hidden file input for gallery/file upload */}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+
+            {/* Camera Capture Modal */}
+            <CameraCapture
+              isOpen={isCameraOpen}
+              onClose={() => setIsCameraOpen(false)}
+              onCapture={handleCameraCapture}
+            />
           </div>
 
           <button

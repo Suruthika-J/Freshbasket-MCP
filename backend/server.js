@@ -18,6 +18,10 @@ import './models/deliveryAgentModel.js';
 import Conversation from './models/Conversation.js';
 import Message from './models/Message.js';
 
+// Pre-load return models
+import './models/returnRequestModel.js';
+import './models/ReturnModel.js';
+
 import returnRouter from './routes/returnRoute.js';
 
 // Middleware
