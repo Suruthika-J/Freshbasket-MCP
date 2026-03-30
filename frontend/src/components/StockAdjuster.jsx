@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const StockAdjuster = ({ productId, initialStock, onStockUpdate }) => {
   const [stock, setStock] = useState(initialStock);

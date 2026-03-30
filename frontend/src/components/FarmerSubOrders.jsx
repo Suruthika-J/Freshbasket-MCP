@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import { FiPackage, FiTruck, FiUser, FiClock, FiCheck, FiCreditCard } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const FarmerSubOrders = () => {
     const { t } = useTranslation('farmer');

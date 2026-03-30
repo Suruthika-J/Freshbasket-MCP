@@ -37,7 +37,7 @@ const CheckoutPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ✅ Get API URL from environment variable
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   // Load user data on mount
   useEffect(() => {

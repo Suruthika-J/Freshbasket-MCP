@@ -13,7 +13,7 @@ import OrderChart from './OrderChart';
 import AssignAgentModal from './AssignAgentModal';
 import { toast } from 'react-toastify';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Orders = () => {
   const [activeTab, setActiveTab] = useState('admin'); // 'admin' or 'farmer'

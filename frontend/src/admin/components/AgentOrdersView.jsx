@@ -21,7 +21,7 @@ const AgentOrdersView = ({ isOpen, onClose, agentId, agentName }) => {
             console.log('📦 Fetching orders for agent:', agentId);
 
             const response = await axios.get(
-                `http://localhost:4000/api/agents/${agentId}`
+                `${import.meta.env.VITE_API_URL}/api/agents/${agentId}`
             );
 
             console.log('✅ Orders fetched:', response.data);

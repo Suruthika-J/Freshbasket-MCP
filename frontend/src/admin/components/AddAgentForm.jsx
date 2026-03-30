@@ -66,7 +66,7 @@ const AddAgentForm = ({ onAgentAdded }) => {
 
             // 📨 Send POST request with token in header
             const response = await axios.post(
-                'http://localhost:4000/api/agents',
+                `${import.meta.env.VITE_API_URL}/api/agents`,
                 formData,
                 {
                     headers: {

@@ -13,7 +13,7 @@ import { itemsHomeStyles } from "../assets/dummyStyles.js";
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // Stock Status Badge Component
 const StockBadge = ({ stock }) => {
@@ -628,46 +628,89 @@ const ItemsHome = () => {
                 return (
                   <div
                     key={product._id}
-                    className={`${itemsHomeStyles.productCard} cursor-pointer hover:shadow-lg transition-shadow duration-200`}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col flex-grow overflow-hidden cursor-pointer"
                     onClick={() => handleCardClick(product)}
                   >
-                    <div className={itemsHomeStyles.imageContainer}>
+                    {/* Image Wrapper (Maintains aspect ratio perfectly, fully fluid on mobile) */}
+                    <div className="aspect-[4/3] w-full bg-gray-50 overflow-hidden relative">
                       <img
                         src={`${API_BASE_URL}${product.imageUrl}`}
                         alt={product.name}
-                        className={itemsHomeStyles.productImage}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.parentNode.innerHTML = `
                             <div class="flex items-center justify-center w-full h-full bg-gray-200">
-                              <span class="text-gray-500 text-sm">No Image</span>
+                              <span class="text-gray-500 text-sm font-medium">No Image</span>
                             </div>`;
                         }}
                       />
+                      <div className="absolute top-3 left-3 flex flex-col gap-2">
+                        <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-emerald-700 shadow-sm border border-white/20 inline-block w-max">
+                          {product.category || 'Fresh'}
+                        </div>
+                        {product.oldPrice && (
+                          <div className="bg-red-500/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-sm inline-block w-max">
+                            Sale
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className={itemsHomeStyles.productContent}>
-                      <h3 className={itemsHomeStyles.productTitle}>
+
+                    {/* Content mapping (Scales responsively via flex-col) */}
+                    <div className="p-4 sm:p-5 flex flex-col flex-grow bg-white">
+                      <h3 className="font-bold text-gray-900 text-base sm:text-lg line-clamp-1 mb-2">
                         {product.name}
                       </h3>
 
-                      <UploaderBadge
-                        uploaderRole={product.uploaderRole}
-                        uploaderName={product.uploaderName}
-                      />
+                      <div className="mb-3 transform scale-90 origin-left sm:scale-100">
+                        <UploaderBadge
+                          uploaderRole={product.uploaderRole}
+                          uploaderName={product.uploaderName}
+                        />
+                      </div>
 
-                      <div className="mb-2">
+                      <div className="mb-3 transform scale-90 origin-left sm:scale-100">
                         <StockBadge stock={stock} />
                       </div>
 
-                      <div className={itemsHomeStyles.priceContainer}>
-                        <div>
-                          <p className={itemsHomeStyles.currentPrice}>
-                            ₹{product.price.toFixed(2)}/{product.unit || 'kg'}
-                          </p>
+                      <div className="mt-auto pt-3 sm:pt-4 flex flex-wrap items-center justify-between border-t border-gray-50 gap-2">
+                        <div className="flex flex-col">
+                          <div className="flex items-baseline">
+                            <span className="text-lg sm:text-xl font-black text-emerald-600">₹{product.price.toFixed(2)}</span>
+                            <span className="text-xs text-gray-400 font-medium ml-1">/{product.unit || 'kg'}</span>
+                          </div>
                           {product.oldPrice && (
-                            <span className={itemsHomeStyles.oldPrice}>
+                            <span className="text-xs text-gray-400 line-through">
                               ₹{product.oldPrice.toFixed(2)}
                             </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center">
+                          {qty > 0 ? (
+                            <div className="flex items-center bg-emerald-50 rounded-full border border-emerald-100" onClick={(e) => e.stopPropagation()}>
+                              <button 
+                                onClick={() => handleDecrease(product)}
+                                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="w-6 sm:w-8 text-center text-sm font-bold text-emerald-800">{qty}</span>
+                              <button 
+                                onClick={() => handleIncrease(product)}
+                                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleIncrease(product); }}
+                              className="bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center justify-center transition-all shadow-sm font-bold text-xs sm:text-sm active:scale-95"
+                            >
+                              Add
+                            </button>
                           )}
                         </div>
                       </div>

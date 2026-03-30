@@ -43,7 +43,7 @@ const OrderChart = ({ isOpen, onClose, isStandalone = false }) => {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
 
-      const { data } = await axios.get('http://localhost:4000/api/orders/stats', {
+      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/api/orders/stats`, {
         params,
         headers: getAuthHeaders()
       });

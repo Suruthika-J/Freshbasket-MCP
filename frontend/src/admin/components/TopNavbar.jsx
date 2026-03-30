@@ -3,7 +3,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { FiLogOut, FiUser, FiBell, FiSearch, FiSettings } from 'react-icons/fi';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const TopNavbar = ({ onLogout, adminUser }) => {
     const [pendingFarmersCount, setPendingFarmersCount] = useState(0);

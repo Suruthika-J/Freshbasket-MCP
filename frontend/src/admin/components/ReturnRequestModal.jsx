@@ -44,7 +44,7 @@ const ReturnRequestModal = ({ isOpen, onClose, order, onReturnRequested }) => {
             }
 
             const response = await axios.post(
-                'http://localhost:4000/api/returns',
+                `${import.meta.env.VITE_API_URL}/api/returns`,
                 {
                     orderId: order._id,
                     reason: reason.trim()

@@ -12,7 +12,7 @@ import {
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const STATUS_COLORS = {
     'pending': '#FFC107',

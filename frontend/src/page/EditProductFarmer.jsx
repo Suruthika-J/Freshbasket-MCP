@@ -7,7 +7,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { FiArrowLeft, FiSave, FiImage } from 'react-icons/fi';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const EditProductFarmer = () => {
   const { id } = useParams();

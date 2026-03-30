@@ -9,7 +9,7 @@ import { groceryData } from '../assets/dummyDataItem';
 import { itemsPageStyles } from '../assets/dummyStyles';
 import { toast } from 'react-toastify';
 
-const BACKEND_URL = 'http://localhost:4000';
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 // Stock Status Badge Component
 const StockBadge = ({ stock }) => {

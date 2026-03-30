@@ -415,18 +415,18 @@ export default function Navbar() {
         >
           <div className={navbarStyles.mobileHeader}>
             <div className={navbarStyles.mobileLogo}>
-              <div className={navbarStyles.mobileLogo}>
+              <div className="flex items-center space-x-2">
                 <img
                   src={logo}
                   alt="FreshBasket Logo"
-                  className={navbarStyles.mobileLogoImage}
+                  className="h-8 w-8 object-contain"
                 />
-                <span className={navbarStyles.mobileLogoText}>FreshBasket</span>
+                <span className="text-xl font-bold tracking-tight fb-text-primary">FreshBasket</span>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className={`${navbarStyles.closeButton} fb-text`}
+              className="p-3 fb-text-secondary hover:fb-surface-alt rounded-full transition-colors active:scale-95"
               aria-label="Close menu"
             >
               <FiX className="h-6 w-6" />
@@ -458,17 +458,16 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`${navbarStyles.mobileItem} ${activeTab === item.path ? 'fb-primary-subtle border-l-4' : ''}`}
+                className={`flex items-center w-full p-4 rounded-xl transition-all duration-300 font-medium active:scale-95 ${activeTab === item.path ? 'bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100' : 'text-gray-600 hover:bg-gray-50'}`}
                 style={{
                   transitionDelay: isOpen ? `${idx * 100}ms` : '0ms',
                   opacity: isOpen ? 1 : 0,
-                  transform: `translateX(${isOpen ? 0 : '20px'})`,
-                  borderLeftColor: activeTab === item.path ? 'var(--color-primary)' : 'transparent',
+                  transform: `translateX(${isOpen ? 0 : '15px'})`,
                 }}
                 onClick={() => setIsOpen(false)}
               >
-                <span className={`${navbarStyles.mobileItemIcon} ${activeTab === item.path ? 'fb-text-primary' : ''}`}>{item.icon}</span>
-                <span className={`${navbarStyles.mobileItemText} ${activeTab === item.path ? 'fb-text-primary font-semibold' : ''}`}>{item.name}</span>
+                <span className={`mr-3 text-xl ${activeTab === item.path ? 'text-emerald-500' : 'text-gray-400'}`}>{item.icon}</span>
+                <span className="text-base">{item.name}</span>
               </Link>
             ))}
 

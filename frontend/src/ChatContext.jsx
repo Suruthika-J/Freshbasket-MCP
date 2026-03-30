@@ -33,7 +33,7 @@ export const ChatProvider = ({ children }) => {
         return localStorage.getItem('userRole') || null;
     });
 
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    const backendUrl = import.meta.env.VITE_API_URL;
 
     // Sync auth state on mount and when storage changes
     useEffect(() => {

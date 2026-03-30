@@ -6,7 +6,7 @@ import {
     FiUsers, FiRotateCcw, FiMessageSquare, FiArrowRight
 } from 'react-icons/fi';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const DashboardAlertSummary = () => {
     const [counts, setCounts] = useState({

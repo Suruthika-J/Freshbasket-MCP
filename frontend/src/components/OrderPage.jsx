@@ -72,7 +72,7 @@ const UserOrdersPage = () => {
 
   const fetchAndFilterOrders = async () => {
     try {
-      const resp = await axios.get('http://localhost:4000/api/orders');
+      const resp = await axios.get(`${import.meta.env.VITE_API_URL}/api/orders`);
       const allOrders = resp.data;
       const mine = allOrders.filter(o =>
         o.customer?.email?.toLowerCase() === userEmail.toLowerCase()
@@ -88,7 +88,7 @@ const UserOrdersPage = () => {
     const reviewsMap = {};
     for (const order of orders) {
       try {
-        const response = await axios.get(`http://localhost:4000/api/reviews/order/${order._id}`);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/reviews/order/${order._id}`);
         reviewsMap[order._id] = (response.data.success && response.data.review) ? response.data.review : null;
       } catch (err) {
         console.error('Error fetching review for order:', order._id, err);
@@ -385,7 +385,7 @@ const UserOrdersPage = () => {
                       >
                         {item.imageUrl ? (
                           <img
-                            src={`http://localhost:4000${item.imageUrl}`}
+                            src={`${import.meta.env.VITE_API_URL}${item.imageUrl}`}
                             alt={item.name}
                             className="w-16 h-16 object-cover rounded-lg mr-4"
                           />

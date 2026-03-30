@@ -28,7 +28,7 @@ const ForgotPassword = () => {
 
     try {
       const res = await axios.post(
-        'http://localhost:4000/api/user/forgot-password',
+        `${import.meta.env.VITE_API_URL}/api/user/forgot-password`,
         { email },
         { headers: { 'Content-Type': 'application/json' } }
       );

@@ -65,7 +65,7 @@ const AgentsList = ({ refreshTrigger }) => {
             console.log('📋 Fetching agents from API...');
 
             const token = localStorage.getItem("token"); // or 'adminSession' if you used that
-            const response = await axios.get("http://localhost:4000/api/agents", {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/agents`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -93,7 +93,7 @@ const AgentsList = ({ refreshTrigger }) => {
     const handleStatusToggle = async (agentId, currentStatus) => {
         try {
             const response = await axios.patch(
-                `http://localhost:4000/api/agents/${agentId}/status`,
+                `${import.meta.env.VITE_API_URL}/api/agents/${agentId}/status`,
                 { isActive: !currentStatus }
             );
 
@@ -113,7 +113,7 @@ const AgentsList = ({ refreshTrigger }) => {
         setIsDeleting(true);
         try {
             const response = await axios.delete(
-                `http://localhost:4000/api/agents/${agentToDelete._id}`
+                `${import.meta.env.VITE_API_URL}/api/agents/${agentToDelete._id}`
             );
 
             if (response.data.success) {

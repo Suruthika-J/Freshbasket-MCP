@@ -56,7 +56,7 @@ const UserOrderTracking = ({ isOpen, onClose, order }) => {
         try {
             setLoading(true);
             const response = await axios.get(
-                `http://localhost:4000/api/orders/${order._id}/track`
+                `${import.meta.env.VITE_API_URL}/api/orders/${order._id}/track`
             );
 
             if (response.data.success) {

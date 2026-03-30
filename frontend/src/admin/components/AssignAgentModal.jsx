@@ -11,7 +11,7 @@ const AssignAgentModal = ({ isOpen, onClose, order, onAgentAssigned }) => {
     const [loading, setLoading] = useState(false);
     const [fetchingAgents, setFetchingAgents] = useState(true);
 
-    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    const API_BASE = import.meta.env.VITE_API_URL;
     const API_URL = `${API_BASE}/api`;
 
     useEffect(() => {

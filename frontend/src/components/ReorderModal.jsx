@@ -30,7 +30,7 @@ const ReorderModal = ({ isOpen, onClose, order }) => {
       console.log(`🔄 Fetching reorder data for order: ${order._id}`);
 
       const response = await axios.get(
-        `http://localhost:4000/api/orders/${order._id}/reorder`,
+        `${import.meta.env.VITE_API_URL}/api/orders/${order._id}/reorder`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

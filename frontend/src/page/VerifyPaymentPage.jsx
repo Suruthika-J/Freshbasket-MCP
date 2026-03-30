@@ -18,7 +18,7 @@ const VerifyPaymentPage = () => {
     const [isToastError, setIsToastError] = useState(false);
     const [countdown, setCountdown] = useState(8);
     // ✅ Get API URL from environment variable
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    const apiUrl = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         const params = new URLSearchParams(search);

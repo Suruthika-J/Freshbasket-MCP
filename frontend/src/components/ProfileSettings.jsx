@@ -140,7 +140,7 @@ const ProfileSettings = () => {
 
       // Mock API call - replace with actual endpoint
       const response = await axios.put(
-        'http://localhost:4000/api/user/update-profile',
+        `${import.meta.env.VITE_API_URL}/api/user/update-profile`,
         { [field]: editForm[field] },
         {
           headers: {
@@ -181,7 +181,7 @@ const ProfileSettings = () => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await axios.put(
-        'http://localhost:4000/api/user/change-password',
+        `${import.meta.env.VITE_API_URL}/api/user/change-password`,
         {
           currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword
@@ -223,7 +223,7 @@ const ProfileSettings = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/user/forgot-password',
+        `${import.meta.env.VITE_API_URL}/api/user/forgot-password`,
         { email: forgotPasswordEmail },
         { headers: { 'Content-Type': 'application/json' } }
       );

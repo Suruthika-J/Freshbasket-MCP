@@ -5,7 +5,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaCheck, FaEnvelope } from 'react-icons/fa';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const OtpVerification = () => {
   const location = useLocation();

@@ -36,7 +36,7 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
       const token = localStorage.getItem('authToken');
 
       const response = await axios.post(
-        'http://localhost:4000/api/reviews',
+        `${import.meta.env.VITE_API_URL}/api/reviews`,
         {
           orderId: order._id,
           rating,

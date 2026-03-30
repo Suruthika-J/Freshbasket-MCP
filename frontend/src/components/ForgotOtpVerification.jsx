@@ -90,7 +90,7 @@ const ForgotOtpVerification = () => {
 
     try {
       const res = await axios.post(
-        'http://localhost:4000/api/user/verify-forgot-otp',
+        `${import.meta.env.VITE_API_URL}/api/user/verify-forgot-otp`,
         { email, otp: otpString },
         { headers: { 'Content-Type': 'application/json' } }
       );
@@ -128,7 +128,7 @@ const ForgotOtpVerification = () => {
 
     try {
       const res = await axios.post(
-        'http://localhost:4000/api/user/forgot-password',
+        `${import.meta.env.VITE_API_URL}/api/user/forgot-password`,
         { email },
         { headers: { 'Content-Type': 'application/json' } }
       );

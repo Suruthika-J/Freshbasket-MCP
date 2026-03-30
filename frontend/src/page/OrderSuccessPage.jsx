@@ -11,7 +11,7 @@ const OrderSuccessPage = () => {
     const [countdown, setCountdown] = useState(10);
     const [orderDetails, setOrderDetails] = useState(null);
     const [loading, setLoading] = useState(true);
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    const apiUrl = import.meta.env.VITE_API_URL;
 
     // Fetch order details
     useEffect(() => {

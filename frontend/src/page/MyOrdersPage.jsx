@@ -33,7 +33,7 @@ const MyOrdersPage = () => {
     const [isLegacyReturnModalOpen, setIsLegacyReturnModalOpen] = useState(false);
     const [selectedLegacyOrder, setSelectedLegacyOrder] = useState(null);
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+    const apiUrl = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         fetchOrders();

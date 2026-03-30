@@ -122,7 +122,7 @@ const FarmerProductsModal = ({ isOpen, onClose, farmerData, loading }) => {
                   {product.imageUrl && (
                     <div className="h-48 bg-gray-100 overflow-hidden">
                       <img
-                        src={`http://localhost:4000${product.imageUrl}`}
+                        src={`${import.meta.env.VITE_API_URL}${product.imageUrl}`}
                         alt={product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {

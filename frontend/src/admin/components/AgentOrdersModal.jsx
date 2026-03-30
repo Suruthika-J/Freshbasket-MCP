@@ -219,7 +219,7 @@ const AgentOrdersModal = ({ isOpen, onClose, agent, orders }) => {
                             <div key={index} className="flex items-center space-x-3 bg-white p-3 rounded-lg border border-gray-200">
                               {item.imageUrl ? (
                                 <img
-                                  src={`http://localhost:4000${item.imageUrl}`}
+                                  src={`${import.meta.env.VITE_API_URL}${item.imageUrl}`}
                                   alt={item.name}
                                   className="w-12 h-12 object-cover rounded-lg"
                                 />

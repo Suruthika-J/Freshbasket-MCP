@@ -38,7 +38,7 @@ const AddAgent = ({ onAgentCreated }) => {
 
         try {
             const response = await axios.post(
-                'http://localhost:4000/api/agents',
+                `${import.meta.env.VITE_API_URL}/api/agents`,
                 formData
             );
 

@@ -365,13 +365,13 @@ export default function ListItemsPage() {
 
   const loadItems = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/items');
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/items`);
       const data = response.data;
 
       const withUrls = data.map(item => ({
         ...item,
         imageUrl: item.imageUrl
-          ? `http://localhost:4000${item.imageUrl}`
+          ? `${import.meta.env.VITE_API_URL}${item.imageUrl}`
           : null,
       }));
 
@@ -412,8 +412,8 @@ export default function ListItemsPage() {
   const handleStockCardClick = async (type) => {
     try {
       const endpoint = type === 'low'
-        ? 'http://localhost:4000/api/items/low-stock'
-        : 'http://localhost:4000/api/items/out-of-stock';
+        ? `${import.meta.env.VITE_API_URL}/api/items/low-stock`
+        : `${import.meta.env.VITE_API_URL}/api/items/out-of-stock`;
 
       const response = await axios.get(endpoint);
 
@@ -462,7 +462,7 @@ export default function ListItemsPage() {
     try {
       const token = getToken();
       const response = await axios.put(
-        `http://localhost:4000/api/items/${productId}`,
+        `${import.meta.env.VITE_API_URL}/api/items/${productId}`,
         updatedData,
         {
           headers: {
@@ -486,7 +486,7 @@ export default function ListItemsPage() {
     setIsDeleting(true);
     try {
       const token = getToken();
-      await axios.delete(`http://localhost:4000/api/items/${productToDelete}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/items/${productToDelete}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -518,7 +518,7 @@ export default function ListItemsPage() {
     setDownloadingCSV(true);
 
     try {
-      const response = await axios.get('http://localhost:4000/api/items/download');
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/items/download`);
       const products = response.data;
 
       if (!products || products.length === 0) {
