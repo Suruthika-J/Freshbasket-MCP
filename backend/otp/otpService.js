@@ -33,14 +33,25 @@ export async function verifyOTP(plainOtp, hashedOtp) {
 /**
  * Create Nodemailer transporter using Gmail
  * Requires EMAIL_USER and EMAIL_PASS in .env
+ * TLS settings added for production (Render, Railway, etc.)
  */
 function createTransporter() {
     return nodemailer.createTransport({
         service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // true for port 465 (SSL)
+        pool: true,   // Use pooled connections for reliability
         auth: {
             user: process.env.EMAIL_USER, // Your Gmail address
             pass: process.env.EMAIL_PASS  // Gmail App Password (NOT regular password)
-        }
+        },
+        tls: {
+            rejectUnauthorized: false // Allow self-signed certs on some hosting providers
+        },
+        connectionTimeout: 10000, // 10s to establish connection
+        greetingTimeout: 10000,   // 10s to receive greeting
+        socketTimeout: 15000      // 15s socket inactivity timeout
     });
 }
 
@@ -97,14 +108,19 @@ export async function sendSignupOTP(email, otp, name) {
         `
     };
 
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Signup OTP sent successfully:', info.messageId);
-        return { success: true, messageId: info.messageId };
-    } catch (error) {
-        console.error('❌ Error sending signup OTP:', error);
-        throw new Error('Failed to send OTP email');
-    }
+    console.log(`📧 [OTP] Initiating signup email to: ${email}`);
+
+    // Non-blocking: fire and forget — do NOT await, so API responds immediately
+    transporter.sendMail(mailOptions)
+        .then((info) => {
+            console.log(`✅ [OTP] Signup email sent to ${email} | MessageId: ${info.messageId}`);
+        })
+        .catch((error) => {
+            console.error(`❌ [OTP] Failed to send signup email to ${email}:`, error.message);
+        });
+
+    // Return immediately — email delivery happens in background
+    return { success: true, message: 'OTP email queued for delivery' };
 }
 
 /**
@@ -161,12 +177,17 @@ export async function sendForgotPasswordOTP(email, otp, name) {
         `
     };
 
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Password reset OTP sent successfully:', info.messageId);
-        return { success: true, messageId: info.messageId };
-    } catch (error) {
-        console.error('❌ Error sending password reset OTP:', error);
-        throw new Error('Failed to send OTP email');
-    }
+    console.log(`📧 [OTP] Initiating forgot-password email to: ${email}`);
+
+    // Non-blocking: fire and forget — do NOT await, so API responds immediately
+    transporter.sendMail(mailOptions)
+        .then((info) => {
+            console.log(`✅ [OTP] Forgot-password email sent to ${email} | MessageId: ${info.messageId}`);
+        })
+        .catch((error) => {
+            console.error(`❌ [OTP] Failed to send forgot-password email to ${email}:`, error.message);
+        });
+
+    // Return immediately — email delivery happens in background
+    return { success: true, message: 'OTP email queued for delivery' };
 }

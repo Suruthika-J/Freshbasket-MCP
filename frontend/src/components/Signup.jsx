@@ -238,7 +238,7 @@ const Signup = () => {
         requestData,
         { 
           headers: { 'Content-Type': 'application/json' },
-          timeout: 10000
+          timeout: 30000  // 30s — accounts for cold-start delay on Render/Railway
         }
       );
 
@@ -277,7 +277,7 @@ const Signup = () => {
         errorMessage = 'Cannot connect to server. Please ensure the backend is running on port 4000.';
         console.error('💡 Backend connection failed. Make sure to run: cd backend && npm start');
       } else if (err.code === 'ECONNABORTED') {
-        errorMessage = 'Request timeout. Please try again.';
+        errorMessage = 'Request timeout. The server is taking too long to respond. Please try again.';
       }
       
       toast.error(errorMessage, {

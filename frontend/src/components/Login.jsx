@@ -182,7 +182,7 @@ const Login = () => {
         },
         { 
           headers: { "Content-Type": "application/json" },
-          timeout: 10000
+          timeout: 30000  // 30s — accounts for cold-start delay on Render/Railway
         }
       );
 
@@ -226,7 +226,7 @@ const Login = () => {
 
         setError(errorData.message || "Login error");
       } else if (err.code === 'ECONNABORTED') {
-        setError("Connection timeout. Please try again.");
+        setError("Connection timeout. The server is taking too long. Please try again.");
       } else {
         setError("Unable to reach server. Please check your connection.");
       }
@@ -251,7 +251,7 @@ const Login = () => {
           credential: credentialResponse.credential, // ✅ FIXED: Changed from 'token' to 'credential'
         },
         { 
-          timeout: 10000,
+          timeout: 30000,  // 30s — accounts for cold-start delay on Render/Railway
           headers: { "Content-Type": "application/json" }
         }
       );
