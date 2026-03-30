@@ -122,26 +122,26 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
     >
       <form onSubmit={handleSubmit}>
         {/* Order Info */}
-        <div className="mb-6 p-4 fb-primary-subtle rounded-lg border fb-border">
-          <p className="fb-text-secondary text-sm mb-1">Order ID</p>
-          <p className="fb-text font-semibold break-all">{order.orderId}</p>
+        <div className="mb-6 p-4 fb-primary-subtle rounded-xl border fb-border text-center">
+          <p className="fb-text-secondary text-xs uppercase tracking-widest mb-1">Order ID</p>
+          <p className="fb-text font-bold text-base tracking-wider">{order.orderId}</p>
         </div>
 
         {/* Star Rating */}
         <div className="mb-6">
-          <label className="block fb-text-secondary font-semibold mb-3">
+          <label className="block text-center fb-text-secondary font-semibold mb-4">
             How would you rate this order?
           </label>
-          <div className="flex justify-center gap-2 mb-2">
+          <div className="flex justify-center items-center gap-3 mb-3">
             {renderStars()}
           </div>
-          <p className="text-center fb-text-muted text-sm font-medium">
+          <p className="text-center fb-text-muted text-sm font-medium min-h-[20px]">
             {rating === 0 && 'Select a rating'}
-            {rating === 1 && 'Poor'}
-            {rating === 2 && 'Fair'}
-            {rating === 3 && 'Good'}
-            {rating === 4 && 'Very Good'}
-            {rating === 5 && 'Excellent'}
+            {rating === 1 && '⭐ Poor'}
+            {rating === 2 && '⭐⭐ Fair'}
+            {rating === 3 && '⭐⭐⭐ Good'}
+            {rating === 4 && '⭐⭐⭐⭐ Very Good'}
+            {rating === 5 && '⭐⭐⭐⭐⭐ Excellent!'}
           </p>
         </div>
 
@@ -154,7 +154,7 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Tell us about your experience with this order..."
-            className="fb-input resize-none h-32"
+            className="fb-input resize-none h-32 w-full"
             maxLength="1000"
             disabled={isSubmitting}
           />
@@ -174,13 +174,13 @@ const RatingModal = ({ isOpen, onClose, order, onReviewSubmitted }) => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="fb-btn-primary w-full py-3 shadow-lg"
+          className="fb-btn-primary w-full py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 text-base font-semibold tracking-wide mt-2"
         >
           {isSubmitting ? (
-            <div className="flex items-center gap-2">
+            <>
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Submitting...
-            </div>
+            </>
           ) : 'Submit Review'}
         </button>
       </form>
