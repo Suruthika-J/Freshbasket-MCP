@@ -108,18 +108,20 @@ export async function sendSignupOTP(email, otp, name) {
         `
     };
 
-    console.log(`📧 [OTP] Initiating signup email to: ${email}`);
+    console.log(`📧 [OTP] Triggering signup email to: ${email}`);
 
-    // Non-blocking: fire and forget — do NOT await, so API responds immediately
-    transporter.sendMail(mailOptions)
-        .then((info) => {
-            console.log(`✅ [OTP] Signup email sent to ${email} | MessageId: ${info.messageId}`);
-        })
-        .catch((error) => {
-            console.error(`❌ [OTP] Failed to send signup email to ${email}:`, error.message);
-        });
+    // Non-blocking: use setTimeout to yield thread entirely
+    setTimeout(() => {
+        transporter.sendMail(mailOptions)
+            .then((info) => {
+                console.log(`✅ [OTP] Signup email sent successfully to ${email} | MessageId: ${info.messageId}`);
+            })
+            .catch((error) => {
+                console.error(`❌ [OTP] Email error sending to ${email}:`, error);
+            });
+    }, 0);
 
-    // Return immediately — email delivery happens in background
+    // Return immediately
     return { success: true, message: 'OTP email queued for delivery' };
 }
 
@@ -177,17 +179,19 @@ export async function sendForgotPasswordOTP(email, otp, name) {
         `
     };
 
-    console.log(`📧 [OTP] Initiating forgot-password email to: ${email}`);
+    console.log(`📧 [OTP] Triggering forgot-password email to: ${email}`);
 
-    // Non-blocking: fire and forget — do NOT await, so API responds immediately
-    transporter.sendMail(mailOptions)
-        .then((info) => {
-            console.log(`✅ [OTP] Forgot-password email sent to ${email} | MessageId: ${info.messageId}`);
-        })
-        .catch((error) => {
-            console.error(`❌ [OTP] Failed to send forgot-password email to ${email}:`, error.message);
-        });
+    // Non-blocking: use setTimeout to yield thread entirely
+    setTimeout(() => {
+        transporter.sendMail(mailOptions)
+            .then((info) => {
+                console.log(`✅ [OTP] Forgot-password email sent successfully to ${email} | MessageId: ${info.messageId}`);
+            })
+            .catch((error) => {
+                console.error(`❌ [OTP] Email error sending to ${email}:`, error);
+            });
+    }, 0);
 
-    // Return immediately — email delivery happens in background
+    // Return immediately
     return { success: true, message: 'OTP email queued for delivery' };
 }

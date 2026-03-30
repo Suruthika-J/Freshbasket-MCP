@@ -238,7 +238,7 @@ const Signup = () => {
         requestData,
         { 
           headers: { 'Content-Type': 'application/json' },
-          timeout: 30000  // 30s — accounts for cold-start delay on Render/Railway
+          timeout: 60000  // 60s timeout limit as requested to handle any slow operations safely
         }
       );
 

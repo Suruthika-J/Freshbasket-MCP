@@ -169,7 +169,9 @@ export async function googleAuthSuccess(req, res) {
 // OTP-BASED SIGNUP FLOW - ✅ UPDATED WITH PINCODE SUPPORT
 // ============================================
 export async function signupWithOtp(req, res) {
-    console.log('🔵 Signup request received:', { name: req.body.name, email: req.body.email, role: req.body.role });
+    console.log('--- START SIGNUP FLOW ---');
+    console.log('📌 CRITICAL LOG: Request received for signup');
+    console.log('🔵 Signup request details:', { name: req.body.name, email: req.body.email, role: req.body.role });
 
     // ✅ UPDATED: Added pincode, city, state parameters
     const { name, email, password, role, district, pincode, city, state } = req.body;
@@ -228,8 +230,7 @@ export async function signupWithOtp(req, res) {
     try {
         console.log('🔍 Checking for existing user...');
         const existingUser = await User.findOne({ email: email.toLowerCase() });
-        console.log('✅ User check completed');
-
+        
         if (existingUser) {
             if (!existingUser.isVerified) {
                 const otp = generateOTP();
@@ -239,15 +240,23 @@ export async function signupWithOtp(req, res) {
                 existingUser.otpExpiry = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
                 existingUser.otpPurpose = 'signup';
                 await existingUser.save();
+                
+                console.log('📌 CRITICAL LOG: User saved (existing/unverified updated)');
 
-                await sendSignupOTP(existingUser.email, otp, existingUser.name);
-
-                return res.status(200).json({
+                // 🔥 Send Response BEFORE sending email 🔥
+                res.status(200).json({
                     success: true,
                     message: "Account exists but not verified. New OTP sent to your email.",
                     email: existingUser.email,
                     requiresVerification: true
                 });
+                console.log('📌 CRITICAL LOG: Response sent (for existing user)');
+
+                // 🔥 Trigger email non-blocking 🔥
+                sendSignupOTP(existingUser.email, otp, existingUser.name);
+                console.log('📌 CRITICAL LOG: Email triggered asynchronously');
+                
+                return; // End execution
             }
 
             return res.status(409).json({
@@ -256,7 +265,10 @@ export async function signupWithOtp(req, res) {
             });
         }
 
+        // --- NEW USER CREATION FLOW ---
         const hashedPassword = await bcrypt.hash(password, 10);
+        console.log('📌 CRITICAL LOG: Password hashed');
+        
         const otp = generateOTP();
         const hashedOtp = await hashOTP(otp);
 
@@ -295,11 +307,9 @@ export async function signupWithOtp(req, res) {
         }
 
         const user = await User.create(userData);
+        console.log('📌 CRITICAL LOG: User saved (new user creation complete)');
 
-        sendSignupOTP(user.email, otp, user.name).catch(error => {
-            console.error('Failed to send signup OTP:', error);
-        });
-
+        // 🔥 Send Response BEFORE sending email 🔥
         res.status(201).json({
             success: true,
             message: userRole === 'farmer'
@@ -309,6 +319,13 @@ export async function signupWithOtp(req, res) {
             requiresVerification: true,
             role: userRole
         });
+        console.log('📌 CRITICAL LOG: Response sent (for new user)');
+
+        // 🔥 Trigger email non-blocking 🔥
+        sendSignupOTP(user.email, otp, user.name);
+        console.log('📌 CRITICAL LOG: Email triggered asynchronously');
+        console.log('--- END SIGNUP FLOW ---');
+
     } catch (err) {
         console.error('Signup error:', err);
         res.status(500).json({
