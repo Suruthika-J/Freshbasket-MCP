@@ -1,8 +1,51 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import { FiLogOut, FiUser, FiBell, FiSearch, FiSettings } from 'react-icons/fi';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const TopNavbar = ({ onLogout, adminUser }) => {
+    const [pendingFarmersCount, setPendingFarmersCount] = useState(0);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const notificationsRef = useRef(null);
+
+    const fetchPendingFarmersCount = async () => {
+        try {
+            const token = JSON.parse(localStorage.getItem('adminSession'))?.token;
+            if (!token) return;
+            const response = await axios.get(
+                `${API_BASE_URL}/api/user/admin/farmers/pending`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (response.data.success) {
+                setPendingFarmersCount(response.data.data.length);
+            }
+        } catch (error) {
+            console.error('Error fetching pending farmers count:', error);
+        }
+    };
+
+    useEffect(() => {
+        // Initial fetch
+        fetchPendingFarmersCount();
+        
+        // Polling every 30 seconds for dynamic updates
+        const intervalId = setInterval(fetchPendingFarmersCount, 30000);
+        
+        return () => clearInterval(intervalId);
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+                setShowNotifications(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     return (
         <nav className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-30 transition-all duration-300">
             {/* Search Bar - Aesthetic Only */}
@@ -17,10 +60,65 @@ const TopNavbar = ({ onLogout, adminUser }) => {
 
             {/* Right side: Actions + Profile */}
             <div className="flex items-center gap-6 ml-auto">
-                {/* Bell - Aesthetic only for now */}
-                <div className="relative cursor-pointer hover:bg-gray-100 p-2.5 rounded-xl transition-all duration-200">
-                    <FiBell size={20} className="text-gray-600" />
-                    <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white shadow-sm" />
+                {/* Notification Bell */}
+                <div className="relative" ref={notificationsRef}>
+                    <div 
+                        className="relative cursor-pointer hover:bg-gray-100 p-2.5 rounded-xl transition-all duration-200"
+                        onClick={() => setShowNotifications(!showNotifications)}
+                    >
+                        <FiBell size={20} className="text-gray-600" />
+                        {pendingFarmersCount > 0 && (
+                            <div className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center">
+                                <span className="text-[9px] text-white font-bold">{pendingFarmersCount > 9 ? '9+' : pendingFarmersCount}</span>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Notification Dropdown */}
+                    {showNotifications && (
+                        <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-xl z-50 border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
+                                {pendingFarmersCount > 0 && (
+                                    <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {pendingFarmersCount} New
+                                    </span>
+                                )}
+                            </div>
+                            <div className="max-h-96 overflow-y-auto">
+                                {pendingFarmersCount > 0 ? (
+                                    <Link
+                                        to="/admin/farmers"
+                                        onClick={() => setShowNotifications(false)}
+                                        className="block px-4 py-4 hover:bg-gray-50 transition-colors border-b border-gray-50 group"
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className="bg-amber-100 rounded-xl p-2.5 flex-shrink-0 group-hover:bg-amber-200 transition-colors">
+                                                <span className="text-amber-600 text-lg">🌾</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-sm font-semibold text-gray-900 mb-0.5">
+                                                    Farmer Registration
+                                                </p>
+                                                <p className="text-xs text-gray-500 line-clamp-2">
+                                                    {pendingFarmersCount} Farmer{pendingFarmersCount > 1 ? 's' : ''} pending approval. Review their applications now.
+                                                </p>
+                                            </div>
+                                            <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></div>
+                                        </div>
+                                    </Link>
+                                ) : (
+                                    <div className="px-4 py-8 text-center flex flex-col items-center justify-center">
+                                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                                            <FiBell className="text-gray-300 text-xl" />
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-900">All caught up!</p>
+                                        <p className="text-xs text-gray-500 mt-1">No new notifications right now</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Profile Dropdown Simulation */}
