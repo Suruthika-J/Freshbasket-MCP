@@ -49,9 +49,43 @@ function createTransporter() {
         tls: {
             rejectUnauthorized: false // Allow self-signed certs on some hosting providers
         },
-        connectionTimeout: 10000, // 10s to establish connection
-        greetingTimeout: 10000,   // 10s to receive greeting
-        socketTimeout: 15000      // 15s socket inactivity timeout
+        connectionTimeout: 5000, // 5s to establish connection
+        greetingTimeout: 5000,   // 5s to receive greeting
+        socketTimeout: 5000      // 5s socket inactivity timeout
+    });
+}
+
+/**
+ * Optional function to verify SMTP connection for debugging
+ */
+export async function verifySMTPConnection() {
+    const transporter = createTransporter();
+    try {
+        const success = await transporter.verify();
+        console.log("✅ SMTP Server is ready to take our messages");
+        return success;
+    } catch (error) {
+        console.error("❌ SMTP Connection Error:", error);
+        return false;
+    }
+}
+
+/**
+ * Reusable function to send email non-blocking using setImmediate
+ */
+function sendEmailAsync(email, mailOptions) {
+    console.log(`📧 [OTP] Triggering background email to: ${email}`);
+    
+    // Fully non-blocking background queueing using setImmediate
+    setImmediate(() => {
+        const transporter = createTransporter();
+        transporter.sendMail(mailOptions)
+            .then((info) => {
+                console.log(`✅ [OTP] Email sent successfully to ${email} | MessageId: ${info.messageId}`);
+            })
+            .catch((error) => {
+                console.error(`❌ [OTP] Email error sending to ${email}:`, error.message || error);
+            });
     });
 }
 
@@ -108,20 +142,7 @@ export async function sendSignupOTP(email, otp, name) {
         `
     };
 
-    console.log(`📧 [OTP] Triggering signup email to: ${email}`);
-
-    // Non-blocking: use setTimeout to yield thread entirely
-    setTimeout(() => {
-        transporter.sendMail(mailOptions)
-            .then((info) => {
-                console.log(`✅ [OTP] Signup email sent successfully to ${email} | MessageId: ${info.messageId}`);
-            })
-            .catch((error) => {
-                console.error(`❌ [OTP] Email error sending to ${email}:`, error);
-            });
-    }, 0);
-
-    // Return immediately
+    sendEmailAsync(email, mailOptions);
     return { success: true, message: 'OTP email queued for delivery' };
 }
 
@@ -179,19 +200,6 @@ export async function sendForgotPasswordOTP(email, otp, name) {
         `
     };
 
-    console.log(`📧 [OTP] Triggering forgot-password email to: ${email}`);
-
-    // Non-blocking: use setTimeout to yield thread entirely
-    setTimeout(() => {
-        transporter.sendMail(mailOptions)
-            .then((info) => {
-                console.log(`✅ [OTP] Forgot-password email sent successfully to ${email} | MessageId: ${info.messageId}`);
-            })
-            .catch((error) => {
-                console.error(`❌ [OTP] Email error sending to ${email}:`, error);
-            });
-    }, 0);
-
-    // Return immediately
+    sendEmailAsync(email, mailOptions);
     return { success: true, message: 'OTP email queued for delivery' };
 }
