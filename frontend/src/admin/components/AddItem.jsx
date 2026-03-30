@@ -4,6 +4,7 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import { FiUpload, FiX, FiSave, FiCamera } from "react-icons/fi";
+import { toast } from "react-toastify";
 import { addItemPageStyles as styles } from "../assets/adminStyles";
 import CameraCapture from "../../components/CameraCapture/CameraCapture";
 
@@ -136,7 +137,7 @@ export default function AddItemPage() {
 
     // Validation
     if (formData.visibleDistricts.length === 0) {
-      alert('Please select at least one district where this product will be visible');
+      toast.error('Please select at least one district where this product will be visible');
       return;
     }
 
@@ -175,13 +176,13 @@ export default function AddItemPage() {
       });
 
       console.log("Created", res.data);
-      alert(`Product added successfully! Visible in ${formData.visibleDistricts.length} district(s)`);
+      toast.success(`Product added successfully! Visible in ${formData.visibleDistricts.length} district(s)`);
       setFormData(initialFormState);
       setImageError("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err) {
       console.error(err);
-      alert("Upload failed: " + (err.response?.data?.message || err.message));
+      toast.error("Upload failed: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }

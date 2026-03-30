@@ -244,24 +244,37 @@ const BannerHome = ({ onSearch }) => {
             ) : (
               // ========== LOGIN BUTTONS FOR NON-AUTHENTICATED ==========
               <>
-                <div className="mt-8 space-y-4">
-                  {/* Customer Login Button */}
+                <div className="mt-8 flex flex-col sm:flex-row gap-4 w-full">
+                  {/* Customer Button */}
                   <button
                     onClick={handleCustomerLogin}
-                    className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 text-white font-bold text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
-                    style={{ background: 'linear-gradient(to right, var(--color-primary-light), var(--color-primary))' }}
+                    className="relative group overflow-hidden w-full sm:w-1/2 flex items-center justify-center gap-3 px-6 py-4 rounded-xl shadow-md border border-emerald-500/20 hover:shadow-[0_8px_20px_rgb(16,185,129,0.3)] transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+                    style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
                   >
-                    <FiUsers className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                    <span>Login as Customer</span>
+                    {/* Hover Shine Glare Animation */}
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out skew-x-12 pointer-events-none"></div>
+                    
+                    <div className="absolute inset-0 rounded-xl bg-white/0 group-hover:bg-white/10 transition-colors duration-300 pointer-events-none"></div>
+                    <FiUsers className="w-5 h-5 text-white filter drop-shadow-sm transform group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 relative z-10" />
+                    <span className="text-white font-bold text-base tracking-wide drop-shadow-sm relative z-10">
+                      Login as Customer
+                    </span>
                   </button>
 
-                  {/* Farmer Login Button */}
+                  {/* Farmer Button */}
                   <button
                     onClick={handleFarmerLogin}
-                    className="w-full group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-amber-500/50 transform hover:scale-105 transition-all duration-300"
+                    className="relative group overflow-hidden w-full sm:w-1/2 flex items-center justify-center gap-3 px-6 py-4 rounded-xl shadow-md border border-amber-500/20 hover:shadow-[0_8px_20px_rgb(245,158,11,0.3)] transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+                    style={{ background: 'linear-gradient(135deg, #fbbf24, #d97706)' }}
                   >
-                    <GiFarmer className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                    <span>Login as Farmer</span>
+                    {/* Hover Shine Glare Animation */}
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out skew-x-12 pointer-events-none"></div>
+                    
+                    <div className="absolute inset-0 rounded-xl bg-white/0 group-hover:bg-white/10 transition-colors duration-300 pointer-events-none"></div>
+                    <GiFarmer className="w-6 h-6 text-white filter drop-shadow-sm -mt-0.5 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 relative z-10" />
+                    <span className="text-white font-bold text-base tracking-wide drop-shadow-sm relative z-10">
+                      Login as Farmer
+                    </span>
                   </button>
                 </div>
 

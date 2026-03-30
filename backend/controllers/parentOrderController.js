@@ -328,7 +328,7 @@ export const createParentOrder = async (req, res) => {
                 payment_method_types: ['card'],
                 line_items: lineItems,
                 mode: 'payment',
-                success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-success/${parentOrderId}`,
+                success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-success/${parentOrder._id}`,
                 cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/checkout`,
                 metadata: {
                     parentOrderId: parentOrder._id.toString(),

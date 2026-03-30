@@ -15,6 +15,7 @@ import DeliveryAgents from './components/DeliveryAgents';
 import AdminReturnRequests from './components/AdminReturnRequests';
 import FarmerManagement from './components/FarmerManagement';
 import AdminChat from './components/AdminChat';
+import FeedbackList from './pages/FeedbackList';
 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -154,6 +155,7 @@ function AdminApp() {
           <Route path="/returns" element={<AdminReturnRequests />} />
           <Route path="/farmers" element={<FarmerManagement />} />
           <Route path="/chat" element={<AdminChat />} />
+          <Route path="/feedback" element={<FeedbackList />} />
         </Route>
         <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>

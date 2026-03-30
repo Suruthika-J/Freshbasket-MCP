@@ -4,7 +4,7 @@ import axios from 'axios';
 import {
     FiHome, FiPlusCircle, FiList, FiShoppingCart,
     FiTruck, FiUsers, FiRotateCcw, FiMessageSquare,
-    FiChevronRight, FiGrid
+    FiChevronRight, FiGrid, FiStar
 } from 'react-icons/fi';
 import { useChat } from '../../ChatContext';
 
@@ -71,6 +71,7 @@ const Sidebar = () => {
             badge: unreadTotal,
             badgeColor: 'bg-blue-500'
         },
+        { path: '/admin/feedback', icon: <FiStar />, label: 'Feedback & Reviews' }
     ];
 
     return (

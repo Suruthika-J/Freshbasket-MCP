@@ -21,7 +21,7 @@ import Contact from './page/Contact';
 import Items from './page/Items';
 import Cart from './page/Cart';
 import CheckoutPage from './components/Checkout';
-import MyOrders from './components/OrderPage';
+import MyOrdersPage from './page/MyOrdersPage';
 import VerifyPaymentPage from './page/VerifyPaymentPage';
 import OrderSuccessPage from './page/OrderSuccessPage';
 import RecipeChatbot from './page/RecipeChatbot';
@@ -193,7 +193,7 @@ const AppInner = () => {
             {/* ==================== PROTECTED ROUTES (Regular Users) ==================== */}
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
-            <Route path="/myorders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+            <Route path="/myorders" element={<ProtectedRoute><MyOrdersPage /></ProtectedRoute>} />
             <Route path="/myorders/verify" element={<ProtectedRoute><VerifyPaymentPage /></ProtectedRoute>} />
             <Route path="/order-success/:orderId" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
             <Route path="/meal-planner" element={<ProtectedRoute><MealPlanner /></ProtectedRoute>} />

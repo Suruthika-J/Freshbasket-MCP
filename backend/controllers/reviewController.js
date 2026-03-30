@@ -1,6 +1,7 @@
 // backend/controllers/reviewController.js
 import Review from '../models/reviewModel.js';
 import Order from '../models/orderModel.js';
+import ParentOrder from '../models/ParentOrderModel.js';
 
 // Add a new review
 export const addReview = async (req, res) => {
@@ -26,12 +27,18 @@ export const addReview = async (req, res) => {
     }
 
     // Check if order exists
-    const order = await Order.findById(orderId);
+    let order = await Order.findById(orderId);
+    let isParentOrder = false;
+
     if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      });
+      order = await ParentOrder.findById(orderId).populate('subOrders');
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: 'Order not found'
+        });
+      }
+      isParentOrder = true;
     }
 
     // Verify order belongs to user
@@ -43,10 +50,14 @@ export const addReview = async (req, res) => {
     }
 
     // Check if order is delivered
-    if (order.status !== 'Delivered') {
+    const isDelivered = isParentOrder 
+      ? ['completed'].includes(order.overallStatus?.toLowerCase())
+      : ['Delivered', 'completed'].includes(order.status);
+
+    if (!isDelivered) {
       return res.status(400).json({
         success: false,
-        message: 'You can only review delivered orders'
+        message: 'You can only review delivered/completed orders'
       });
     }
 
@@ -59,6 +70,23 @@ export const addReview = async (req, res) => {
       });
     }
 
+    let itemsArray = [];
+    if (isParentOrder) {
+      itemsArray = order.subOrders.flatMap(sub => 
+        sub.items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          imageUrl: item.imageUrl
+        }))
+      );
+    } else {
+      itemsArray = order.items.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        imageUrl: item.imageUrl
+      }));
+    }
+
     // Create review
     const review = new Review({
       orderId,
@@ -67,11 +95,7 @@ export const addReview = async (req, res) => {
       userEmail,
       rating,
       comment,
-      items: order.items.map(item => ({
-        productId: item.productId,
-        name: item.name,
-        imageUrl: item.imageUrl
-      }))
+      items: itemsArray
     });
 
     await review.save();

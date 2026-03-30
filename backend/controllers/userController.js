@@ -750,6 +750,7 @@ export async function loginUser(req, res) {
         // Enforce which roles are allowed per login page.
         // This is the backend security gate — frontend UI alone is not enough.
         // ============================================
+        const { loginType } = req.body;
         const effectiveRole = isAgent ? 'agent' : (user.role || 'user');
 
         console.log('🔐 STEP 7: Validating loginType...');
@@ -760,8 +761,8 @@ export async function loginUser(req, res) {
             // Define which roles each login page permits
             const allowedRoles = {
                 customer: ['user', 'agent'],  // Customer page: customers + delivery agents
-                farmer:   ['farmer'],          // Farmer page: farmers only
-                admin:    ['admin'],           // Admin/Retailer page: admins only
+                farmer: ['farmer'],          // Farmer page: farmers only
+                admin: ['admin'],           // Admin/Retailer page: admins only
             };
 
             const permitted = allowedRoles[loginType];

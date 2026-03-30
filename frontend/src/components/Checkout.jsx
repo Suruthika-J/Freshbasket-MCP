@@ -192,7 +192,7 @@ const CheckoutPage = () => {
         });
 
         setTimeout(() => {
-          navigate('/myorders');
+          navigate(`/order-success/${createdOrder._id}`);
         }, 1500);
       } else {
         throw new Error(res.data.message || 'Failed to create order');

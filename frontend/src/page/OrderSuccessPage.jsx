@@ -18,9 +18,33 @@ const OrderSuccessPage = () => {
         const fetchOrderDetails = async () => {
             try {
                 const token = localStorage.getItem('authToken');
-                const response = await axios.get(`${apiUrl}/api/orders/${orderId}`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {}
-                });
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                
+                // 1. Try fetching as a parent order first
+                try {
+                    const response = await axios.get(`${apiUrl}/api/parent-orders/${orderId}`, { headers });
+                    if (response.data.success && response.data.parentOrder) {
+                        const po = response.data.parentOrder;
+                        const flatItems = po.subOrders ? po.subOrders.flatMap(so => so.items || []) : [];
+                        
+                        setOrderDetails({
+                            orderId: po.parentOrderId || orderId,
+                            createdAt: po.createdAt || new Date().toISOString(),
+                            status: (po.paymentStatus === 'Paid' ? 'Paid' : po.overallStatus) || 'SUCCESSFUL',
+                            paymentMethod: po.paymentMethod || 'Unknown',
+                            total: po.totalAmount || 0,
+                            items: flatItems,
+                            customer: po.customer || {}
+                        });
+                        setLoading(false);
+                        return;
+                    }
+                } catch (parentErr) {
+                    console.log('Not a parent order, falling back to legacy orders...', parentErr?.response?.data || parentErr.message);
+                }
+
+                // 2. Fallback to legacy orders
+                const response = await axios.get(`${apiUrl}/api/orders/${orderId}`, { headers });
                 setOrderDetails(response.data);
             } catch (error) {
                 console.error('Error fetching order details:', error);
