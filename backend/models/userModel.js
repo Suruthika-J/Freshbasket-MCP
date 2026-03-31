@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema({
       message: 'Phone number must be 10 digits'
     }
   },
+  address: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   location: {
     city: { type: String, default: '-' },
     state: { type: String, default: 'Tamil Nadu' },

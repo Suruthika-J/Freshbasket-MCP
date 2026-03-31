@@ -60,7 +60,8 @@ const CheckoutPage = () => {
           ...prev,
           name: userData.name || '',
           email: userData.email || '',
-          phone: userData.phone || ''
+          phone: userData.phone || '',
+          address: userData.address || ''
         }));
       }
     } catch (error) {

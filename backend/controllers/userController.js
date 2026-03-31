@@ -6,6 +6,7 @@ import User from "../models/userModel.js";
 import DeliveryAgent from "../models/deliveryAgentModel.js";
 import Return from "../models/ReturnModel.js";
 import Message from "../models/Message.js";
+import ParentOrder from "../models/ParentOrderModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import validator from "validator";
@@ -884,6 +885,7 @@ export async function loginUser(req, res) {
                 email: user.email,
                 role: userRole,
                 phone: user.phone,
+                address: user.address,
                 location: user.location,
                 district: user.district,
                 isVerified: user.isVerified,
@@ -948,10 +950,10 @@ export async function getUserProfile(req, res) {
 
 export async function updateProfile(req, res) {
     try {
-        const { name, email, phone } = req.body;
+        const { name, email, phone, address } = req.body;
         const userId = req.user._id;
 
-        if (!name && !email && !phone) {
+        if (!name && !email && !phone && !address) {
             return res.status(400).json({
                 success: false,
                 message: 'At least one field is required to update'
@@ -1001,18 +1003,22 @@ export async function updateProfile(req, res) {
         }
 
         if (phone !== undefined) {
-            if (phone.trim()) {
-                const cleanPhone = phone.replace(/\D/g, '');
-                if (cleanPhone.length !== 10) {
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Phone number must be 10 digits'
-                    });
-                }
-                updateData.phone = cleanPhone;
-            } else {
-                updateData.phone = '';
+          if (phone.trim()) {
+            const cleanPhone = phone.replace(/\D/g, '');
+            if (cleanPhone.length !== 10) {
+              return res.status(400).json({
+                success: false,
+                message: 'Phone number must be 10 digits'
+              });
             }
+            updateData.phone = cleanPhone;
+          } else {
+            updateData.phone = '';
+          }
+        }
+
+        if (address !== undefined) {
+          updateData.address = address.trim();
         }
 
         updateData.profileUpdatedAt = new Date();
@@ -1131,16 +1137,30 @@ export async function getUserStats(req, res) {
     try {
         const userId = req.user._id;
 
+        // Fetch real order statistics from ParentOrder collection
+        const totalOrders = await ParentOrder.countDocuments({ user: userId });
+        const completedOrders = await ParentOrder.countDocuments({
+            user: userId,
+            orderStatus: 'completed'
+        });
+
+        const lastOrder = await ParentOrder.findOne({ user: userId })
+            .sort({ date: -1 })
+            .select('date');
+
         const stats = {
-            totalOrders: 12,
-            completedOrders: 10,
-            lastOrderDate: '2025-01-10',
+            totalOrders,
+            completedOrders,
+            lastOrderDate: lastOrder ? lastOrder.date : null,
             accountCreated: req.user.createdAt,
             lastProfileUpdate: req.user.profileUpdatedAt || req.user.updatedAt
         };
 
         res.status(200).json({
             success: true,
+            totalOrders: stats.totalOrders,
+            completedOrders: stats.completedOrders,
+            lastOrderDate: stats.lastOrderDate,
             data: stats
         });
     } catch (error) {

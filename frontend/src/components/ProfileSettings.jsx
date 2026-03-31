@@ -20,6 +20,7 @@ import {
   FaChevronUp
 } from 'react-icons/fa';
 import axios from 'axios';
+import Modal from './Modal';
 
 const ProfileSettings = () => {
   const navigate = useNavigate();
@@ -38,7 +39,8 @@ const ProfileSettings = () => {
   const [editForm, setEditForm] = useState({
     name: '',
     email: '',
-    phone: ''
+    phone: '',
+    address: ''
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -69,21 +71,57 @@ const ProfileSettings = () => {
         }
 
         if (storedUserData) {
-          const parsedData = JSON.parse(storedUserData);
-          setUserData(parsedData);
-          setEditForm({
-            name: parsedData.name || '',
-            email: parsedData.email || '',
-            phone: parsedData.phone || ''
-          });
-          setForgotPasswordEmail(parsedData.email || '');
+          try {
+            const parsedData = JSON.parse(storedUserData);
+            setUserData(parsedData);
+            setEditForm({
+              name: parsedData.name || '',
+              email: parsedData.email || '',
+              phone: parsedData.phone || '',
+              address: parsedData.address || ''
+            });
+            setForgotPasswordEmail(parsedData.email || '');
+          } catch (e) {
+            console.error('Failed to parse stored user data:', e);
+          }
+        }
 
-          // Fetch order statistics (mock data - replace with actual API call)
-          setOrderStats({
-            totalOrders: 12,
-            completedOrders: 10,
-            lastOrderDate: '2025-01-10'
+        // Fetch and update user data from backend to ensure synchronization
+        try {
+          const profileResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
+          
+          if (profileResponse.data.success) {
+            const freshData = profileResponse.data.data; // Corrected from .user to .data
+            setUserData(freshData);
+            setEditForm({
+              name: freshData.name || '',
+              email: freshData.email || '',
+              phone: freshData.phone || '',
+              address: freshData.address || ''
+            });
+            localStorage.setItem('userData', JSON.stringify(freshData));
+          }
+        } catch (error) {
+          console.error('Error fetching fresh user data:', error);
+        }
+
+        // Fetch actual order statistics
+        try {
+          const statsResponse = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/stats`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (statsResponse.data.success) {
+            setOrderStats({
+              totalOrders: statsResponse.data.totalOrders || 0,
+              completedOrders: statsResponse.data.completedOrders || 0,
+              lastOrderDate: statsResponse.data.lastOrderDate ? new Date(statsResponse.data.lastOrderDate).toLocaleDateString() : 'No orders yet'
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching order statistics:', error);
+          // Keep existing defaults or mock data if fetch fails
         }
       } catch (error) {
         console.error('Error loading user data:', error);
@@ -108,7 +146,8 @@ const ProfileSettings = () => {
       setEditForm({
         name: userData.name || '',
         email: userData.email || '',
-        phone: userData.phone || ''
+        phone: userData.phone || '',
+        address: userData.address || ''
       });
     }
     setErrors({});
@@ -140,7 +179,7 @@ const ProfileSettings = () => {
 
       // Mock API call - replace with actual endpoint
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/user/update-profile`,
+        `${import.meta.env.VITE_API_URL}/api/user/profile`,
         { [field]: editForm[field] },
         {
           headers: {
@@ -151,7 +190,7 @@ const ProfileSettings = () => {
       );
 
       if (response.data.success) {
-        const updatedUserData = { ...userData, [field]: editForm[field] };
+        const updatedUserData = response.data.data;
         setUserData(updatedUserData);
         localStorage.setItem('userData', JSON.stringify(updatedUserData));
         setEditingField(null);
@@ -425,12 +464,60 @@ const ProfileSettings = () => {
                 </div>
                 {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
               </div>
+              {/* Shipping Address Field */}
+              <div className="mb-6">
+                <label className="block fb-text-secondary mb-2">Shipping Address</label>
+                <div className="flex items-start">
+                  {editingField === 'address' ? (
+                    <div className="flex-1 flex flex-col space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <textarea
+                          value={editForm.address}
+                          onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                          placeholder="Enter your full address"
+                          rows="3"
+                          className="flex-1 fb-surface border fb-border rounded-lg px-4 py-2 fb-text focus:fb-border-primary focus:outline-none resize-none"
+                        />
+                        <div className="flex flex-col space-y-2">
+                          <button
+                            onClick={() => handleSave('address')}
+                            className="fb-btn-primary px-3 py-2 rounded-lg transition-colors"
+                          >
+                            <FaSave />
+                          </button>
+                          <button
+                            onClick={handleCancel}
+                            className="fb-bg-surface-alt hover:fb-bg-surface-alt/80 fb-text px-3 py-2 rounded-lg transition-colors border fb-border"
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex items-start justify-between bg-fb-surface-alt/20 p-3 rounded-lg border fb-border">
+                      <div className="flex items-start">
+                        <FaMapMarkerAlt className="mr-3 fb-text-primary mt-1" />
+                        <span className="fb-text text-sm whitespace-pre-wrap">{userData.address || 'Address not provided'}</span>
+                      </div>
+                      <button
+                        onClick={() => handleEdit('address')}
+                        className="fb-text-primary hover:fb-text-secondary transition-colors"
+                      >
+                        <FaEdit />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+              </div>
+
               {/* Current Location */}
               <div className="mb-6">
-                <label className="block fb-text-secondary mb-2">Current Location</label>
-                <div className="flex items-center fb-text">
+                <label className="block fb-text-secondary mb-2">Location Region</label>
+                <div className="flex items-center fb-text p-2">
                   <FaMapMarkerAlt className="mr-3 fb-text-primary" />
-                  <span>Tamil Nadu, IN</span>
+                  <span>{userData.district ? `${userData.district}, ` : ''} Tamil Nadu, IN</span>
                 </div>
               </div>
               {/* Account Created Date */}
