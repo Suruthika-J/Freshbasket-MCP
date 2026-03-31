@@ -19,6 +19,7 @@ import EditProductFarmer from "./page/EditProductFarmer";
 import Home from './page/Home';
 import Contact from './page/Contact';
 import Items from './page/Items';
+import About from './page/About';
 import Cart from './page/Cart';
 import CheckoutPage from './components/Checkout';
 import MyOrdersPage from './page/MyOrdersPage';
@@ -175,6 +176,7 @@ const AppInner = () => {
             {/* ==================== PUBLIC ROUTES ==================== */}
             <Route path="/" element={<Home />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
             <Route path="/items" element={<Items />} />
             <Route path="/recipe-chatbot" element={<RecipeChatbot />} />
 

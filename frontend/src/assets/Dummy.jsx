@@ -1,11 +1,11 @@
 //frontend/src/assets/Dummy.jsx
-import { FiGift, FiHome, FiMail, FiPercent, FiShoppingBag, FiShoppingCart, FiTruck , FiPackage, FiCalendar, FiArrowDownCircle, FiArrowDownLeft} from "react-icons/fi";
+import { FiGift, FiHome, FiMail, FiPercent, FiShoppingBag, FiUsers, FiShoppingCart, FiTruck , FiPackage, FiCalendar, FiArrowDownCircle, FiArrowDownLeft} from "react-icons/fi";
 import { bannerStyles } from './dummyStyles'
 
 // Function to get translated nav items
 export const getNavItems = (t) => [
     { name: t('nav.home'), path: '/', icon: <FiHome className="text-xl" /> },
-    { name: t('nav.shop'), path: '/items', icon: <FiShoppingBag className="text-xl" /> },
+    { name: t('nav.about'), path: '/about', icon: <FiUsers className="text-xl" /> },
     { name: t('nav.contact'), path: '/contact', icon: <FiMail className="text-xl" /> },
 ];
 
@@ -29,7 +29,7 @@ export const features = [
 // NAVBAR - Keeping for backward compatibility, but using getNavItems(t) in Navbar.jsx
 export const navItems = [
     { name: 'Home', path: '/', icon: <FiHome className="text-xl" /> },
-    { name: 'Items', path: '/items', icon: <FiShoppingBag className="text-xl" /> },
+    { name: 'About Us', path: '/about', icon: <FiUsers className="text-xl" /> },
     { name: 'Contact', path: '/contact', icon: <FiMail className="text-xl" /> },
      { name: 'My Orders', path: '/myorders', icon: <FiPackage className="text-xl" /> },
 ];

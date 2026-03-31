@@ -167,6 +167,46 @@ const contactStyles = {
   }`
 };
 
+export const aboutStyles = {
+  heroSection: "relative py-20 overflow-hidden fb-bg-secondary",
+  heroContainer: "container mx-auto px-4 flex flex-col md:flex-row items-center",
+  heroTextContent: "md:w-1/2 text-center md:text-left z-10",
+  heroTitle: "text-4xl md:text-6xl font-extrabold fb-text mb-6 leading-tight",
+  heroHighlight: "fb-text-primary",
+  heroTagline: "text-lg md:text-xl fb-text-secondary mb-8 max-w-lg mx-auto md:mx-0",
+  heroIllustration: "md:w-1/2 mt-12 md:mt-0 flex justify-center relative",
+  
+  missionSection: "py-20 fb-surface",
+  missionContainer: "container mx-auto px-4 flex flex-col md:flex-row-reverse items-center gap-12",
+  missionText: "md:w-1/2",
+  missionTitle: "text-3xl md:text-4xl font-bold fb-text mb-6",
+  missionParagraph: "text-lg fb-text-secondary leading-relaxed mb-6",
+  
+  whyChooseSection: "py-20 fb-bg",
+  grid: "grid grid-cols-1 md:grid-cols-3 gap-8",
+  card: "fb-card p-8 rounded-3xl text-center transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl",
+  cardIcon: "w-16 h-16 mx-auto mb-6 bg-fb-primary-subtle rounded-2xl flex items-center justify-center text-3xl fb-text-primary",
+  cardTitle: "text-xl font-bold fb-text mb-4",
+  cardText: "fb-text-secondary",
+  
+  featuresSection: "py-20 fb-bg-secondary/50",
+  featureItem: "flex items-center space-x-4 p-6 fb-card rounded-2xl",
+  featureIcon: "text-4xl fb-text-primary",
+  
+  teamSection: "py-20 fb-surface",
+  teamGrid: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8",
+  teamMember: "text-center group",
+  teamAvatar: "w-32 h-32 mx-auto rounded-full overflow-hidden mb-4 border-4 fb-border group-hover:fb-border-primary transition-colors",
+  teamName: "font-bold fb-text text-lg",
+  teamRole: "fb-text-secondary text-sm",
+  
+  ctaSection: "py-20 bg-gradient-to-r from-green-600 to-emerald-700 text-white text-center rounded-[3rem] mx-4 mb-20",
+  ctaTitle: "text-3xl md:text-5xl font-black mb-8 text-white",
+  ctaButton: "bg-white text-green-700 px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-xl",
+  
+  blob: "absolute rounded-full filter blur-3xl opacity-20 animate-pulse",
+};
+
 export default contactStyles;
 
 

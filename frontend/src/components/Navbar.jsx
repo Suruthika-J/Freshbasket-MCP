@@ -157,9 +157,9 @@ export default function Navbar() {
 
     // Add "My Orders" and "Meal Planner" after Shop link for logged-in users
     if (isLoggedIn) {
-      const shopIndex = baseItems.findIndex(item => item.name === t('nav.shop'));
-      if (shopIndex !== -1) {
-        baseItems.splice(shopIndex + 1, 0,
+      const aboutIndex = baseItems.findIndex(item => item.path === '/about');
+      if (aboutIndex !== -1) {
+        baseItems.splice(aboutIndex + 1, 0,
           {
             name: t('nav.myOrders'),
             path: "/myorders",

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import BannerHome from '../components/BannerHome';
 import ItemsHome from '../components/ItemsHome';
 import Footer from '../components/Footer';
+import Counter from '../components/Counter';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -119,19 +120,28 @@ const Home = () => {
                         </div>
 
                         {/* Stats Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-                            <div className="fb-card rounded-xl p-6 transform transition-all duration-300 hover:scale-105">
-                                <div className="text-3xl font-bold fb-text-primary mb-2">1000+</div>
-                                <div className="fb-text-secondary">Active Farmers</div>
-                            </div>
-                            <div className="fb-card rounded-xl p-6 transform transition-all duration-300 hover:scale-105">
-                                <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-info)' }}>5000+</div>
-                                <div className="fb-text-secondary">Happy Customers</div>
-                            </div>
-                            <div className="fb-card rounded-xl p-6 transform transition-all duration-300 hover:scale-105">
-                                <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-warning)' }}>100%</div>
-                                <div className="fb-text-secondary">Fresh & Organic</div>
-                            </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 px-4">
+                            <Counter 
+                              target={1000} 
+                              suffix="+" 
+                              label="Active Farmers" 
+                              textColorClass="fb-text-primary"
+                              duration={2500}
+                            />
+                            <Counter 
+                              target={5000} 
+                              suffix="+" 
+                              label="Happy Customers" 
+                              textColorClass="fb-text-info"
+                              duration={3000}
+                            />
+                            <Counter 
+                              target={100} 
+                              suffix="%" 
+                              label="Fresh & Organic" 
+                              textColorClass="fb-text-warning"
+                              duration={2000}
+                            />
                         </div>
                     </div>
 
