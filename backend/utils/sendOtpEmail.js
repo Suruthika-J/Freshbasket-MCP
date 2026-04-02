@@ -31,14 +31,13 @@ export const sendOtpEmail = (email, otp) => {
        `
     };
 
-    // Non-blocking execution
     setImmediate(() => {
         transporter.sendMail(mailOptions)
-            .then(() => console.log("✅ OTP email sent via Gmail"))
+            .then(() => console.log("✅ OTP email sent"))
             .catch(err => {
-                console.error("❌ Gmail email error:", err);
-                // Fallback for testing/demo
-                console.log("⚠️ OTP fallback (use this if email fails):", otp);
+                console.error("❌ Email failed:", err);
+                // Fallback ONLY in logs (do NOT expose to frontend)
+                console.log("⚠️ OTP fallback (for developer only):", otp);
             });
     });
 };
