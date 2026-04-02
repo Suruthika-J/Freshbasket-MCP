@@ -14,10 +14,9 @@ import { OAuth2Client } from 'google-auth-library';
 import {
     generateOTP,
     hashOTP,
-    verifyOTP,
-    sendSignupOTP,
-    sendForgotPasswordOTP
+    verifyOTP
 } from "../otp/otpService.js";
+import { sendOtpEmail } from "../utils/sendOtpEmail.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_here';
 const TOKEN_EXPIRES = "24h";
@@ -254,7 +253,7 @@ export async function signupWithOtp(req, res) {
                 console.log('📌 CRITICAL LOG: Response sent (for existing user)');
 
                 // 🔥 Trigger email non-blocking 🔥
-                sendSignupOTP(existingUser.email, otp, existingUser.name);
+                sendOtpEmail(existingUser.email, otp);
                 console.log('📌 CRITICAL LOG: Email triggered asynchronously');
                 
                 return; // End execution
@@ -323,7 +322,7 @@ export async function signupWithOtp(req, res) {
         console.log('📌 CRITICAL LOG: Response sent (for new user)');
 
         // 🔥 Trigger email non-blocking 🔥
-        sendSignupOTP(user.email, otp, user.name);
+        sendOtpEmail(user.email, otp);
         console.log('📌 CRITICAL LOG: Email triggered asynchronously');
         console.log('--- END SIGNUP FLOW ---');
 
@@ -449,9 +448,7 @@ export async function resendSignupOtp(req, res) {
 
         // Non-blocking: respond immediately, send email in background
         console.log(`📧 [Resend OTP] Queuing signup OTP email to: ${user.email}`);
-        sendSignupOTP(user.email, otp, user.name)
-            .then(() => console.log(`✅ [Resend OTP] Signup email dispatched to: ${user.email}`))
-            .catch(err => console.error(`❌ [Resend OTP] Failed to send email to ${user.email}:`, err.message));
+        sendOtpEmail(user.email, otp);
 
         res.status(200).json({
             success: true,
@@ -514,9 +511,7 @@ export async function forgotPasswordOtp(req, res) {
 
         // Non-blocking: respond immediately, send email in background
         console.log(`📧 [Forgot Password] Queuing reset OTP email to: ${user.email}`);
-        sendForgotPasswordOTP(user.email, otp, user.name)
-            .then(() => console.log(`✅ [Forgot Password] Reset email dispatched to: ${user.email}`))
-            .catch(err => console.error(`❌ [Forgot Password] Failed to send email to ${user.email}:`, err.message));
+        sendOtpEmail(user.email, otp);
 
         res.status(200).json({
             success: true,
