@@ -25,6 +25,7 @@ const VerifyPaymentPage = () => {
         const session_id = params.get('session_id');
         const payment_status = params.get('payment_status');
         const order_id = params.get('order_id'); // For COD orders
+        const is_parent = params.get('is_parent'); // For parent orders
         const token = localStorage.getItem('authToken');
 
         console.log('🔍 Payment verification started');
@@ -80,29 +81,41 @@ const VerifyPaymentPage = () => {
         }
 
         console.log('💳 Online Payment - Verifying with Stripe');
-        axios
-            .get(`${apiUrl}/api/orders/verify`, {
+        
+        const verifyEndpoint = is_parent === 'true' 
+            ? `${apiUrl}/api/parent-orders/confirm-payment`
+            : `${apiUrl}/api/orders/verify`;
+
+        const verifyPromise = is_parent === 'true'
+            ? axios.post(verifyEndpoint, { sessionId: session_id }, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+              })
+            : axios.get(verifyEndpoint, {
                 params: { session_id },
-                headers: token
-                    ? { Authorization: `Bearer ${token}` }
-                    : {}
-            })
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+              });
+
+        verifyPromise
             .then((response) => {
-                console.log('✅ Online payment confirmed:', response.data);
+                const orderData = is_parent === 'true' ? response.data.parentOrder : response.data;
+                console.log('✅ Online payment confirmed:', orderData);
                 clearCart();
-                setConfirmedOrder(response.data);
+                setConfirmedOrder(orderData);
                 setOrderConfirmed(true);
                 setShowSuccess(true);
                 setStatusMsg('Order confirmed!');
+                
+                const idToUse = is_parent === 'true' ? orderData._id : orderData.orderId;
+                const dbId = orderData._id;
 
                 // Auto-download invoice after 2 seconds
                 setTimeout(() => {
-                    downloadInvoice(response.data._id, response.data.orderId);
+                    downloadInvoice(dbId, idToUse, is_parent === 'true');
                 }, 2000);
 
                 // Navigate to Order Success Page after 3 seconds
                 setTimeout(() => {
-                    navigate(`/order-success/${response.data._id}`, { replace: true });
+                    navigate(`/order-success/${dbId}`, { replace: true });
                 }, 3000);
             })
             .catch(err => {
@@ -130,10 +143,19 @@ const VerifyPaymentPage = () => {
     }, [orderConfirmed, countdown, navigate, confirmedOrder]);
 
     // Function to download invoice
-    const downloadInvoice = async (orderId, orderNumber) => {
+    const downloadInvoice = async (orderId, orderNumber, isParent = false) => {
         try {
             console.log('📄 Downloading invoice for order:', orderId);
             const token = localStorage.getItem('authToken');
+
+            // If it's a parent order, we might not have an invoice route. 
+            // In a real app we'd need a backend route for it. 
+            // For now, if it's a parent order we'll skip backend PDF or try to download from sub-orders.
+            // Currently backend only supports /api/orders/:id/invoice.
+            if (isParent) {
+                console.log('Invoice generation for parent orders relies on frontend PDF generation on the success page.');
+                return;
+            }
 
             const response = await axios({
                 url: `${apiUrl}/api/orders/${orderId}/invoice`,
@@ -173,7 +195,9 @@ const VerifyPaymentPage = () => {
     };
 
     const handleDownloadInvoice = async () => {
-        await downloadInvoice(confirmedOrder._id, confirmedOrder.orderId);
+        const isParent = !!confirmedOrder?.parentOrderId;
+        const idToUse = isParent ? confirmedOrder._id : confirmedOrder.orderId;
+        await downloadInvoice(confirmedOrder._id, idToUse, isParent);
     };
 
     const handleViewMyOrders = () => {

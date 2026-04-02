@@ -143,9 +143,9 @@ export const createOrder = async (req, res) => {
                     }]
                 }),
                 customer_email: customer.email,
-                // ✅ CRITICAL FIX: Use FRONTEND_URL (port 5174) for user-facing pages
-                success_url: `${process.env.FRONTEND_URL}/myorders/verify?session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url: `${process.env.FRONTEND_URL}/checkout?payment_status=cancel`,
+                // ✅ CRITICAL FIX: Use robust FRONTEND_URL fallback for user-facing pages
+                success_url: `${process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173'}/myorders/verify?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url: `${process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173'}/checkout?payment_status=cancel`,
                 metadata: { orderId }
             });
 
@@ -196,8 +196,9 @@ export const createOrder = async (req, res) => {
 
             await newOrder.save();
 
-            // ✅ CRITICAL FIX: Redirect to FRONTEND verify page (port 5174)
-            const successUrl = `${process.env.FRONTEND_URL}/myorders/verify?order_id=${newOrder._id}`;
+            // ✅ CRITICAL FIX: Redirect to FRONTEND verify page
+            const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+            const successUrl = `${frontendUrl}/myorders/verify?order_id=${newOrder._id}`;
 
             console.log('✅ COD Order created');
             console.log('   Order ID:', newOrder.orderId);

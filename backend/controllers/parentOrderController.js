@@ -324,12 +324,14 @@ export const createParentOrder = async (req, res) => {
                 }
             });
 
+            const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
+
             const stripeSession = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
                 line_items: lineItems,
                 mode: 'payment',
-                success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-success/${parentOrder._id}`,
-                cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/checkout`,
+                success_url: `${frontendUrl}/myorders/verify?session_id={CHECKOUT_SESSION_ID}&is_parent=true`,
+                cancel_url: `${frontendUrl}/checkout`,
                 metadata: {
                     parentOrderId: parentOrder._id.toString(),
                     userId: userId.toString()
