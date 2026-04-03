@@ -332,15 +332,15 @@ const Login = () => {
           <div className={loginStyles.inputContainer}>
             <FaUser className={loginStyles.inputIcon} />
             <input
-              type="email"
+              type="text"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Email Address"
+              placeholder="Email Address or Phone Number"
               required
               disabled={isLoading}
               className={loginStyles.input}
-              autoComplete="email"
+              autoComplete="username"
             />
           </div>
 

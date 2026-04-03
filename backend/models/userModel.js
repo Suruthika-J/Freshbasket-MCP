@@ -13,8 +13,9 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
+    required: function() { return this.role !== 'farmer'; },
     unique: true,
+    sparse: true,
     lowercase: true,
     trim: true
   },
@@ -26,6 +27,8 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     trim: true,
+    unique: true,
+    sparse: true,
     validate: {
       validator: function (phone) {
         return !phone || /^\d{10}$/.test(phone.replace(/\D/g, ''));

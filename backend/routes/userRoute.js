@@ -22,7 +22,8 @@ import {
   getApprovedFarmers,
   updateFarmerApproval,
   deactivateFarmer,
-  updateFarmerProfile // ADD THIS IMPORT
+  updateFarmerProfile, // ADD THIS IMPORT
+  createFarmerByAdmin
 } from '../controllers/userController.js';
 import authMiddleware, { requireAdmin } from '../middleware/auth.js';
 
@@ -83,5 +84,8 @@ userRouter.put('/admin/farmers/:farmerId/approve', authMiddleware, requireAdmin,
 
 // Deactivate farmer
 userRouter.put('/admin/farmers/:farmerId/deactivate', authMiddleware, requireAdmin, deactivateFarmer);
+
+// Create farmer manually
+userRouter.post('/admin/create-farmer', authMiddleware, requireAdmin, createFarmerByAdmin);
 
 export default userRouter;

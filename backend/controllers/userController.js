@@ -694,9 +694,14 @@ export async function loginUser(req, res) {
     try {
         // Step 1: Try to find user in User collection first
         console.log('🔍 STEP 1: Searching for user in User collection...');
-        console.log('🔍 Search email:', email.toLowerCase());
+        console.log('🔍 Search email/phone:', email.toLowerCase());
 
-        let user = await User.findOne({ email: email.toLowerCase() });
+        let user = await User.findOne({
+            $or: [
+                { email: email.toLowerCase() },
+                { phone: email }
+            ]
+        });
         let isAgent = false;
 
         console.log('✅ STEP 1 RESULT:', user ? 'User found' : 'User not found');
@@ -704,7 +709,12 @@ export async function loginUser(req, res) {
         // Step 2: If not found in User, check DeliveryAgent collection
         if (!user) {
             console.log('🔍 STEP 2: Searching in DeliveryAgent collection...');
-            user = await DeliveryAgent.findOne({ email: email.toLowerCase() });
+            user = await DeliveryAgent.findOne({
+                $or: [
+                    { email: email.toLowerCase() },
+                    { phone: email }
+                ]
+            });
             if (user) {
                 isAgent = true;
                 console.log('✅ STEP 2 RESULT: User found in DeliveryAgent collection');
@@ -1525,6 +1535,61 @@ export async function updateFarmerProfile(req, res) {
         });
     } catch (error) {
         console.error('❌ Update farmer profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error',
+            error: error.message
+        });
+    }
+}
+
+// ============================================
+// ADMIN CREATE FARMER
+// ============================================
+export async function createFarmerByAdmin(req, res) {
+    try {
+        const { name, phone, password, certification, experience } = req.body;
+
+        if (!name || !phone) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name and Phone are required'
+            });
+        }
+
+        const existingUser = await User.findOne({ phone });
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Phone number is already registered'
+            });
+        }
+
+        const pass = password || Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(pass, 10);
+
+        const newFarmer = await User.create({
+            name,
+            phone,
+            password: hashedPassword,
+            role: 'farmer',
+            isVerified: true,  // Manually created meaning auto-verified
+            isApproved: true,  // Auto approved when admin creates
+            certification: certification || 'None',
+            experience: experience ? Number(experience) : 0
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Farmer account created successfully',
+            credentials: {
+                phone,
+                password: pass
+            },
+            data: newFarmer
+        });
+    } catch (error) {
+        console.error('Create farmer error:', error);
         res.status(500).json({
             success: false,
             message: 'Server error',

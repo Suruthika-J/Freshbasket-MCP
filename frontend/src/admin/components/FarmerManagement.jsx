@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { FaCheck, FaTimes, FaUser, FaMapMarkerAlt, FaEnvelope, FaCalendar, FaBan, FaPhone, FaEye, FaComments } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaUser, FaMapMarkerAlt, FaEnvelope, FaCalendar, FaBan, FaPhone, FaEye, FaComments, FaClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { GiFarmer } from 'react-icons/gi';
-import { FiPackage, FiAlertTriangle } from 'react-icons/fi';
+import { FiPackage, FiAlertTriangle, FiPlus } from 'react-icons/fi';
 import FarmerProductsModal from './FarmerProductsModal';
+import CreateFarmer from './CreateFarmer';
 
 // Deactivate Confirm Modal
 const DeactivateConfirmModal = ({ isOpen, onClose, onConfirm, loading }) => {
@@ -65,6 +66,7 @@ const FarmerManagement = () => {
   const [activeTab, setActiveTab] = useState('pending');
   const [farmerToDeactivate, setFarmerToDeactivate] = useState(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // New state for products modal
   const [productsModal, setProductsModal] = useState({
@@ -369,31 +371,45 @@ const FarmerManagement = () => {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex">
-              <button
-                onClick={() => setActiveTab('pending')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'pending'
-                  ? 'border-amber-500 text-amber-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                Pending Approvals ({pendingFarmers.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('approved')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'approved'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                Approved Farmers ({approvedFarmers.length})
-              </button>
-            </nav>
+        {/* Header section with tabs and Create Button */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6 sticky top-0 z-10 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex space-x-2 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'pending'
+                  ? 'bg-amber-100 text-amber-700 shadow-sm'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              }`}
+            >
+              <FaClock /> Pending Approvals
+              {pendingFarmers.length > 0 && activeTab !== 'pending' && (
+                <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full ml-1">
+                  {pendingFarmers.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('approved')}
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'approved'
+                  ? 'bg-green-100 text-green-700 shadow-sm'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              }`}
+            >
+              <FaCheck /> Approved Farmers
+            </button>
           </div>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 whitespace-nowrap"
+          >
+            <FiPlus className="text-xl" /> Create Farmer
+          </button>
         </div>
+
+
 
         {/* Pending Farmers List */}
         {activeTab === 'pending' && (
@@ -654,6 +670,14 @@ const FarmerManagement = () => {
         onConfirm={confirmDeactivate}
         loading={isDeactivating}
       />
+
+      {/* Create Farmer Modal */}
+      {isCreateModalOpen && (
+        <CreateFarmer
+          onClose={() => setIsCreateModalOpen(false)}
+          refreshList={() => { fetchApprovedFarmers(); fetchPendingFarmers(); }}
+        />
+      )}
     </div>
   );
 };
