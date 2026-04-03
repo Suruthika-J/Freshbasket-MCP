@@ -173,8 +173,8 @@ export async function signupWithOtp(req, res) {
     console.log('📌 CRITICAL LOG: Request received for signup');
     console.log('🔵 Signup request details:', { name: req.body.name, email: req.body.email, role: req.body.role });
 
-    // ✅ UPDATED: Added pincode, city, state parameters
-    const { name, email, password, role, district, pincode, city, state } = req.body;
+    // ✅ UPDATED: Added pincode, city, state, certification, experience parameters
+    const { name, email, password, role, district, pincode, city, state, certification, experience } = req.body;
 
     if (!name || !email || !password) {
         console.log('❌ Missing required fields');
@@ -297,12 +297,20 @@ export async function signupWithOtp(req, res) {
             if (pincode) {
                 userData.pincode = pincode.trim();
             }
+            if (certification) {
+                userData.certification = certification;
+            }
+            if (experience !== undefined) {
+                userData.experience = Number(experience);
+            }
 
-            console.log('🌾 Creating farmer with location:', {
+            console.log('🌾 Creating farmer with location & prof details:', {
                 district: userData.district,
                 city: userData.location.city,
                 state: userData.location.state,
-                pincode: pincode
+                pincode: pincode,
+                certification: userData.certification,
+                experience: userData.experience
             });
         }
 

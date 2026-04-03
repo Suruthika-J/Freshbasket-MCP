@@ -453,6 +453,22 @@ const FarmerManagement = () => {
                       </div>
 
                       <div className="flex items-start gap-2">
+                        <span className="text-amber-500 mt-1" style={{ fontSize: '12px' }}>🎖️</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Certification</p>
+                          <p className="text-sm font-semibold text-amber-600">{farmer.certification || 'None'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-1" style={{ fontSize: '12px' }}>📈</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Experience</p>
+                          <p className="text-sm text-gray-800">{farmer.experience !== null && farmer.experience !== undefined ? `${farmer.experience} Years` : '0 Years'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
                         <FaCalendar className="text-gray-400 mt-1" />
                         <div className="flex-1">
                           <p className="text-xs text-gray-500">Registered On</p>
@@ -549,6 +565,22 @@ const FarmerManagement = () => {
                         <div className="flex-1">
                           <p className="text-xs text-gray-500">District</p>
                           <p className="text-sm text-gray-800">{farmer.district || 'Not specified'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <span className="text-amber-500 mt-1" style={{ fontSize: '12px' }}>🎖️</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Certification</p>
+                          <p className="text-sm font-semibold text-amber-600">{farmer.certification || 'None'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <span className="text-blue-500 mt-1" style={{ fontSize: '12px' }}>📈</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-500">Experience</p>
+                          <p className="text-sm text-gray-800">{farmer.experience !== null && farmer.experience !== undefined ? `${farmer.experience} Years` : '0 Years'}</p>
                         </div>
                       </div>
 

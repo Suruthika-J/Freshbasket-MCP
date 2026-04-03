@@ -520,6 +520,27 @@ const ProfileSettings = () => {
                   <span>{userData.district ? `${userData.district}, ` : ''} Tamil Nadu, IN</span>
                 </div>
               </div>
+              
+              {/* Farmer specific details */}
+              {userData.role === 'farmer' && (
+                <>
+                  <div className="mb-6">
+                    <label className="block fb-text-secondary mb-2">Certification</label>
+                    <div className="flex items-center fb-text p-2">
+                      <span className="mr-3">🎖️</span>
+                      <span className="font-semibold text-amber-600">{userData.certification || 'None'}</span>
+                    </div>
+                  </div>
+                  <div className="mb-6">
+                    <label className="block fb-text-secondary mb-2">Experience</label>
+                    <div className="flex items-center fb-text p-2">
+                      <span className="mr-3">📈</span>
+                      <span>{userData.experience !== null && userData.experience !== undefined ? `${userData.experience} Years` : '0 Years'}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
               {/* Account Created Date */}
               <div className="mb-6">
                 <label className="block fb-text-secondary mb-2">Account Created</label>

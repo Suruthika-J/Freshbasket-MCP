@@ -24,6 +24,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  const [step, setStep] = useState(1);
   
   // Track intended role from location state
   const [intendedRole, setIntendedRole] = useState(
@@ -38,6 +39,8 @@ const Signup = () => {
     city: '', // Auto-filled from pincode
     district: '', // Auto-filled from pincode
     state: '', // Auto-filled from pincode
+    certification: 'None',
+    experience: '',
     remember: false,
   });
   
@@ -195,6 +198,20 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateStep2 = () => {
+    const newErrors = {};
+    if (intendedRole === 'farmer') {
+      if (!formData.certification) {
+        newErrors.certification = 'Certification is required';
+      }
+      if (formData.experience === '' || isNaN(formData.experience) || Number(formData.experience) < 0) {
+        newErrors.experience = 'Experience must be a valid number >= 0';
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const togglePasswordVisibility = () => {
     setShowPassword(v => !v);
   };
@@ -202,12 +219,26 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validate()) {
-      toast.error('Please fix the errors in the form', {
-        position: "top-center",
-        autoClose: 3000,
-      });
-      return;
+    if (step === 1) {
+      if (!validate()) {
+        toast.error('Please fix the errors in the form', {
+          position: "top-center",
+          autoClose: 3000,
+        });
+        return;
+      }
+      if (intendedRole === 'farmer') {
+        setStep(2);
+        return;
+      }
+    } else if (step === 2) {
+      if (!validateStep2()) {
+        toast.error('Please fix the errors in the form', {
+          position: "top-center",
+          autoClose: 3000,
+        });
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -229,6 +260,8 @@ const Signup = () => {
         requestData.city = formData.city;
         requestData.district = formData.district;
         requestData.state = formData.state;
+        requestData.certification = formData.certification;
+        requestData.experience = Number(formData.experience);
       }
       
       console.log('Request data:', { ...requestData, password: '***' });
@@ -337,7 +370,17 @@ const Signup = () => {
             : 'Sign up to get started with FreshBasket'}
         </p>
 
+        {intendedRole === 'farmer' && (
+          <div className="flex items-center justify-center mb-6">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step === 1 ? 'bg-amber-600 text-white' : 'bg-green-500 text-white'}`}>1</div>
+            <div className={`w-16 h-1 ${step === 2 ? 'bg-amber-600' : 'bg-gray-300'}`}></div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step === 2 ? 'bg-amber-600 text-white' : 'bg-gray-300 text-gray-600'}`}>2</div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className={signupStyles.form}>
+          {step === 1 ? (
+            <>
           {/* Name Field */}
           <div className={signupStyles.inputContainer}>
             <FaUser className={signupStyles.inputIcon} />
@@ -497,31 +540,113 @@ const Signup = () => {
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className={signupStyles.submitButton}
-            disabled={isLoading || (intendedRole === 'farmer' && fetchingLocation)}
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Creating Account...
-              </span>
-            ) : fetchingLocation ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Fetching Location...
-              </span>
-            ) : (
-              'Sign Up'
-            )}
-          </button>
+          {intendedRole === 'farmer' && step === 1 ? (
+             <button 
+              type="submit" 
+              className={signupStyles.submitButton}
+              disabled={isLoading || fetchingLocation}
+            >
+              Next Step
+            </button>
+          ) : (
+             <div className="flex space-x-3 w-full">
+              {intendedRole === 'farmer' && step === 2 && (
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                >
+                  Back
+                </button>
+              )}
+              <button 
+                type="submit" 
+                className={`${signupStyles.submitButton} flex-[2]`}
+                disabled={isLoading || (intendedRole === 'farmer' && fetchingLocation)}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating Account...
+                  </span>
+                ) : fetchingLocation ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Fetching Location...
+                  </span>
+                ) : (
+                  'Sign Up'
+                )}
+              </button>
+            </div>
+          )}
+          
+          </>
+          ) : (
+            <>
+              {/* Step 2 Form Fields for Farmers */}
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                  <span className="mr-2 text-amber-600 px-2 rounded bg-amber-100">2</span>
+                  Professional Details
+                </h3>
+
+                {/* Certification Field */}
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Certification</label>
+                  <select
+                    name="certification"
+                    value={formData.certification}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                  >
+                    <option value="None">None</option>
+                    <option value="FSSAI">FSSAI</option>
+                    <option value="Organic">Organic</option>
+                  </select>
+                  {errors.certification && <p className={signupStyles.error}>{errors.certification}</p>}
+                </div>
+
+                {/* Experience Field */}
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-bold mb-2">Experience (Years)</label>
+                  <input
+                    type="number"
+                    name="experience"
+                    value={formData.experience}
+                    onChange={handleChange}
+                    min="0"
+                    placeholder="E.g. 5"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  {errors.experience && <p className={signupStyles.error}>{errors.experience}</p>}
+                </div>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold"
+                >
+                  Back
+                </button>
+                <button 
+                  type="submit" 
+                  className={`${signupStyles.submitButton} flex-[2]`}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Creating...' : 'Register'}
+                </button>
+              </div>
+            </>
+          )}
         </form>
 
         {/* Google Sign-in (Only for customers) */}
