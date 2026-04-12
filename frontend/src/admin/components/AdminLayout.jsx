@@ -16,7 +16,7 @@ const AdminLayout = ({ onLogout, adminUser }) => {
             />
 
             {/* Sidebar */}
-            <div className={`admin-sidebar-mobile ${sidebarOpen ? 'is-open' : ''} fixed left-0 top-0 bottom-0 z-40 lg:static lg:translate-x-0 lg:z-auto`}>
+            <div className={`admin-sidebar-mobile ${sidebarOpen ? 'is-open' : ''} fixed left-0 top-0 bottom-0 z-40 lg:static lg:transform-none lg:z-auto`}>
                 <Sidebar onClose={() => setSidebarOpen(false)} />
             </div>
 
