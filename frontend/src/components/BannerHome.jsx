@@ -86,38 +86,36 @@ const BannerHome = ({ onSearch }) => {
               onMouseLeave={() => setIsAutoPlay(true)}
             >
               {/* Organic Blob Shape Container */}
-              <div className="relative aspect-square overflow-hidden shadow-2xl"
-                style={{
-                  clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
-                }}>
-                {carouselImages.map((imageSrc, index) => (
-                  <img
-                    key={index}
-                    src={imageSrc}
-                    alt={`Fresh produce ${index + 1}`}
-                    className={`absolute inset-0 object-cover w-full h-full transition-all duration-700 ease-in-out ${index === currentIndex
-                      ? 'opacity-100 scale-100 group-hover:scale-110 group-hover:rotate-2'
-                      : 'opacity-0 scale-95'
-                      }`}
-                  />
-                ))}
+              <div className="relative flex justify-center items-center overflow-visible">
+                <div className="relative aspect-square w-full max-w-md bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden group shadow-2xl"
+                  style={{
+                    clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                    borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%'
+                  }}>
+                  {carouselImages.map((imageSrc, index) => (
+                    <img
+                      key={index}
+                      src={imageSrc}
+                      alt={`Fresh produce ${index + 1}`}
+                      className={`absolute inset-0 w-full h-full object-cover object-top origin-top transition-all duration-1000 ease-in-out ${index === currentIndex
+                        ? 'opacity-100 scale-[1.65] group-hover:scale-[1.7] group-hover:rotate-1'
+                        : 'opacity-0 scale-[1.75]'
+                        }`}
+                    />
+                  ))}
+                </div>
 
-                {/* Overlay gradient on hover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'linear-gradient(135deg, rgba(46,125,50,0.2), transparent, rgba(46,125,50,0.2))' }} />
+                {/* Morphing border effect overlaying the same exact bounds */}
+                <div
+                  className="absolute inset-0 transition-all duration-700 pointer-events-none group-hover:scale-105"
+                  style={{
+                    clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                    borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+                    border: '4px solid var(--color-primary-light)',
+                    opacity: 0.5
+                  }}
+                />
               </div>
-
-              {/* Morphing border effect */}
-              <div
-                className="absolute inset-0 transition-all duration-700 group-hover:scale-105"
-                style={{
-                  clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
-                  border: '4px solid var(--color-primary-light)',
-                  opacity: 0.5
-                }}
-              />
 
               {/* Discount Badge with organic shape */}
               <div className="absolute bottom-8 left-8 transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
