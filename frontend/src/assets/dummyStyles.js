@@ -512,7 +512,7 @@ export const signupStyles = {
   page: "relative w-full min-h-screen fb-bg flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-4",
   backLink: "absolute top-4 left-4 mt-19 flex items-center fb-text hover:fb-text-primary z-20 transition-colors",
   toast: "fixed top-16 right-6 bg-green-600 text-white inline-flex items-center px-4 py-2 rounded-lg shadow-lg z-50",
-  signupCard: "mt-8 w-full max-w-[90%] sm:max-w-sm md:max-w-md lg:max-w-sm fb-card p-6 sm:p-8 md:p-10 lg:p-6 rounded-2xl flex-shrink-0 z-10",
+  signupCard: "mt-8 w-full max-w-[95%] sm:max-w-md md:max-w-xl lg:max-w-2xl fb-card p-6 sm:p-8 md:p-10 rounded-3xl flex-shrink-0 z-10",
   logoContainer: "flex justify-center mb-6",
   logoOuter: "w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg",
   logoInner: "w-12 h-12 sm:w-16 sm:h-16 fb-surface rounded-full flex items-center justify-center",

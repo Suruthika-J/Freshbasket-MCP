@@ -381,35 +381,41 @@ const Signup = () => {
         <form onSubmit={handleSubmit} className={signupStyles.form}>
           {step === 1 ? (
             <>
-          {/* Name Field */}
-          <div className={signupStyles.inputContainer}>
-            <FaUser className={signupStyles.inputIcon} />
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Full Name"
-              className={signupStyles.input}
-              disabled={isLoading}
-            />
-          </div>
-          {errors.name && <p className={signupStyles.error}>{errors.name}</p>}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+            {/* Name Field */}
+            <div>
+              <div className={`${signupStyles.inputContainer} !mb-2`}>
+                <FaUser className={signupStyles.inputIcon} />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Full Name"
+                  className={signupStyles.input}
+                  disabled={isLoading}
+                />
+              </div>
+              {errors.name && <p className={signupStyles.error}>{errors.name}</p>}
+            </div>
 
-          {/* Email Field */}
-          <div className={signupStyles.inputContainer}>
-            <FaEnvelope className={signupStyles.inputIcon} />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Email Address"
-              className={signupStyles.input}
-              disabled={isLoading}
-            />
+            {/* Email Field */}
+            <div>
+              <div className={`${signupStyles.inputContainer} !mb-2`}>
+                <FaEnvelope className={signupStyles.inputIcon} />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Email Address"
+                  className={signupStyles.input}
+                  disabled={isLoading}
+                />
+              </div>
+              {errors.email && <p className={signupStyles.error}>{errors.email}</p>}
+            </div>
           </div>
-          {errors.email && <p className={signupStyles.error}>{errors.email}</p>}
 
           {/* FARMER ADDRESS SECTION - Only shown for farmers */}
           {intendedRole === 'farmer' && (
@@ -425,68 +431,78 @@ const Signup = () => {
                 </p>
               </div>
 
-              {/* Pincode Field */}
-              <div className={signupStyles.inputContainer}>
-                <FaMapMarkerAlt className={signupStyles.inputIcon} />
-                <input
-                  type="text"
-                  name="pincode"
-                  value={formData.pincode}
-                  onChange={handleChange}
-                  placeholder="Enter 6-digit Pincode"
-                  className={signupStyles.input}
-                  disabled={isLoading}
-                  maxLength="6"
-                />
-                {fetchingLocation && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-600"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                {/* Pincode Field */}
+                <div>
+                  <div className={`${signupStyles.inputContainer} !mb-2`}>
+                    <FaMapMarkerAlt className={signupStyles.inputIcon} />
+                    <input
+                      type="text"
+                      name="pincode"
+                      value={formData.pincode}
+                      onChange={handleChange}
+                      placeholder="Enter 6-digit Pincode"
+                      className={signupStyles.input}
+                      disabled={isLoading}
+                      maxLength="6"
+                    />
+                    {fetchingLocation && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-600"></div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              {errors.pincode && <p className={signupStyles.error}>{errors.pincode}</p>}
+                  {errors.pincode && <p className={signupStyles.error}>{errors.pincode}</p>}
+                </div>
 
-              {/* City/Town Field (Read-only, auto-filled) */}
-              <div className={signupStyles.inputContainer}>
-                <FaMapMarkerAlt className={signupStyles.inputIcon} />
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  placeholder="City / Town (Auto-filled)"
-                  className={`${signupStyles.input} bg-gray-100 cursor-not-allowed`}
-                  disabled
-                  readOnly
-                />
-              </div>
+                {/* City/Town Field (Read-only, auto-filled) */}
+                <div>
+                  <div className={`${signupStyles.inputContainer} !mb-2`}>
+                    <FaMapMarkerAlt className={signupStyles.inputIcon} />
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      placeholder="City / Town (Auto-filled)"
+                      className={`${signupStyles.input} bg-gray-100 cursor-not-allowed`}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                </div>
 
-              {/* District Field (Read-only, auto-filled) */}
-              <div className={signupStyles.inputContainer}>
-                <FaMapMarkerAlt className={signupStyles.inputIcon} />
-                <input
-                  type="text"
-                  name="district"
-                  value={formData.district}
-                  placeholder="District (Auto-filled)"
-                  className={`${signupStyles.input} bg-gray-100 cursor-not-allowed`}
-                  disabled
-                  readOnly
-                />
-              </div>
-              {errors.district && <p className={signupStyles.error}>{errors.district}</p>}
+                {/* District Field (Read-only, auto-filled) */}
+                <div>
+                  <div className={`${signupStyles.inputContainer} !mb-2`}>
+                    <FaMapMarkerAlt className={signupStyles.inputIcon} />
+                    <input
+                      type="text"
+                      name="district"
+                      value={formData.district}
+                      placeholder="District (Auto-filled)"
+                      className={`${signupStyles.input} bg-gray-100 cursor-not-allowed`}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                  {errors.district && <p className={signupStyles.error}>{errors.district}</p>}
+                </div>
 
-              {/* State Field (Read-only, auto-filled) */}
-              <div className={signupStyles.inputContainer}>
-                <FaMapMarkerAlt className={signupStyles.inputIcon} />
-                <input
-                  type="text"
-                  name="state"
-                  value={formData.state}
-                  placeholder="State (Auto-filled)"
-                  className={`${signupStyles.input} bg-gray-100 cursor-not-allowed`}
-                  disabled
-                  readOnly
-                />
+                {/* State Field (Read-only, auto-filled) */}
+                <div>
+                  <div className={`${signupStyles.inputContainer} !mb-2`}>
+                    <FaMapMarkerAlt className={signupStyles.inputIcon} />
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      placeholder="State (Auto-filled)"
+                      className={`${signupStyles.input} bg-gray-100 cursor-not-allowed`}
+                      disabled
+                      readOnly
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
