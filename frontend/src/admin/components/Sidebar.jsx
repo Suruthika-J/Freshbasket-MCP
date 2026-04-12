@@ -4,13 +4,13 @@ import axios from 'axios';
 import {
     FiHome, FiPlusCircle, FiList, FiShoppingCart,
     FiTruck, FiUsers, FiRotateCcw, FiMessageSquare,
-    FiChevronRight, FiGrid, FiStar
+    FiChevronRight, FiGrid, FiStar, FiX
 } from 'react-icons/fi';
 import { useChat } from '../../ChatContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
     const { unreadTotal } = useChat();
     const [counts, setCounts] = useState({
         pendingFarmers: 0,
@@ -76,20 +76,34 @@ const Sidebar = () => {
 
     return (
         <aside className="w-64 bg-slate-900 h-screen fixed left-0 top-0 text-slate-300 flex flex-col z-40 transition-all duration-300 shadow-2xl">
-            <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                    <FiHome size={22} strokeWidth={2.5} />
+            {/* Header */}
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+                        <FiHome size={22} strokeWidth={2.5} />
+                    </div>
+                    <span className="font-black text-xl text-white tracking-tight italic">FreshBasket</span>
                 </div>
-                <span className="font-black text-xl text-white tracking-tight italic">FreshBasket</span>
+                {/* Mobile close button */}
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                        aria-label="Close sidebar"
+                    >
+                        <FiX size={20} />
+                    </button>
+                )}
             </div>
 
-            <nav className="flex-grow p-4 space-y-2 overflow-y-auto custom-scrollbar pt-8">
+            <nav className="flex-grow p-4 space-y-1 overflow-y-auto custom-scrollbar pt-6">
                 {menuItems.map((item) => (
                     <NavLink
                         key={item.path}
                         to={item.path}
+                        onClick={onClose}
                         className={({ isActive }) =>
-                            `flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-200 group relative ${isActive
+                            `flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-200 group relative ${isActive
                                 ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 font-bold'
                                 : 'hover:bg-slate-800 hover:text-white font-medium'
                             }`
@@ -111,7 +125,7 @@ const Sidebar = () => {
                 ))}
             </nav>
 
-            <div className="p-6 border-t border-slate-800 bg-slate-900/50">
+            <div className="p-5 border-t border-slate-800 bg-slate-900/50">
                 <div className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-2xl border border-slate-700/50">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-black text-white">
                         AD

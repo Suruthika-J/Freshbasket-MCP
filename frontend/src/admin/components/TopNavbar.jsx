@@ -47,9 +47,9 @@ const TopNavbar = ({ onLogout, adminUser }) => {
     }, []);
 
     return (
-        <nav className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-30 transition-all duration-300">
-            {/* Search Bar - Aesthetic Only */}
-            <div className="hidden lg:flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-2xl w-96 border border-gray-100 group transition-all duration-300 focus-within:ring-2 focus-within:ring-emerald-500/20 shadow-sm">
+        <nav className="h-16 lg:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 hidden lg:flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-30 transition-all duration-300">
+            {/* Search Bar - Desktop Only */}
+            <div className="hidden lg:flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-2xl w-72 xl:w-96 border border-gray-100 group transition-all duration-300 focus-within:ring-2 focus-within:ring-emerald-500/20 shadow-sm">
                 <FiSearch className="text-gray-400 group-focus-within:text-emerald-500" />
                 <input
                     type="text"

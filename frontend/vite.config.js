@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'https://freshbasket-i8el.onrender.com',
         changeOrigin: true,
         secure: false,
       },

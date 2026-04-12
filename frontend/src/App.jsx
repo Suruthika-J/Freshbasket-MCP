@@ -170,8 +170,8 @@ const AppInner = () => {
         {/* Only show Navbar for non-admin and non-delivery-agent routes */}
         {showNavbar && <Navbar isAuthenticated={isAuthenticated} />}
 
-        {/* Main content — pt-20 prevents fixed navbar overlap */}
-        <div className={showNavbar ? 'pt-20' : ''}>
+        {/* Main content — pt accounts for fixed navbar height on mobile (64px) and desktop (80px) */}
+        <div className={showNavbar ? 'pt-16 lg:pt-20' : ''}>
           <Routes>
             {/* ==================== PUBLIC ROUTES ==================== */}
             <Route path="/" element={<Home />} />

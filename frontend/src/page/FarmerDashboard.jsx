@@ -194,29 +194,31 @@ const FarmerDashboard = () => {
     <div className="min-h-screen bg-gray-50 pb-20">
       <FarmerNavbar farmerInfo={farmerInfo} />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
               {t('dashboard.welcome', { name: farmerInfo?.name || 'Farmer' })}
             </h1>
-            <p className="text-gray-500 font-medium mt-1">Manage your harvests and track your growth.</p>
+            <p className="text-gray-500 font-medium mt-1 text-sm sm:text-base">Manage your harvests and track your growth.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setShowProfileEdit(!showProfileEdit)}
-              className="bg-white px-5 py-2.5 rounded-xl font-bold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm"
+              className="bg-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold text-gray-700 border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm text-sm"
             >
               <FiUser className="text-green-600" />
-              {showProfileEdit ? 'Hide Details' : 'View Profile'}
+              <span className="hidden sm:inline">{showProfileEdit ? 'Hide Details' : 'View Profile'}</span>
+              <span className="sm:hidden">Profile</span>
             </button>
             <button
               onClick={() => navigate('/farmer/add-product')}
-              className="bg-green-600 px-6 py-2.5 rounded-xl font-bold text-white hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-100"
+              className="bg-green-600 px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold text-white hover:bg-green-700 transition-all flex items-center gap-2 shadow-lg shadow-green-100 text-sm"
             >
-              <FiPlus className="w-5 h-5" />
-              {t('navbar.addUpdateProducts')}
+              <FiPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">{t('navbar.addUpdateProducts')}</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
         </div>
@@ -287,7 +289,7 @@ const FarmerDashboard = () => {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <StatCard
             icon={FiPackage}
             label={t('dashboard.stats.totalProducts')}
@@ -323,8 +325,8 @@ const FarmerDashboard = () => {
         </div>
 
         {/* Main Content Tabs */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="flex border-b border-gray-100 p-2 gap-2 bg-gray-50/50">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex border-b border-gray-100 p-1.5 sm:p-2 gap-1 sm:gap-2 bg-gray-50/50 overflow-x-auto">
             <TabButton
               active={activeTab === 'products'}
               onClick={() => setActiveTab('products')}
@@ -351,20 +353,20 @@ const FarmerDashboard = () => {
             />
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {activeTab === 'products' && (
               <div className="animate-in fade-in duration-500">
                 {products.length === 0 ? (
-                  <div className="text-center py-20">
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FiPackage className="w-10 h-10 text-gray-300" />
+                  <div className="text-center py-12 sm:py-20">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FiPackage className="w-8 h-8 sm:w-10 sm:h-10 text-gray-300" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">No products listed</h3>
-                    <p className="text-gray-500 mt-2">Start your digital farm by adding your first crop.</p>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900">No products listed</h3>
+                    <p className="text-gray-500 mt-2 text-sm">Start your digital farm by adding your first crop.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                  <div className="table-responsive">
+                    <table className="w-full text-left min-w-[600px]">
                       <thead>
                         <tr className="text-gray-400 text-[10px] font-black uppercase tracking-widest border-b border-gray-50">
                           <th className="pb-4 pt-2">Product Details</th>
@@ -511,13 +513,13 @@ const StatCard = ({ icon: Icon, label, value, color, onClick }) => {
 const TabButton = ({ active, onClick, icon: Icon, label }) => (
   <button
     onClick={onClick}
-    className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-2xl text-sm font-bold transition-all ${active
-      ? 'bg-white text-green-600 shadow-xl shadow-green-50 z-10 scale-105'
+    className={`flex-shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-4 px-3 sm:px-6 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold transition-all ${active
+      ? 'bg-white text-green-600 shadow-lg shadow-green-50 z-10'
       : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
       }`}
   >
-    <Icon className={`w-4 h-4 ${active ? 'text-green-600' : 'text-gray-300'}`} />
-    {label}
+    <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${active ? 'text-green-600' : 'text-gray-300'}`} />
+    <span className="whitespace-nowrap">{label}</span>
   </button>
 );
 

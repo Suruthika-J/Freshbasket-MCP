@@ -424,31 +424,31 @@ const DeliveryDashboard = () => {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
             {/* Header */}
             <header className="bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg">
-                <div className="max-w-7xl mx-auto px-4 py-6">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-white/20 p-3 rounded-full backdrop-blur-sm">
-                                <FiTruck className="text-3xl" />
+                <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                            <div className="bg-white/20 p-2.5 sm:p-3 rounded-full backdrop-blur-sm">
+                                <FiTruck className="text-2xl sm:text-3xl" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold">Delivery Dashboard</h1>
-                                <p className="text-blue-100">Welcome, {agentInfo?.name || 'Agent'}</p>
+                                <h1 className="text-xl sm:text-2xl font-bold">Delivery Dashboard</h1>
+                                <p className="text-blue-100 text-sm sm:text-base">Welcome, {agentInfo?.name || 'Agent'}</p>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="delivery-header-actions flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                             <button
                                 onClick={fetchOrders}
                                 disabled={loading}
-                                className="flex items-center px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors backdrop-blur-sm"
+                                className="flex items-center px-3 sm:px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors backdrop-blur-sm text-sm font-medium flex-1 sm:flex-none justify-center"
                             >
-                                <FiRefreshCw className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+                                <FiRefreshCw className={`mr-2 w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                                 Refresh
                             </button>
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                                className="flex items-center px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg transition-colors text-sm font-medium flex-1 sm:flex-none justify-center"
                             >
-                                <FiLogOut className="mr-2" />
+                                <FiLogOut className="mr-2 w-4 h-4" />
                                 Logout
                             </button>
                         </div>
@@ -456,86 +456,86 @@ const DeliveryDashboard = () => {
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
                 {/* Agent Info Card */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                    <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+                    <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center">
                         <FiPackage className="mr-2 text-blue-600" />
                         Agent Information
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                         <div className="flex items-center">
-                            <FiMail className="text-gray-400 mr-3" />
-                            <div>
-                                <p className="text-sm text-gray-600">Email</p>
-                                <p className="font-medium">{agentInfo?.email || 'N/A'}</p>
+                            <FiMail className="text-gray-400 mr-3 flex-shrink-0" />
+                            <div className="min-w-0">
+                                <p className="text-xs text-gray-600">Email</p>
+                                <p className="font-medium text-sm truncate">{agentInfo?.email || 'N/A'}</p>
                             </div>
                         </div>
                         {agentInfo?.phone && (
                             <div className="flex items-center">
-                                <FiPhone className="text-gray-400 mr-3" />
+                                <FiPhone className="text-gray-400 mr-3 flex-shrink-0" />
                                 <div>
-                                    <p className="text-sm text-gray-600">Phone</p>
-                                    <p className="font-medium">{agentInfo.phone}</p>
+                                    <p className="text-xs text-gray-600">Phone</p>
+                                    <p className="font-medium text-sm">{agentInfo.phone}</p>
                                 </div>
                             </div>
                         )}
                         <div className="flex items-center">
-                            <FiClock className="text-gray-400 mr-3" />
+                            <FiClock className="text-gray-400 mr-3 flex-shrink-0" />
                             <div>
-                                <p className="text-sm text-gray-600">Role</p>
-                                <p className="font-medium capitalize">{agentInfo?.role || 'Delivery Agent'}</p>
+                                <p className="text-xs text-gray-600">Role</p>
+                                <p className="font-medium text-sm capitalize">{agentInfo?.role || 'Delivery Agent'}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-600 text-sm">Total Orders</p>
-                                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                                <p className="text-gray-600 text-xs sm:text-sm">Total Orders</p>
+                                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.total}</p>
                             </div>
-                            <div className="bg-blue-100 p-3 rounded-full">
-                                <FiPackage className="text-blue-600 text-2xl" />
+                            <div className="bg-blue-100 p-2 sm:p-3 rounded-full">
+                                <FiPackage className="text-blue-600 text-lg sm:text-2xl" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-md p-6">
+                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-600 text-sm">Pending</p>
-                                <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
+                                <p className="text-gray-600 text-xs sm:text-sm">Pending</p>
+                                <p className="text-2xl sm:text-3xl font-bold text-yellow-600">{stats.pending}</p>
                             </div>
-                            <div className="bg-yellow-100 p-3 rounded-full">
-                                <FiClock className="text-yellow-600 text-2xl" />
+                            <div className="bg-yellow-100 p-2 sm:p-3 rounded-full">
+                                <FiClock className="text-yellow-600 text-lg sm:text-2xl" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-md p-6">
+                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-600 text-sm">Shipped</p>
-                                <p className="text-3xl font-bold text-purple-600">{stats.shipped}</p>
+                                <p className="text-gray-600 text-xs sm:text-sm">Shipped</p>
+                                <p className="text-2xl sm:text-3xl font-bold text-purple-600">{stats.shipped}</p>
                             </div>
-                            <div className="bg-purple-100 p-3 rounded-full">
-                                <FiTruck className="text-purple-600 text-2xl" />
+                            <div className="bg-purple-100 p-2 sm:p-3 rounded-full">
+                                <FiTruck className="text-purple-600 text-lg sm:text-2xl" />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-md p-6">
+                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-gray-600 text-sm">Delivered</p>
-                                <p className="text-3xl font-bold text-green-600">{stats.delivered}</p>
+                                <p className="text-gray-600 text-xs sm:text-sm">Delivered</p>
+                                <p className="text-2xl sm:text-3xl font-bold text-green-600">{stats.delivered}</p>
                             </div>
-                            <div className="bg-green-100 p-3 rounded-full">
-                                <FiCheckCircle className="text-green-600 text-2xl" />
+                            <div className="bg-green-100 p-2 sm:p-3 rounded-full">
+                                <FiCheckCircle className="text-green-600 text-lg sm:text-2xl" />
                             </div>
                         </div>
                     </div>
@@ -543,9 +543,9 @@ const DeliveryDashboard = () => {
 
                 {/* Orders List */}
                 <div className="bg-white rounded-lg shadow-md">
-                    <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-2xl font-bold text-gray-900">Assigned Orders</h2>
-                        <p className="text-gray-600 mt-1">Manage your delivery orders</p>
+                    <div className="p-4 sm:p-6 border-b border-gray-200">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Assigned Orders</h2>
+                        <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your delivery orders</p>
                     </div>
 
                     {loading ? (
@@ -553,60 +553,62 @@ const DeliveryDashboard = () => {
                             <FiRefreshCw className="animate-spin text-4xl text-blue-600" />
                         </div>
                     ) : orders.length === 0 ? (
-                        <div className="text-center py-12">
-                            <FiPackage className="mx-auto text-6xl text-gray-300 mb-4" />
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                        <div className="text-center py-12 px-4">
+                            <FiPackage className="mx-auto text-5xl sm:text-6xl text-gray-300 mb-4" />
+                            <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-2">
                                 No Orders Assigned
                             </h3>
-                            <p className="text-gray-500">
+                            <p className="text-gray-500 text-sm sm:text-base">
                                 You don't have any orders assigned yet
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
+                        <div className="table-responsive">
+                            <table className="w-full min-w-[600px]">
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
                                     {orders.map((order) => (
                                         <tr key={order._id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm font-medium text-blue-600">
+                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-blue-600">
                                                 {order.subOrderId}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-gray-900">
+                                            <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                                <div className="text-xs sm:text-sm font-medium text-gray-900">
                                                     {order.parentOrder?.customer?.name || 'N/A'}
                                                 </div>
-                                                <div className="text-sm text-gray-500">
+                                                <div className="text-xs text-gray-500">
                                                     {order.parentOrder?.customer?.phone || 'N/A'}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500">
+                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500">
                                                 {new Date(order.createdAt).toLocaleDateString()}
                                             </td>
-                                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                                            <td className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-900">
                                                 ₹{order.total?.toFixed(2) || '0.00'}
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.deliveryStatus === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                            <td className="px-4 sm:px-6 py-3 sm:py-4">
+                                                <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${order.deliveryStatus === 'DELIVERED' ? 'bg-green-100 text-green-800' :
                                                     order.deliveryStatus === 'PICKED_UP' ? 'bg-blue-100 text-blue-800' :
                                                         'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {order.deliveryStatus || 'ASSIGNED'}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 sm:px-6 py-3 sm:py-4">
                                                 <button
                                                     onClick={() => viewOrderDetails(order)}
-                                                    className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                                                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium"
                                                 >
-                                                    View Details
+                                                    View
                                                 </button>
                                             </td>
                                         </tr>

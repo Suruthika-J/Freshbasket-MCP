@@ -250,13 +250,13 @@ const CartPage = () => {
         `}
       </style>
       <ToastContainer />
-      <div className={cartStyles.maxContainerLarge}>
-        <div className={cartStyles.headerContainer}>
-          <h1 className={cartStyles.headerTitle}>Your Shopping Cart</h1>
-          <button onClick={clearCart} className={cartStyles.clearCartButton}>
-            <FiTrash2 className="mr-1" /> Clear Cart
-          </button>
-        </div>
+        <div className={cartStyles.maxContainerLarge}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 mt-8 sm:mt-12">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold fb-text">Your Shopping Cart</h1>
+            <button onClick={clearCart} className={cartStyles.clearCartButton}>
+              <FiTrash2 className="mr-1" /> Clear Cart
+            </button>
+          </div>
 
         <div className={cartStyles.cartGrid}>
           <div className={cartStyles.cartItemsSection}>

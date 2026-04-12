@@ -862,3 +862,784 @@ body {
 [data-theme="dark"] .Toastify__close-button {
   color: #aaa !important;
 }
+
+/* ============================================================
+   RESPONSIVE DESIGN SYSTEM — FreshBasket
+   Mobile-first breakpoints:
+   - Mobile:  < 768px
+   - Tablet:  768px – 1024px
+   - Desktop: > 1024px
+   ============================================================ */
+
+/* ── Touch Targets ─────────────────────────────────────────── */
+@media (max-width: 767px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* ── Admin Layout ───────────────────────────────────────────── */
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 39;
+}
+@media (max-width: 1023px) {
+  .admin-sidebar-overlay.is-open {
+    display: block;
+  }
+  .admin-sidebar-mobile {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .admin-sidebar-mobile.is-open {
+    transform: translateX(0);
+  }
+  .admin-main-content {
+    margin-left: 0 !important;
+  }
+}
+
+/* ── Scrollable Tables ─────────────────────────────────────── */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+/* ── Card-Based Tables on Mobile ───────────────────────────── */
+@media (max-width: 639px) {
+  .mobile-card-table {
+    display: block;
+  }
+  .mobile-card-table thead {
+    display: none;
+  }
+  .mobile-card-table tbody tr {
+    display: block;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: var(--color-card-bg);
+    box-shadow: var(--shadow-card);
+  }
+  .mobile-card-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 4px;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+  }
+  .mobile-card-table td:last-child {
+    border-bottom: none;
+  }
+  .mobile-card-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    margin-right: 8px;
+  }
+}
+
+/* ── Typography Scaling ─────────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-heading-xl {
+    font-size: clamp(1.5rem, 6vw, 2.5rem);
+  }
+  .fb-heading-lg {
+    font-size: clamp(1.25rem, 5vw, 2rem);
+  }
+  .fb-text-responsive {
+    font-size: clamp(0.875rem, 3.5vw, 1rem);
+  }
+}
+
+/* ── Product Grid — Responsive ─────────────────────────────── */
+.fb-products-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+@media (min-width: 768px) {
+  .fb-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+@media (min-width: 1024px) {
+  .fb-products-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* ── Stats Grid ─────────────────────────────────────────────── */
+.fb-stats-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 768px) {
+  .fb-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ── Sidebar Drawer Animation ───────────────────────────────── */
+.fb-drawer {
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fb-drawer.open {
+  transform: translateX(0);
+}
+.fb-drawer-right {
+  transform: translateX(100%);
+}
+.fb-drawer-right.open {
+  transform: translateX(0);
+}
+
+/* ── Mobile Navigation Fix ─────────────────────────────────── */
+@media (max-width: 1023px) {
+  .fb-navbar {
+    height: 64px !important;
+  }
+}
+
+/* ── Form Responsive ────────────────────────────────────────── */
+.fb-form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .fb-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── Cart Layout ────────────────────────────────────────────── */
+.fb-cart-layout {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .fb-cart-layout {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* ── Dashboard Layout ───────────────────────────────────────── */
+.fb-dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.fb-dashboard-sidebar {
+  width: 256px;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 40;
+  transition: transform 0.3s ease;
+}
+.fb-dashboard-main {
+  flex: 1;
+  margin-left: 256px;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+@media (max-width: 1023px) {
+  .fb-dashboard-sidebar {
+    transform: translateX(-100%);
+  }
+  .fb-dashboard-sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  }
+  .fb-dashboard-main {
+    margin-left: 0;
+  }
+}
+
+/* ── Mobile Helper Utilities ────────────────────────────────── */
+.mobile-full-width {
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .mobile-full-width {
+    width: auto;
+  }
+}
+
+/* ── Safe Area Padding for Modern Phones ────────────────────── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .fb-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ── Improved Focus Visible ─────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Prevent Horizontal Overflow ────────────────────────────── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* ── Sticky Mobile Menu Toggle ─────────────────────────────── */
+.fb-mobile-menu-toggle {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .fb-mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ── Responsive Image ───────────────────────────────────────── */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Responsive Map Container ───────────────────────────────── */
+@media (max-width: 767px) {
+  .leaflet-container {
+    height: 250px !important;
+  }
+  .fb-map-container {
+    height: 250px;
+  }
+}
+@media (min-width: 768px) {
+  .fb-map-container {
+    height: 350px;
+  }
+}
+@media (min-width: 1024px) {
+  .fb-map-container {
+    height: 400px;
+  }
+}
+
+/* ── Responsive Modal ───────────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-modal-responsive {
+    max-width: calc(100vw - 2rem);
+    max-height: 95vh;
+    border-radius: 16px;
+  }
+}
+
+/* ── Delivery Dashboard Header ──────────────────────────────── */
+@media (max-width: 767px) {
+  .delivery-header-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .delivery-header-actions button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* ============================================================
+   EXTENDED RESPONSIVE DESIGN SYSTEM
+   FreshBasket — Comprehensive Mobile-First Overrides
+   ============================================================ */
+
+/* ── Base Mobile Fixes ──────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .container { padding-left: 2rem; padding-right: 2rem; }
+}
+
+/* ── Navbar Padding Fix ─────────────────────────────────────── */
+/* Ensure page content doesn't hide behind the fixed navbar */
+.fb-page-content {
+  padding-top: 64px;
+}
+@media (min-width: 1024px) {
+  .fb-page-content {
+    padding-top: 80px;
+  }
+}
+
+/* ── Hero / Banner Responsive ───────────────────────────────── */
+.fb-hero {
+  padding: 2rem 1rem;
+  min-height: auto;
+}
+@media (min-width: 768px) {
+  .fb-hero {
+    padding: 4rem 2rem;
+  }
+}
+@media (min-width: 1024px) {
+  .fb-hero {
+    padding: 6rem 2rem;
+    min-height: 80vh;
+  }
+}
+
+.fb-hero-title {
+  font-size: clamp(1.75rem, 6vw, 3.5rem);
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.fb-hero-subtitle {
+  font-size: clamp(0.9rem, 3vw, 1.25rem);
+  line-height: 1.6;
+}
+
+/* ── Section Spacing ────────────────────────────────────────── */
+.fb-section-padding {
+  padding: 2rem 1rem;
+}
+@media (min-width: 768px) {
+  .fb-section-padding {
+    padding: 3rem 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .fb-section-padding {
+    padding: 5rem 2rem;
+  }
+}
+
+/* ── Page Header Padding (below fixed navbar) ───────────────── */
+@media (max-width: 767px) {
+  .page-header-mt {
+    margin-top: 1rem;
+  }
+}
+
+/* ── Product Grid Enhancements ──────────────────────────────── */
+/* Already defined above as .fb-products-grid but extending */
+.fb-products-grid > * {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Touch-Friendly Buttons ─────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-btn-primary,
+  .fb-btn-secondary {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ── Mobile-Specific Full-Width Buttons ─────────────────────── */
+@media (max-width: 639px) {
+  .fb-btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Forms — Mobile Optimized ───────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-input,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    border-radius: 10px;
+  }
+
+  .fb-form-flex-mobile {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .fb-form-action-mobile {
+    width: 100%;
+  }
+}
+
+/* ── Cart Layout Stacking ───────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-cart-items-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .fb-cart-item-card {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 1rem;
+  }
+
+  .fb-cart-item-image {
+    flex-shrink: 0;
+  }
+
+  .fb-order-summary-sticky {
+    position: static;
+  }
+}
+
+/* ── Checkout Grid ──────────────────────────────────────────── */
+.fb-checkout-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .fb-checkout-grid {
+    grid-template-columns: 1.5fr 1fr;
+    align-items: start;
+  }
+}
+
+/* ── Profile Page Layout ────────────────────────────────────── */
+.fb-profile-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .fb-profile-grid {
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}
+
+/* ── Admin Table Responsive ─────────────────────────────────── */
+@media (max-width: 767px) {
+  .admin-table-responsive td:before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 2px;
+  }
+}
+
+/* ── Farmer Dashboard Tabs ──────────────────────────────────── */
+@media (max-width: 639px) {
+  .fb-tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .fb-tab-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .fb-tab-btn {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* ── Modal Responsive ───────────────────────────────────────── */
+@media (max-width: 639px) {
+  .fb-modal-responsive {
+    width: calc(100vw - 1.5rem);
+    max-height: calc(100dvh - 2rem);
+    border-radius: 20px;
+  }
+}
+
+/* ── Notification Dropdown on Mobile ────────────────────────── */
+@media (max-width: 639px) {
+  .fb-notification-dropdown {
+    width: calc(100vw - 2rem);
+    right: -1rem;
+  }
+}
+
+/* ── Footer Responsive ──────────────────────────────────────── */
+@media (max-width: 639px) {
+  .fb-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+/* ── About Page ─────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-about-hero {
+    text-align: center;
+    flex-direction: column;
+  }
+  .fb-about-hero > * {
+    width: 100%;
+  }
+}
+
+/* ── Order Tracking Page ────────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-order-tracking-card {
+    padding: 1rem;
+  }
+  .fb-timeline-step {
+    font-size: 0.8rem;
+  }
+}
+
+/* ── Login / Signup Card ────────────────────────────────────── */
+@media (max-width: 639px) {
+  .fb-auth-card {
+    margin: 1rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    max-width: none;
+    width: calc(100% - 2rem);
+  }
+}
+
+/* ── Item Detail Modal ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-item-modal {
+    flex-direction: column;
+  }
+  .fb-item-modal-image {
+    max-height: 200px;
+  }
+}
+
+/* ── Category Sidebar on Mobile (Horizontal Scroll) ─────────── */
+@media (max-width: 1023px) {
+  .fb-category-sidebar {
+    display: none;
+  }
+  .fb-mobile-category-bar {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fb-mobile-category-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .fb-mobile-category-chip {
+    flex-shrink: 0;
+    padding: 0.4rem 0.9rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+}
+
+/* ── Farmer Sub-Orders Mobile ───────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-sub-orders-table {
+    display: block;
+    overflow-x: auto;
+  }
+  .fb-sub-orders-table table {
+    min-width: 600px;
+  }
+}
+
+/* ── Delivery Dashboard Mobile ──────────────────────────────── */
+@media (max-width: 639px) {
+  .fb-delivery-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  .fb-delivery-stat-card {
+    padding: 0.75rem;
+  }
+  .fb-delivery-stat-value {
+    font-size: 1.5rem;
+  }
+}
+
+/* ── Map Container Fix ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-map-wrapper {
+    height: 220px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .leaflet-container {
+    height: 220px !important;
+    border-radius: 12px;
+  }
+}
+
+/* ── AdminNavbar / TopNavbar on Mobile ──────────────────────── */
+@media (max-width: 1023px) {
+  .admin-top-navbar {
+    display: none;
+  }
+  .admin-mobile-header {
+    display: flex;
+  }
+}
+@media (min-width: 1024px) {
+  .admin-mobile-header {
+    display: none;
+  }
+}
+
+/* ── Typography Fluid Scaling ───────────────────────────────── */
+.fb-text-fluid-xl {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+}
+.fb-text-fluid-lg {
+  font-size: clamp(1.25rem, 4vw, 2rem);
+}
+.fb-text-fluid-md {
+  font-size: clamp(1rem, 3vw, 1.375rem);
+}
+.fb-text-fluid-sm {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+/* ── Overflow Fixes ─────────────────────────────────────────── */
+.fb-no-overflow {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* ── Section Max-Width Containers ───────────────────────────── */
+.fb-container-sm  { max-width: 640px;  margin-left: auto; margin-right: auto; }
+.fb-container-md  { max-width: 768px;  margin-left: auto; margin-right: auto; }
+.fb-container-lg  { max-width: 1024px; margin-left: auto; margin-right: auto; }
+.fb-container-xl  { max-width: 1280px; margin-left: auto; margin-right: auto; }
+.fb-container-2xl { max-width: 1536px; margin-left: auto; margin-right: auto; }
+
+/* ── Gap Utilities ──────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .fb-gap-mobile-sm { gap: 0.5rem; }
+  .fb-gap-mobile-md { gap: 0.75rem; }
+  .fb-gap-mobile-lg { gap: 1rem; }
+}
+
+/* ── Hide / Show on Breakpoints ─────────────────────────────── */
+.fb-show-mobile { display: block; }
+.fb-hide-mobile { display: none; }
+
+@media (min-width: 768px) {
+  .fb-show-mobile { display: none; }
+  .fb-hide-mobile { display: block; }
+}
+
+.fb-show-tablet { display: none; }
+@media (min-width: 768px) and (max-width: 1023px) {
+  .fb-show-tablet { display: block; }
+}
+
+.fb-show-desktop { display: none; }
+@media (min-width: 1024px) {
+  .fb-show-desktop { display: block; }
+}
+
+/* ── Smooth Transitions ─────────────────────────────────────── */
+.fb-transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Sticky Order Summary ───────────────────────────────────── */
+@media (min-width: 1024px) {
+  .fb-sticky-summary {
+    position: sticky;
+    top: 84px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+}
+
+/* ── Image Aspect Ratio Containers ──────────────────────────── */
+.fb-aspect-square { aspect-ratio: 1 / 1; }
+.fb-aspect-video  { aspect-ratio: 16 / 9; }
+.fb-aspect-product { aspect-ratio: 4 / 3; }
+
+/* ── Card Equal Heights in Grid ─────────────────────────────── */
+.fb-grid-equal-heights {
+  align-items: stretch;
+}
+.fb-grid-equal-heights > * {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Performance: Reduce Motion for Accessibility ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Print Styles ───────────────────────────────────────────── */
+@media print {
+  .fb-navbar,
+  .fb-no-print {
+    display: none !important;
+  }
+  .fb-page-content {
+    padding-top: 0 !important;
+  }
+}
+

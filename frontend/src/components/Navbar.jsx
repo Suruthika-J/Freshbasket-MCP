@@ -409,7 +409,7 @@ export default function Navbar() {
           className={`
             ${navbarStyles.mobilePanel}
             ${isOpen ? 'translate-x-0' : 'translate-x-full'}
-            fixed right-0 top-0 bottom-0 z-50 w-4/5 max-w-sm
+            fixed right-0 top-0 bottom-0 z-50 w-4/5 max-w-sm bg-white dark:bg-gray-900
           `}
           onClick={e => e.stopPropagation()}
         >

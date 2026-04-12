@@ -230,7 +230,8 @@ const Orders = () => {
         {/* Content Area */}
         {activeTab === 'admin' ? (
           <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
-            <table className="w-full text-left">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left min-w-[800px]">
               <thead className="bg-gray-50/50 border-b border-gray-100">
                 <tr>
                   <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Order ID</th>
@@ -283,7 +284,8 @@ const Orders = () => {
                   ))
                 )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         ) : (
           /* Farmer Tab - Grouped View */
@@ -300,8 +302,8 @@ const Orders = () => {
                     </div>
                     <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{orders.length} Active Orders</span>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                  <div className="overflow-x-auto w-full">
+                    <table className="w-full text-left min-w-[800px]">
                       <thead className="bg-gray-50/30">
                         <tr>
                           <th className="px-8 py-4 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Sub Order</th>

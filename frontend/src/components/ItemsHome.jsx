@@ -473,14 +473,14 @@ const ItemsHome = () => {
     <div className={itemsHomeStyles.page}>
       <div className="fb-surface border-b fb-border shadow-sm py-3">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FiFilter className="fb-text-primary" />
-              <span className="text-sm font-medium fb-text-secondary">Filter by District:</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <FiFilter className="fb-text-primary flex-shrink-0" />
+              <span className="text-sm font-medium fb-text-secondary whitespace-nowrap">Filter by District:</span>
               <select
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="fb-input px-4 py-2 rounded-lg text-sm"
+                className="fb-input px-3 py-2 rounded-lg text-sm flex-1 min-w-0 sm:flex-none sm:w-auto"
               >
                 <option value="">All Districts</option>
                 {tamilNaduDistricts.map(district => (
@@ -491,7 +491,7 @@ const ItemsHome = () => {
             {userDistrict && (
               <button
                 onClick={() => setSelectedDistrict(userDistrict)}
-                className="text-sm fb-text-primary hover:opacity-70 font-medium transition-opacity"
+                className="text-sm fb-text-primary hover:opacity-70 font-medium transition-opacity text-left sm:text-right whitespace-nowrap"
               >
                 Show My District ({userDistrict})
               </button>
