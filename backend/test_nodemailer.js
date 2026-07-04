@@ -6,7 +6,7 @@ const transporter = nodemailer.createTransport({
     secure: false,
     auth: {
         user: "quickcommerceapp@gmail.com",
-        pass: "imbbdbvmupmjinhh"
+        pass: "-------------"
     },
     requireTLS: true
 });
